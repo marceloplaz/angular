@@ -1,0 +1,55 @@
+<div class="gestion-container">
+  <h2>Gestión de Personal</h2>
+  
+  <div class="table-responsive">
+    <table class="table-hospital">
+      <thead>
+        <tr>
+          <th>Nombre Completo</th>
+          <th>C.I.</th>
+          <th>Género</th>
+          <th>Contacto</th>
+          <th>Laboral (Cargo/Tipo)</th>
+          <th>Finanzas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of listaPersonas">
+          
+          <td>{{ p.nombre_completo }}</td>
+
+          <td>{{ p.carnet_identidad }}</td>
+
+          <td>
+            {{ p.genero }}<br>
+            <small>{{ p.nacionalidad }}</small>
+          </td>
+
+          <td>
+            {{ p.telefono }}<br>
+            <small>{{ p.direccion }}</small>
+          </td>
+
+          <td>
+            <span class="badge">{{ p.tipo_trabajador | uppercase }}</span><br>
+            <strong>{{ p.cargo }}</strong>
+          </td>
+
+          <td>
+            <strong>{{ p.salario_monto | currency:'BOB':'symbol' }}</strong><br>
+            <small>{{ p.tipo_salario }} ({{ p.numero_tipo_salario }})</small>
+          </td>
+
+          <td>
+            <div class="btn-group">
+              <button class="btn-pdf" (click)="generarReporte(p.id)">Ver Turnos</button>
+              <button class="btn-edit" (click)="abrirEdicion(p)">Editar</button>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

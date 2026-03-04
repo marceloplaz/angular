@@ -6,16 +6,17 @@ import { tap } from 'rxjs';
 export class AuthService {
   private http = inject(HttpClient);
   
-  // URL corregida para evitar el error 404 de /login/login
-  private API_URL = 'http://localhost:8000/api/v1/auth';
+  // URL base ajustada al prefijo "v1" y al grupo "auth" de tu api.php
+  private API_URL = 'http://localhost:8000/api/v1/auth'; 
 
   login(credentials: any) {
+    // La petición ahora irá a http://localhost:8000/api/v1/auth/login
     return this.http.post<any>(`${this.API_URL}/login`, credentials).pipe(
       tap(res => {
-        // Usamos access_token porque es lo que envía tu backend Laravel
+        // Laravel Sanctum suele devolver 'access_token' o 'token'
         if (res && res.access_token) { 
           localStorage.setItem('token', res.access_token);
-          console.log('Token guardado con éxito');
+          console.log('Sesión iniciada correctamente en bd_proyecto_backend');
         }
       })
     );

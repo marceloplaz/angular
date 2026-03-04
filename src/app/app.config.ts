@@ -1,23 +1,15 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'; // NECESARIO
-import { providePrimeNG } from 'primeng/config'; // NUEVO
-import Aura from '@primeng/themes/aura'; // O el tema que prefieras
-
-import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { authInterceptor } from './interceptors/auth.interceptor';
+import { routes } from './app.routes';
+import { authInterceptor } from './interceptors/auth.interceptor'; // <--- Verifica que el archivo exista
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
-    provideAnimationsAsync(),
-    providePrimeNG({ 
-        theme: {
-            preset: Aura
-        }
-    })
+    // Esto es lo que permite que el token de la imagen image_bcc500.png se envíe
+    provideHttpClient(
+      withInterceptors([authInterceptor]) 
+    )
   ]
 };
