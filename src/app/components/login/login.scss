@@ -1,0 +1,15 @@
+.login-background {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    
+    // Personalización del encabezado de la tarjeta
+    ::ng-deep .p-card-header {
+        border-top: 6px solid #2196F3;
+        border-radius: 6px 6px 0 0;
+    }
+}
+
+// Estilo para los mensajes de validación
+.p-error {
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+}

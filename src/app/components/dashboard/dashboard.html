@@ -1,0 +1,48 @@
+<div class="dashboard-wrapper">
+  <header class="hospital-header">
+    <div class="header-left">
+      <button class="toggle-btn" (click)="toggleSidebar()">☰</button>
+      <span class="brand">Hospital - Gestión de Turnos</span>
+    </div>
+    <div class="header-right">
+      <span class="user-info">👤 <strong>{{ usuario }}</strong></span>
+      <button class="btn-exit" (click)="logout()">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <div class="body-container">
+    <aside class="hospital-sidebar" [class.closed]="!sidebarVisible">
+      <nav class="sidebar-nav">
+        <p class="nav-title">Gestión Médica</p>
+        <a routerLink="/personal" class="nav-item">👨‍⚕️ Personal</a>
+        <a routerLink="/turnos" class="nav-item">📅 Turnos</a>
+        
+        <p class="nav-title">Sistema</p>
+        <a routerLink="/incidencias" class="nav-item">⚠️ Incidencias</a>
+        <a href="#" class="nav-item">📄 Reportes PDF</a>
+      </nav>
+    </aside>
+
+    <main class="hospital-content">
+      <router-outlet></router-outlet>
+
+      <div class="dashboard-cards">
+        <div class="card card-blue">
+          <h3>Personal Activo</h3>
+          <p class="big-number">24</p>
+          <span>Médicos y Enfermeras</span>
+        </div>
+        <div class="card card-green">
+          <h3>Turnos de Hoy</h3>
+          <p class="big-number">12</p>
+          <span>Asignaciones listas</span>
+        </div>
+        <div class="card card-red">
+          <h3>Incidencias</h3>
+          <p class="big-number">3</p>
+          <span>Pendientes de revisión</span>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
