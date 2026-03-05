@@ -1,15 +1,138 @@
-.login-background {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    
-    // Personalización del encabezado de la tarjeta
-    ::ng-deep .p-card-header {
-        border-top: 6px solid #2196F3;
-        border-radius: 6px 6px 0 0;
-    }
+/* 1. Fondo de Pantalla Completa: Efecto Mármol Sutil Yanbal */
+.login-screen {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  
+  /* Simulamos las vetas del mármol con degradados radiales sutiles */
+  background-color: #fdfdfd; /* Blanco roto muy limpio */
+  background-image: 
+    radial-gradient(at 10% 10%, rgba(210, 210, 210, 0.15) 0, transparent 40%), 
+    radial-gradient(at 90% 10%, rgba(190, 190, 190, 0.1) 0, transparent 40%), 
+    radial-gradient(at 50% 90%, rgba(200, 200, 200, 0.1) 0, transparent 50%),
+    radial-gradient(at 5% 85%, rgba(170, 170, 170, 0.08) 0, transparent 40%);
 }
 
-// Estilo para los mensajes de validación
-.p-error {
-    font-size: 0.85rem;
-    margin-top: 0.2rem;
+/* 2. El Cuadrante Verde Agua MÁS SUAVE */
+.login-container-aqua {
+  background-color: rgba(232, 245, 243, 0.98); /* Verde menta pálido, muy suave */
+  padding: 50px 40px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  /* Sombra sutilísima para efecto de elevación suave */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03); 
+  border: 1px solid rgba(178, 223, 219, 0.5); /* Borde verde claro muy desvanecido */
+  z-index: 10;
+}
+
+/* 3. Textos Elegantes */
+.hospital-title {
+  color: #333; /* Gris muy oscuro, no negro puro */
+  font-family: 'Times New Roman', serif; /* Fuente serif elegante para el título */
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  color: #888; /* Gris medio para el subtítulo */
+  font-size: 0.9rem;
+  font-weight: 300;
+  margin-bottom: 35px;
+  letter-spacing: 1px;
+}
+
+/* 4. Inputs Minimalistas Estilo Yanbal */
+.form-floating-custom {
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.form-floating-custom label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #666; /* Gris para las etiquetas */
+  display: block;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+}
+
+.form-floating-custom input {
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid #ddd; /* Línea gris sutil */
+  background: transparent;
+  outline: none;
+  font-size: 1rem;
+  color: #333;
+  transition: border-color 0.3s;
+}
+
+.form-floating-custom input:focus {
+  border-bottom: 2px solid #E16128; /* Resalte en Naranja Coral Yanbal */
+}
+
+/* 5. Botón Naranja Yanbal con Contraste Elegante */
+.btn-ingresar-yanbal {
+  width: 100%;
+  padding: 15px;
+  background-color: transparent;
+  color: #E16128;
+  border: 1.5px solid #E16128;
+  font-weight: 300; /* Tipografía más delgada para el botón */
+  letter-spacing: 3px; /* Mayor espaciado */
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-ingresar-yanbal:hover {
+  background-color: #E16128;
+  color: white;
+  box-shadow: 0 5px 15px rgba(225, 97, 40, 0.2);
+}
+
+.forgot-link {
+  color: #999; /* Gris suave para el link */
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+/* Definición de la animación de entrada suave */
+@keyframes fadeInLogin {
+  0% {
+    opacity: 0;
+    transform: translateY(20px); /* Empieza un poco más abajo */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0); /* Sube a su posición original */
+  }
+}
+
+/* Aplicar la animación al cuadrante verde suave */
+.login-container-aqua {
+  background-color: rgba(232, 245, 243, 0.98); /* El verde más suave que pediste */
+  padding: 50px 40px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03); 
+  border: 1px solid rgba(178, 223, 219, 0.5);
+  z-index: 10;
+
+  /* Configuración de la animación */
+  animation: fadeInLogin 1.2s ease-out forwards; 
 }

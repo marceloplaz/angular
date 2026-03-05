@@ -1,50 +1,51 @@
-<div class="dashboard-wrapper">
-  <header class="hospital-header">
-    <div class="header-left">
-      <button class="toggle-btn" (click)="toggleSidebar()">☰</button>
-      <span class="brand">Hospital - Gestión de Turnos</span>
-    </div>
-    <div class="header-right">
-      <span class="user-info">👤 <strong>{{ usuario }}</strong></span>
-      <button class="btn-exit" (click)="logout()">Cerrar Sesión</button>
-    </div>
-  </header>
+<div class="main-wrapper">
+    <aside class="sidebar">
+        <div class="brand-logo d-flex align-items-center">
+            <div class="logo-box me-3">
+                <i class="bi bi-hospital"></i>
+            </div>
+            <span class="fw-bold text-success">HOSPITAL APP</span>
+        </div>
 
-  <div class="body-container">
-    <aside class="hospital-sidebar" [class.closed]="!sidebarVisible">
-      <nav class="sidebar-nav">
-        <p class="nav-title">Gestión Médica</p>
-        <a routerLink="/dashboard/personal" routerLinkActive="active-link" class="nav-item">👨‍⚕️ Personal</a>
-        <a routerLink="/dashboard/turnos" routerLinkActive="active-link" class="nav-item">📅 Turnos</a>
-        
-        <p class="nav-title">Sistema</p>
-        <a routerLink="/dashboard/incidencias" routerLinkActive="active-link" class="nav-item">⚠️ Incidencias</a>
-        <a href="#" class="nav-item">📄 Reportes PDF</a>
-      </nav>
+        <nav class="mt-3">
+            <div class="nav-label">GESTIÓN MÉDICA</div>
+            <a routerLink="/dashboard/personal" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-person-badge"></i> Gestión de Personal
+            </a>
+            <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-calendar-check"></i> Gestión de Turnos
+            </a>
+            <a routerLink="/dashboard/servicios" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-clipboard-pulse"></i> Servicios
+            </a>
+            <a routerLink="/dashboard/categorias" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-tags"></i> Categorías
+            </a>
+
+            <div class="nav-label mt-3">ADMINISTRACIÓN</div>
+            <a routerLink="/dashboard/vacaciones" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-sun"></i> Vacaciones
+            </a>
+            <a routerLink="/dashboard/incidencias" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-tools"></i> Incidencias Técnicas
+            </a>
+        </nav>
     </aside>
 
-    <main class="hospital-content">
-      <router-outlet></router-outlet>
+    <main class="content-area">
+        <header class="top-bar">
+            <div class="search-box">
+                <i class="bi bi-search text-muted me-2"></i>
+                <span class="text-muted small">Buscar en el sistema...</span>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Hola, jugadordeunbit</span>
+                <button class="btn btn-sm btn-outline-danger ms-3 rounded-pill">Salir</button>
+            </div>
+        </header>
 
-      <div class="dashboard-cards" *ngIf="esInicio()">
-        <div class="card card-blue">
-          <h3>Personal Activo</h3>
-          <p class="big-number">24</p>
-          <span>Médicos y Enfermeras</span>
+        <div class="p-4">
+            <router-outlet></router-outlet>
         </div>
-        
-        <div class="card card-green">
-          <h3>Turnos de Hoy</h3>
-          <p class="big-number">12</p>
-          <span>Asignaciones listas</span>
-        </div>
-        
-        <div class="card card-red">
-          <h3>Incidencias</h3>
-          <p class="big-number">3</p>
-          <span>Pendientes de revisión</span>
-        </div>
-      </div>
     </main>
-  </div>
 </div>

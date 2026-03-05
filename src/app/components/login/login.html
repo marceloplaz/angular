@@ -1,8 +1,32 @@
-<h2>Sistema Hospitalario</h2>
-<p>Identifícate para gestionar turnos</p>
-<form (submit)="onLogin($event)">
-  <input type="email" name="email" [(ngModel)]="loginData.email" required>
-  <input type="password" name="password" [(ngModel)]="loginData.password" required>
-  
-  <button type="submit">INGRESAR</button>
-</form>
+<div class="login-screen">
+  <div class="login-container-aqua">
+    <div class="brand-section">
+      <h2 class="hospital-title">SISTEMA HOSPITALARIO</h2>
+      <p class="subtitle">Identifícate para gestionar turnos</p>
+    </div>
+
+    <form (submit)="onLogin($event)" autocomplete="off">
+      <div class="form-floating-custom">
+        <label>CORREO ELECTRÓNICO</label>
+        <input type="email" 
+               name="email" 
+               [(ngModel)]="loginData.email" 
+               required 
+               autocomplete="off"
+               placeholder="usuario@hospital.com">
+      </div>
+
+      <div class="form-floating-custom">
+        <label>CONTRASEÑA</label>
+        <input type="password" 
+               name="password" 
+               [(ngModel)]="loginData.password" 
+               required 
+               autocomplete="new-password"
+               placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="btn-ingresar-yanbal">INGRESAR</button>
+    </form>
+  </div>
+</div>

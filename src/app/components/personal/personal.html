@@ -1,12 +1,19 @@
 <div class="container-fluid mt-4">
-    <div class="card shadow">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-dark fw-light">Gestión de Personal</h2>
+        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistroPersonal">
+            ➕ Nuevo Personal
+        </button>
+    </div>
+
+    <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">📋 Gestión Integral de Personal - Hospital</h5>
+            <h5 class="mb-0">📋 Nómina Actual - Hospital</h5>
             <span class="badge bg-success">Servidor Activo</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered mb-0 align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Nombre Completo / Usuario</th>
@@ -24,42 +31,122 @@
                                 <div class="fw-bold">{{ user.persona?.nombre_completo || user.name }}</div>
                                 <small class="text-muted">{{ user.email }}</small>
                             </td>
-
                             <td>
                                 <div>{{ user.persona?.carnet_identidad || '---' }}</div>
                                 <small class="badge bg-light text-dark border">{{ user.persona?.nacionalidad || 'N/A' }}</small>
                             </td>
-
                             <td class="text-center">
                                 <span *ngIf="user.persona?.genero === 'M'" class="text-primary">♂️ M</span>
                                 <span *ngIf="user.persona?.genero === 'F'" class="text-danger">♀️ F</span>
-                                <span *ngIf="!user.persona?.genero">---</span>
                             </td>
-
                             <td>
-                                <div title="Teléfono">📞 {{ user.persona?.telefono || 's/n' }}</div>
-                                <small class="text-muted" title="Dirección">📍 {{ user.persona?.direccion || 'No registrada' }}</small>
+                                <div class="small">📞 {{ user.persona?.telefono || 's/n' }}</div>
+                                <small class="text-muted text-truncate d-inline-block" style="max-width: 150px;">
+                                    📍 {{ user.persona?.direccion || 'No registrada' }}
+                                </small>
                             </td>
-
                             <td>
                                 <div class="badge bg-info text-dark">{{ user.categoria?.nombre || 'General' }}</div>
-                                <div class="small mt-1 text-capitalize">{{ user.persona?.tipo_trabajador || 'Sin cargo' }}</div>
+                                <div class="small mt-1">{{ user.persona?.tipo_trabajador || 'Sin cargo' }}</div>
                             </td>
-
                             <td>
                                 <div class="small fw-bold">{{ user.persona?.tipo_salario || '---' }}</div>
-                                <div class="small text-muted">ID: {{ user.persona?.numero_tipo_salario || '---' }}</div>
+                                <small class="text-muted">ID: {{ user.persona?.numero_tipo_salario || '---' }}</small>
                             </td>
-
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-primary" title="Ver Turnos">📅</button>
-                                    <button class="btn btn-danger" title="Descargar PDF">📄</button>
+                                    <button class="btn btn-outline-primary" title="Ver Turnos">📅</button>
+                                    <button class="btn btn-outline-danger" title="Descargar PDF">📄</button>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRegistroPersonal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg shadow-lg">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">🏥 Registro de Nuevo Personal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" style="background-color: #f8fafb;">
+                <form (ngSubmit)="guardarUsuario()">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">USUARIO</label>
+                            <input type="text" [(ngModel)]="nuevoUsuario.name" name="name" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">EMAIL</label>
+                            <input type="email" [(ngModel)]="nuevoUsuario.email" name="email" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">CONTRASEÑA</label>
+                            <input type="password" [(ngModel)]="nuevoUsuario.password" name="password" class="form-control" required>
+                        </div>
+
+                        <hr>
+
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold small">NOMBRE COMPLETO</label>
+                            <input type="text" [(ngModel)]="nuevoUsuario.nombre_completo" name="nombre_completo" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">GÉNERO</label>
+                            <select [(ngModel)]="nuevoUsuario.genero" name="genero" class="form-select">
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">C.I.</label>
+                            <input type="text" [(ngModel)]="nuevoUsuario.carnet_identidad" name="ci" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">NACIONALIDAD</label>
+                            <input type="text" [(ngModel)]="nuevoUsuario.nacionalidad" name="nac" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">TELÉFONO</label>
+                            <input type="text" [(ngModel)]="nuevoUsuario.telefono" name="tel" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">DIRECCIÓN</label>
+                            <input type="text" [(ngModel)]="nuevoUsuario.direccion" name="dir" class="form-control">
+                        </div>
+
+                        <hr>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">CATEGORÍA</label>
+                            <select [(ngModel)]="nuevoUsuario.categoria_id" name="cat" class="form-select">
+                                <option value="1">Médicos</option>
+                                <option value="2">Enfermería</option>
+                                <option value="3">Administrativo</option>
+                                <option value="4">Manual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">SALARIO</label>
+                            <select [(ngModel)]="nuevoUsuario.tipo_salario" name="sal" class="form-select">
+                                <option value="TGN">TGN</option>
+                                <option value="CONTRATO">CONTRATO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer mt-4 border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success px-4" data-bs-dismiss="modal">
+                            💾 GUARDAR PERSONAL
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

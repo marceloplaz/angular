@@ -1,8 +1,51 @@
-/* Eliminamos el import de primeng/resources/themes... */
+/* Importaciones existentes */
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
+
+:root {
+    /* Paleta Verde Hospitalario */
+    --hospital-green: #2ecc71;       /* Verde base */
+    --hospital-green-dark: #27ae60;  /* Botones y Hover */
+    --hospital-green-light: #e8f8f1; /* Fondos de tarjetas y filas */
+    --hospital-mint: #a3e4d7;        /* Acentos suaves */
+    
+    /* Configuración de Prime */
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
 
 body {
     margin: 0;
     font-family: var(--font-family);
+    background-color: #f4f7f6; /* Gris muy claro verdoso para el fondo general */
+    color: #2c3e50;
+}
+
+/* --- CLASES DE UTILIDAD PARA TU PROYECTO --- */
+
+/* Fondos verdes suaves para tarjetas */
+.bg-hospital-light {
+    background-color: var(--hospital-green-light) !important;
+}
+
+/* Botones con el nuevo estilo verde */
+.btn-hospital {
+    background-color: var(--hospital-green) !important;
+    border: none !important;
+    color: white !important;
+    transition: background 0.3s ease;
+}
+
+.btn-hospital:hover {
+    background-color: var(--hospital-green-dark) !important;
+}
+
+/* Bordes superiores para dar el toque "Envato" */
+.border-top-hospital {
+    border-top: 4px solid var(--hospital-green) !important;
+}
+
+/* Estilo para las tablas */
+.table-hospital thead {
+    background-color: var(--hospital-green-light);
+    color: var(--hospital-green-dark);
 }

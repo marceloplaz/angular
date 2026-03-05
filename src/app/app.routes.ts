@@ -1,8 +1,15 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login'; 
-import { DashboardComponent } from './components/dashboard/dashboard'; 
-import { PersonalComponent } from './components/personal/personal'; 
 import { authGuard } from './guards/auth-guard';
+
+// Importaciones corregidas según tu estructura real
+import { LoginComponent } from './components/login/login';
+import { DashboardComponent } from './components/dashboard/dashboard';
+import { PersonalComponent } from './components/personal/personal';
+import { TurnosComponent } from './components/turnos/turnos';
+import { ServiciosComponent } from './components/servicios/servicios';
+import { CategoriasComponent } from './components/categorias/categorias';
+import { IncidenciasComponent } from './components/incidencias/incidencias';
+import { VacacionesComponent } from './components/vacaciones/vacaciones';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -11,10 +18,15 @@ export const routes: Routes = [
     component: DashboardComponent, 
     canActivate: [authGuard],
     children: [
-      // Al navegar a /dashboard/personal, se activa este componente
-      { path: 'personal', component: PersonalComponent } 
+      { path: 'personal', component: PersonalComponent },
+      { path: 'turnos', component: TurnosComponent },
+      { path: 'servicios', component: ServiciosComponent },
+      { path: 'categorias', component: CategoriasComponent },
+      { path: 'incidencias', component: IncidenciasComponent },
+      { path: 'vacaciones', component: VacacionesComponent },
+      { path: '', redirectTo: 'personal', pathMatch: 'full' }
     ]
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: '**', redirectTo: '/login' } // Comodín para rutas no encontradas
+  { path: '**', redirectTo: '/login' }
 ];

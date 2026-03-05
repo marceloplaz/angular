@@ -1,13 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms'; // 1. Importa esto
 
 @Component({
   selector: 'app-personal',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './personal.html' 
+  imports: [CommonModule, FormsModule], // 2. Agrégalo aquí
+  templateUrl: './personal.html'
 })
+
 export class PersonalComponent implements OnInit {
   private http = inject(HttpClient);
 
@@ -31,4 +33,36 @@ export class PersonalComponent implements OnInit {
       }
     });
   }
+public nuevoUsuario: any = {
+  name: '',
+  email: '',
+  password: '',
+  categoria_id: '',
+  // Campos de Persona
+  nombre_completo: '',
+  carnet_identidad: '',
+  genero: '',
+  telefono: '',
+  direccion: '',
+  tipo_trabajador: '',
+  nacionalidad: 'Boliviana',
+  tipo_salario: '',
+  numero_tipo_salario: ''
+};
+public mostrarModal = false;
+
+guardarUsuario() {
+  const token = localStorage.getItem('token'); //
+  const headers = { 'Authorization': `Bearer ${token}` };
+
+  this.http.post('http://localhost:8000/api/v1/usuarios', this.nuevoUsuario, { headers })
+    .subscribe({
+      next: (res) => {
+        this.cargarDatos(); // Recargamos la tabla
+        this.mostrarModal = false;
+        alert('Usuario creado con éxito');
+      },
+      error: (err) => console.error('Error al crear:', err)
+    });
+}
 }
