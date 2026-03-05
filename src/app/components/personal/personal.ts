@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PersonaService } from '../../services/persona';
-import { Persona } from '../../interfaces/persona';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-personal',
@@ -10,38 +9,26 @@ import { Persona } from '../../interfaces/persona';
   templateUrl: './personal.html' 
 })
 export class PersonalComponent implements OnInit {
-  private personaService = inject(PersonaService);
-  
-  // Lista donde se guardan los 24 registros detectados
-  public listaPersonas: Persona[] = [];
+  private http = inject(HttpClient);
+
+  // Inicializamos como arreglo vacío para evitar errores de renderizado
+  public listaPersonas: any[] = []; 
 
   ngOnInit(): void {
-    this.obtenerPersonal();
+    this.cargarDatos();
   }
 
-  obtenerPersonal(): void {
-    this.personaService.getPersonas().subscribe({
+  cargarDatos(): void {
+    // Es importante que la URL coincida con tu ruta pública de Laravel
+    this.http.get('http://localhost:8000/api/v1/usuarios').subscribe({
       next: (res: any) => {
-        // Laravel Paginate devuelve los registros en la propiedad 'data'
-        this.listaPersonas = res.data; 
-        console.log('Datos cargados desde bd_proyecto_backend');
+        // Como el JSON que me pasaste es un Array directo [], lo asignamos así:
+        this.listaPersonas = Array.isArray(res) ? res : (res.data || []);
+        console.log('Personal cargado con éxito:', this.listaPersonas);
       },
-      error: (err: any) => {
-        console.error('Error al conectar con el backend', err);
+      error: (err) => {
+        console.error('Error al conectar con el backend de jugadordeunbit:', err);
       }
     });
-  }
-
-  // FUNCIÓN PARA EL BOTÓN PDF
-  generarReporte(id: number | undefined): void {
-    if (!id) return;
-    console.log('Generando reporte PDF para la persona con ID:', id);
-    // Aquí llamarás a tu servicio de PDF más adelante
-  }
-
-  // FUNCIÓN PARA EL BOTÓN EDITAR
-  abrirEdicion(persona: Persona): void {
-    console.log('Editando a:', persona.nombre_completo);
-    // Aquí abrirás tu modal o formulario de edición
   }
 }

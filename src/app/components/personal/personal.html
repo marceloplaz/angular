@@ -1,55 +1,66 @@
-<div class="gestion-container">
-  <h2>Gestión de Personal</h2>
-  
-  <div class="table-responsive">
-    <table class="table-hospital">
-      <thead>
-        <tr>
-          <th>Nombre Completo</th>
-          <th>C.I.</th>
-          <th>Género</th>
-          <th>Contacto</th>
-          <th>Laboral (Cargo/Tipo)</th>
-          <th>Finanzas</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let p of listaPersonas">
-          
-          <td>{{ p.nombre_completo }}</td>
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📋 Gestión Integral de Personal - Hospital</h5>
+            <span class="badge bg-success">Servidor Activo</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre Completo / Usuario</th>
+                            <th>C.I. / Nac.</th>
+                            <th>Género</th>
+                            <th>Contacto / Dirección</th>
+                            <th>Laboral (Categoría)</th>
+                            <th>Finanzas (Tipo/N°)</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let user of listaPersonas">
+                            <td>
+                                <div class="fw-bold">{{ user.persona?.nombre_completo || user.name }}</div>
+                                <small class="text-muted">{{ user.email }}</small>
+                            </td>
 
-          <td>{{ p.carnet_identidad }}</td>
+                            <td>
+                                <div>{{ user.persona?.carnet_identidad || '---' }}</div>
+                                <small class="badge bg-light text-dark border">{{ user.persona?.nacionalidad || 'N/A' }}</small>
+                            </td>
 
-          <td>
-            {{ p.genero }}<br>
-            <small>{{ p.nacionalidad }}</small>
-          </td>
+                            <td class="text-center">
+                                <span *ngIf="user.persona?.genero === 'M'" class="text-primary">♂️ M</span>
+                                <span *ngIf="user.persona?.genero === 'F'" class="text-danger">♀️ F</span>
+                                <span *ngIf="!user.persona?.genero">---</span>
+                            </td>
 
-          <td>
-            {{ p.telefono }}<br>
-            <small>{{ p.direccion }}</small>
-          </td>
+                            <td>
+                                <div title="Teléfono">📞 {{ user.persona?.telefono || 's/n' }}</div>
+                                <small class="text-muted" title="Dirección">📍 {{ user.persona?.direccion || 'No registrada' }}</small>
+                            </td>
 
-          <td>
-            <span class="badge">{{ p.tipo_trabajador | uppercase }}</span><br>
-            <strong>{{ p.cargo }}</strong>
-          </td>
+                            <td>
+                                <div class="badge bg-info text-dark">{{ user.categoria?.nombre || 'General' }}</div>
+                                <div class="small mt-1 text-capitalize">{{ user.persona?.tipo_trabajador || 'Sin cargo' }}</div>
+                            </td>
 
-          <td>
-            <strong>{{ p.salario_monto | currency:'BOB':'symbol' }}</strong><br>
-            <small>{{ p.tipo_salario }} ({{ p.numero_tipo_salario }})</small>
-          </td>
+                            <td>
+                                <div class="small fw-bold">{{ user.persona?.tipo_salario || '---' }}</div>
+                                <div class="small text-muted">ID: {{ user.persona?.numero_tipo_salario || '---' }}</div>
+                            </td>
 
-          <td>
-            <div class="btn-group">
-              <button class="btn-pdf" (click)="generarReporte(p.id)">Ver Turnos</button>
-              <button class="btn-edit" (click)="abrirEdicion(p)">Editar</button>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-primary" title="Ver Turnos">📅</button>
+                                    <button class="btn btn-danger" title="Descargar PDF">📄</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-          </td>
-
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        </div>
+    </div>
 </div>
