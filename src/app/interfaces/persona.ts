@@ -8,11 +8,12 @@ export interface Persona {
   direccion: string;
   nacionalidad: string;
 
-  // Estos son los campos que causan el error
-  tipo_trabajador: 'medico' | 'enfermera' | 'manual' | 'chofer' | 'administrativo';
+  // Ampliamos para evitar errores de coincidencia con la DB
+  tipo_trabajador: 'medico' | 'enfermera' | 'manual' | 'chofer' | 'administrativo' | string;
   cargo: string; 
   
-  tipo_salario: 'TGN' | 'SUS' | 'CONTRATO';
+  // Agregamos 'SUS' que mencionaste ahora
+  tipo_salario: 'TGN' | 'SUS' | 'CONTRATO' | string;
   numero_tipo_salario: string;
   salario_monto: number;
 

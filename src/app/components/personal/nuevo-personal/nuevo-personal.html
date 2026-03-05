@@ -1,0 +1,108 @@
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-success fw-bold"><i class="bi bi-person-plus"></i> Registro de Personal</h2>
+        <a routerLink="/dashboard/personal" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Volver al Listado
+        </a>
+    </div>
+
+    <form (ngSubmit)="guardar()" #personalForm="ngForm">
+        <div class="row g-4">
+            
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-shield-lock"></i> Credenciales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" name="email" [(ngModel)]="nuevoUsuario.email" class="form-control" placeholder="usuario@test.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contraseña</label>
+                            <input type="password" name="password" [(ngModel)]="nuevoUsuario.password" class="form-control" placeholder="********" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 text-success fw-bold"><i class="bi bi-person-vcard"></i> Datos del Empleado</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Nombre Completo</label>
+                                <input type="text" name="nombre" [(ngModel)]="nuevoUsuario.nombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">C.I. / Documento</label>
+                                <input type="text" name="ci" [(ngModel)]="nuevoUsuario.ci" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Nacionalidad</label>
+                                <input type="text" name="nacionalidad" [(ngModel)]="nuevoUsuario.nacionalidad" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Género</label>
+                                <select name="genero" [(ngModel)]="nuevoUsuario.genero" class="form-select">
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Teléfono / Celular</label>
+                                <input type="text" name="telefono" [(ngModel)]="nuevoUsuario.telefono" class="form-control">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Dirección de Domicilio</label>
+                                <input type="text" name="direccion" [(ngModel)]="nuevoUsuario.direccion" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-light border-bottom py-3">
+                        <h5 class="mb-0 text-dark fw-bold"><i class="bi bi-briefcase"></i> Asignación Laboral</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Categoría</label>
+                                <select name="categoria" [(ngModel)]="nuevoUsuario.categoria" class="form-select" required>
+                                    <option value="Médicos">Médicos</option>
+                                    <option value="Enfermera">Enfermera</option>
+                                    <option value="administrativo">Administrativo</option>
+                                    <option value="Manual">Manual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Tipo Salario</label>
+                                <select name="tipo_salario" [(ngModel)]="nuevoUsuario.tipo_salario" class="form-select">
+                                    <option value="TGN">TGN</option>
+                                    <option value="CONTRATO">CONTRATO</option>
+                                    <option value="AISEM">AISEM</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">N° de Ítem</label>
+                                <input type="text" name="numero_item" [(ngModel)]="nuevoUsuario.numero_item" class="form-control" placeholder="Ej: 9618">
+                            </div>
+                           
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white d-flex justify-content-end gap-2 py-3">
+                        <button type="button" class="btn btn-light px-4" routerLink="/dashboard/personal">Cancelar</button>
+                        <button type="submit" class="btn btn-success px-5 fw-bold" [disabled]="!personalForm.form.valid">
+                            <i class="bi bi-save"></i> GUARDAR EN SISTEMA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+

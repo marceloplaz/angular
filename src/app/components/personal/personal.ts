@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms'; // 1. Importa esto
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-personal',
   standalone: true,
-  imports: [CommonModule, FormsModule], // 2. Agrégalo aquí
+  imports: [CommonModule, FormsModule, RouterLink], // 2. Agrégalo aquí
   templateUrl: './personal.html'
 })
 
