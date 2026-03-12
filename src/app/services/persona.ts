@@ -1,9 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Persona } from '../interfaces/persona';
-// Cambia esto en la línea 5 de tu servicio
-// Sube tres niveles para salir de 'services', 'app' y llegar a 'environments'
 import { environment } from '../../environments/environment.development';
 
 @Injectable({
@@ -11,44 +9,32 @@ import { environment } from '../../environments/environment.development';
 })
 export class PersonaService {
   private http = inject(HttpClient);
-  
-  // Usamos la URL del environment detectada en tu terminal: http://127.0.0.1:8000/api/v1
-  // Esta línea ahora funcionará correctamente al detectar 'apiUrl' corregido
-private readonly API_URL = `${environment.apiUrl}/persona`; 
+  // Se cambia a /usuarios para que coincida con la ruta funcional de tu API
+  private readonly API_URL = `${environment.apiUrl}/usuarios`; 
 
-  /**
-   * Obtiene la lista de personas. 
-   * Se usa 'any' porque Laravel devuelve un objeto con 'data' y paginación.
-   */
+  // Función privada para obtener los headers con el token
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+  }
+
   getPersonas(): Observable<any> {
-    return this.http.get<any>(this.API_URL);
+    return this.http.get<any>(this.API_URL, { headers: this.getHeaders() });
   }
 
-  /**
-   * Obtiene una persona específica por ID.
-   */
-  getPersona(id: number): Observable<Persona> {
-    return this.http.get<Persona>(`${this.API_URL}/${id}`);
+  getPersona(id: number): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
   }
 
-  /**
-   * Crea un nuevo registro de personal.
-   */
   crearPersona(persona: Persona): Observable<any> {
-    return this.http.post<any>(this.API_URL, persona);
+    return this.http.post<any>(this.API_URL, persona, { headers: this.getHeaders() });
   }
 
-  /**
-   * Actualiza los datos de una persona existente.
-   */
-  updatePersona(id: number, persona: Persona): Observable<any> {
-    return this.http.put<any>(`${this.API_URL}/${id}`, persona);
-  }
+  updatePersona(id: number, persona: any): Observable<any> {
+  return this.http.put<any>(`${this.API_URL}/${id}`, persona, { headers: this.getHeaders() });
+}
 
-  /**
-   * Elimina un registro (Requiere lógica de AdminAuthorization en el backend).
-   */
   deletePersona(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.API_URL}/${id}`);
+    return this.http.delete<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
   }
 }

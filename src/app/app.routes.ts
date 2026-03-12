@@ -7,8 +7,10 @@ import { DashboardComponent } from './components/dashboard/dashboard';
 
 // Componentes de Gestión
 import { PersonalComponent } from './components/personal/personal';
-// Cambia la línea 10 por esta:
 import { NuevoPersonalComponent } from './components/personal/nuevo-personal/nuevo-personal';
+// Importación correcta del nuevo componente
+// Debe ser exactamente igual al nombre de la clase que exportaste
+import { VerPersonalComponent } from './components/personal/ver-personal/ver-personal';
 import { TurnosComponent } from './components/turnos/turnos';
 import { ServiciosComponent } from './components/servicios/servicios';
 import { CategoriasComponent } from './components/categorias/categorias';
@@ -23,7 +25,9 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'personal', component: PersonalComponent },
-      { path: 'personal/nuevo', component: NuevoPersonalComponent }, // Ruta más descriptiva
+      { path: 'personal/nuevo', component: NuevoPersonalComponent },
+      // RUTA CORREGIDA: Se añade el parámetro :id y se corrige el nombre del componente
+      { path: 'personal/ver/:id', component: VerPersonalComponent }, 
       { path: 'turnos', component: TurnosComponent },
       { path: 'servicios', component: ServiciosComponent },
       { path: 'categorias', component: CategoriasComponent },

@@ -1,0 +1,79 @@
+/* Contenedor principal con fondo suave */
+.container-fluid {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Tarjeta principal estilo expediente */
+.card {
+    border: none !important;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Etiquetas de los campos (Label) */
+label.text-muted {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    color: #6c757d !important;
+}
+
+/* Valores de los campos */
+span.fw-bold {
+    color: #2c3e50;
+    display: block;
+}
+
+/* Avatar circular con sombra */
+.rounded-circle.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1a4f32 100%) !important;
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Diseño de las secciones de información */
+h5.text-success {
+    font-size: 1.1rem;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+}
+
+h5.text-success i {
+    margin-right: 10px;
+}
+
+/* Badges personalizados para Cargo y Salario */
+.badge {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bg-success-subtle {
+    background-color: #e8f5e9 !important;
+    color: #1a4f32 !important;
+}
+
+/* Efecto al pasar el mouse por el botón volver */
+.btn-light.rounded-pill:hover {
+    background-color: #f8f9fa;
+    border-color: #1a4f32 !important;
+    color: #1a4f32;
+    transform: translateX(-3px);
+    transition: 0.2s;
+}
+
+/* Ajuste para pantallas pequeñas */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 20px !important;
+    }
+    
+    .border-end {
+        border-end: none !important;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+}

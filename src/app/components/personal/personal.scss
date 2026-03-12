@@ -74,3 +74,80 @@
 .avatar-excel { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .badge-cargo { background: #e8f5e9; color: #1a4f32; border: 1px solid #a3cfbb; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
 .x-small { font-size: 0.72rem; }
+/* --- CORRECCIÓN DE MODAL (FONDO CLARO) --- */
+
+/* Forza el fondo blanco en el contenedor del modal */
+.modal-content {
+    background-color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+    color: #333 !important; /* Texto oscuro para legibilidad */
+}
+
+/* Estilo para el fondo semi-transparente detrás del modal */
+.modal.fade.show {
+    background: rgba(26, 79, 50, 0.4) !important; /* Verde hospital muy transparente */
+    backdrop-filter: blur(4px); /* Efecto de desenfoque elegante */
+}
+
+/* Estilo para los inputs dentro del modal para que no se vean grises */
+.modal-body {
+    background-color: #ffffff !important;
+    
+    .form-label {
+        color: #1a4f32 !important; /* Verde hospital para etiquetas */
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control, .form-select {
+        background-color: #ffffff !important;
+        border: 1px solid #a3cfbb !important; /* Bordes verde aqua como tu tabla */
+        color: #212529 !important;
+        padding: 10px !important;
+        
+        &:focus {
+            border-color: #28a745 !important;
+            box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.15);
+        }
+    }
+}
+
+/* Pie del modal con fondo sutil */
+.modal-footer {
+    background-color: #f8f9fa !important;
+    border-top: 1px solid #e6eee9 !important;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Botón Ver (Ojo) que faltaba en tus dibujos */
+.btn-dibujo.ver { color: #28a745; }
+.btn-dibujo.ver:hover { background-color: #28a745 !important; color: white !important; }
+
+/* Ajuste de visibilidad para el botón de cerrar (X) */
+.btn-close {
+    filter: brightness(0.5); /* Hace la X más visible en fondo blanco */
+}
+.ls-2 { letter-spacing: 2px; }
+
+.info-item {
+  padding: 8px 0;
+  border-bottom: 1px dashed #f0f0f0;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.avatar-circle {
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.card {
+  transition: all 0.3s ease;
+  &:hover {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
+  }
+}
