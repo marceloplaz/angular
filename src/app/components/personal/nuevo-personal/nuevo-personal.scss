@@ -1,0 +1,97 @@
+/* Paleta de Colores */
+$hospital-verde-dark: #166534;    /* Títulos y bordes */
+$hospital-verde-action: #22c55e;  /* Botón principal */
+$hospital-verde-claro: #f0fdf4;   /* Fondo sección laboral (CORRECCIÓN) */
+$hospital-celeste-claro: #f0f9ff; /* Fondo sección credenciales */
+
+/* Título Centrado y Elegante */
+.hospital-title-centered {
+    color: $hospital-verde-dark;
+    font-weight: 800;
+    font-size: 1.8rem;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    
+    i {
+        font-size: 2rem;
+        color: $hospital-verde-action;
+    }
+}
+
+/* Botón Volver con Estilo Moderno */
+.btn-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #64748b; 
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    padding: 8px 20px;
+    border-radius: 50px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+    i {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+
+    &:hover {
+        color: $hospital-verde-dark;
+        border-color: $hospital-verde-dark;
+        background-color: rgba(22, 101, 52, 0.05);
+        
+        i {
+            transform: translateX(-5px);
+        }
+    }
+}
+
+/* Contenedor con borde verde oscuro reforzado */
+.hospital-form-container {
+    border: 3px solid $hospital-verde-dark !important;
+    border-radius: 25px;
+    margin-top: 10px;
+    background: white;
+    overflow: hidden;
+}
+
+.form-section {
+    padding: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    
+    &.bg-verde-light { background-color: $hospital-verde-claro; }
+    &.bg-celeste-light { background-color: $hospital-celeste-claro; }
+}
+
+/* Estilo de controles e inputs */
+.hospital-control {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+
+    &:focus {
+        border-color: $hospital-verde-action;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    }
+}
+
+.btn-hospital-primary {
+    background-color: $hospital-verde-action;
+    border: none;
+    color: white;
+    font-weight: 700;
+    &:hover:not(:disabled) {
+        background-color: $hospital-verde-dark;
+        transform: translateY(-1px);
+    }
+}

@@ -1,91 +1,41 @@
-// Paleta de colores Hospital
-$dark-green: #0a4d28;
-$mid-green: #198754;
-$light-green: #e9f5ee;
+$dark-green: #1a4332; // Verde bosque oscuro
+$light-blue-hover: #f0f9ff; // Celeste muy claro
 
-.text-dark-green { color: $dark-green; }
-
-.bg-light-green-subtle {
-  background-color: #f8fbf9;
-  min-height: 100vh;
-}
-
-.table-wrapper-impact {
-  border: 2px solid $dark-green !important;
+.hospital-container-premium {
+  background: white;
+  border: 3px solid $dark-green; // Encuadrado verde solicitado
   border-radius: 12px;
   overflow: hidden;
-  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 
   thead {
     background-color: $dark-green;
-    th {
-      color: white !important;
-      font-size: 0.75rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      padding: 15px 10px;
-    }
+    color: white;
+    font-size: 0.8rem;
+    text-transform: uppercase;
   }
 }
 
-.table-row-custom {
-  transition: all 0.3s ease;
-  border-bottom: 1px solid #eee;
-
+.row-hospital-hover {
+  transition: background-color 0.2s;
   &:hover {
-    background-color: $light-green !important;
-    transform: scale(1.002);
-    box-shadow: inset 4px 0 0 $dark-green;
+    background-color: $light-blue-hover !important; // Impacto celeste al pasar el mouse
   }
 }
 
-.name-text { font-size: 1rem; }
-.x-small { font-size: 0.72rem; }
-
-.ci-box {
-  background: #f1f1f1;
-  padding: 2px 8px;
-  border-radius: 4px;
-  display: inline-block;
-  font-weight: 600;
-  color: #333;
-}
-
-// Estilo de Género moderno
-.gender-m, .gender-f {
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
-  border-radius: 50%;
-  font-weight: bold;
-  font-size: 0.8rem;
-}
-.gender-m { background: #e3f2fd; color: #0d6efd; border: 1px solid #0d6efd; }
-.gender-f { background: #fff1f2; color: #e11d48; border: 1px solid #e11d48; }
-
-// Badges de Categoría
-.badge-category {
-  padding: 5px 12px;
+.badge-role {
+  padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  border: 1px solid #ddd;
-  background: white;
-  
-  &[data-type="administrativo"] { color: #0891b2; border-color: #0891b2; }
-  &[data-type="medico"] { color: #15803d; border-color: #15803d; }
-  &[data-type="enfermera"] { color: #7e22ce; border-color: #7e22ce; }
+  font-weight: 700;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+
+  &[data-role="medico"] { color: #1e40af; background-color: #dbeafe; }
+  &[data-role="enfermera"] { color: #92400e; background-color: #fef3c7; }
+  &[data-role="administrativo"] { color: #065f46; background-color: #dcfce7; }
 }
 
-.btn-dark-green {
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  font-weight: bold;
-  &:hover {
-    background-color: #083d20;
-    color: #ccff00; // Un toque de luz al hover
-  }
-}
+.btn-light-blue { background: #e0f2fe; color: #0369a1; border: none; }
+.btn-light-red { background: #fee2e2; color: #b91c1c; border: none; }
+.xx-small { font-size: 0.65rem; }
