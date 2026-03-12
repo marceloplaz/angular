@@ -1,75 +1,90 @@
-<div class="container-fluid py-4 px-4">
-  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+<div class="container-fluid py-4 px-4" style="background-color: #f0f6f3 !important; min-vh-100;">
+  
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom" style="border-color: #a3cfbb !important;">
     <div>
-      <h2 class="text-dark fw-bold mb-0">Gestión de Personal</h2>
-      <p class="text-muted small mb-0">Administración de nómina y roles del hospital</p>
+      <h1 class="h2 fw-bold mb-6" style="color: #1a4f32 !important;">GESTIÓN DE PERSONAL</h1>
+      
     </div>
-    <a routerLink="/dashboard/personal/nuevo" class="btn btn-success px-4 py-2 shadow-sm rounded-pill">
-      <i class="bi bi-person-plus-fill me-2"></i> Nuevo Personal
+    <a [routerLink]="['/dashboard/personal/nuevo']" class="btn shadow-sm" 
+       style="background-color: #28a745 !important; color: white !important; border-radius: 50px; padding: 8px 20px; font-weight: bold; border: none;">
+      <i class="bi bi-plus-circle me-2"></i> Nuevo Personal
     </a>
   </div>
 
-  <div class="card border-0 shadow-sm">
+  <div class="row mb-3 align-items-center">
+    <div class="col-md-7">
+      <div class="btn-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #a3cfbb;">
+        <button (click)="aplicarFiltro('Todos')" [style.background-color]="filtroActual === 'Todos' ? '#28a745' : '#e0f2f1'"
+                [style.color]="filtroActual === 'Todos' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">Todos</button>
+        <button (click)="aplicarFiltro('TGN')" [style.background-color]="filtroActual === 'TGN' ? '#28a745' : '#e0f2f1'"
+                [style.color]="filtroActual === 'TGN' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">TGN</button>
+        <button (click)="aplicarFiltro('SUS')" [style.background-color]="filtroActual === 'SUS' ? '#28a745' : '#e0f2f1'"
+                [style.color]="filtroActual === 'SUS' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">SUS</button>
+        <button (click)="aplicarFiltro('CONTRATO')" [style.background-color]="filtroActual === 'CONTRATO' ? '#28a745' : '#e0f2f1'"
+                [style.color]="filtroActual === 'CONTRATO' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">Contrato</button>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="input-group input-group-sm shadow-sm">
+        <span class="input-group-text bg-white" style="border-color: #a3cfbb !important;">
+          <i class="bi bi-search text-success"></i>
+        </span>
+        <input type="text" class="form-control" placeholder="Nombre o CI..." 
+               [(ngModel)]="terminoBusqueda" (input)="filtrarTodo()"
+               style="border-color: #a3cfbb !important; border-left: none;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm" style="border: 1px solid #1a4f32 !important; border-radius: 10px; overflow: hidden;">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="bg-light">
-          <tr>
-            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Nombre y Usuario</th>
-            <th class="py-3 text-uppercase small fw-bold text-muted">Identificación</th>
-            <th class="py-3 text-uppercase small fw-bold text-muted text-center">Género</th>
-            <th class="py-3 text-uppercase small fw-bold text-muted">Contacto / Dirección</th>
-            <th class="py-3 text-uppercase small fw-bold text-muted">Categoría Laboral</th>
-            <th class="py-3 text-uppercase small fw-bold text-muted text-end pe-4">Finanzas (Tipo/N°)</th>
+      <table class="table table-bordered align-middle mb-0" style="font-size: 0.85rem;">
+        <thead style="background-color: #e6eee9 !important; color: #1a4f32 !important;">
+          <tr style="border-bottom: 2px solid #1a4f32 !important;">
+            <th style="border: 1px solid #a3cfbb !important; width: 20%;">Especialista</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 10%;" class="text-center">CI</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 5%;" class="text-center">Sexo</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 10%;" class="text-center">Celular</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 20%;">Dirección</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 10%;" class="text-center">Cargo</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 10%;" class="text-center">Salario</th>
+            <th style="border: 1px solid #a3cfbb !important; width: 15%;" class="text-center">Acciones</th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngFor="let u of listaPersonas" class="border-bottom">
-            <td class="ps-4 py-3">
-              <div class="d-flex align-items-center">
-                <div class="avatar-circle me-3 bg-primary-soft text-primary fw-bold">
-                  {{ (u.persona?.nombre_completo || u.name).charAt(0) }}
-                </div>
-                <div>
-                  <div class="fw-bold text-dark">{{ u.persona?.nombre_completo || u.name }}</div>
-                  <div class="text-muted small">{{ u.email }}</div>
-                </div>
-              </div>
+        <tbody class="bg-white">
+          <tr *ngFor="let p of personasFiltradas">
+            <td style="border: 1px solid #a3cfbb !important;" class="ps-3">
+              <div class="fw-bold text-dark">{{ p.persona?.nombre_completo || p.name }}</div>
+              <div class="text-muted" style="font-size: 0.75rem;">{{ p.email }}</div>
             </td>
-
-            <td>
-              <div class="text-dark fw-medium">{{ u.persona?.carnet_identidad || '---' }}</div>
-              <div class="text-muted x-small">{{ u.persona?.nacionalidad }}</div>
-            </td>
-
-            <td class="text-center">
-              <span class="badge rounded-pill" 
-                [ngClass]="u.persona?.genero === 'M' ? 'bg-info-soft text-info' : 'bg-danger-soft text-danger'">
-                <i class="bi" [ngClass]="u.persona?.genero === 'M' ? 'bi-gender-male' : 'bi-gender-female'"></i>
-                {{ u.persona?.genero || 'N/A' }}
+            <td style="border: 1px solid #a3cfbb !important;" class="text-center">{{ p.persona?.carnet_identidad || '---' }}</td>
+            <td style="border: 1px solid #a3cfbb !important;" class="text-center">
+              <span [style.color]="p.persona?.genero === 'M' ? '#0d6efd' : '#d63384'" class="fw-bold">
+                {{ p.persona?.genero === 'M' ? '♂' : '♀' }}
               </span>
             </td>
-
-            <td>
-              <div class="small"><i class="bi bi-telephone me-1 text-muted"></i> {{ u.persona?.telefono }}</div>
-              <div class="text-muted x-small text-truncate" style="max-width: 180px;">
-                <i class="bi bi-geo-alt me-1"></i> {{ u.persona?.direccion }}
+            <td style="border: 1px solid #a3cfbb !important;" class="text-center text-success fw-bold">{{ p.persona?.telefono || '---' }}</td>
+            <td style="border: 1px solid #a3cfbb !important;" class="text-muted small">{{ p.persona?.direccion || 'S/D' }}</td>
+            <td style="border: 1px solid #a3cfbb !important;" class="text-center">
+               <span style="background: #e8f5e9; color: #1a4f32; border: 1px solid #a3cfbb; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">
+                {{ p.persona?.tipo_trabajador || 'Personal' }}
+               </span>
+            </td>
+            <td style="border: 1px solid #a3cfbb !important;" class="text-center fw-bold text-dark">{{ p.persona?.tipo_salario || '0.00' }}</td>
+            
+            <td style="border: 1px solid #a3cfbb !important;" class="text-center">
+              <div class="d-flex justify-content-center gap-1">
+                <button (click)="verDetalles(p)" class="btn-dibujo ver" title="Ver todos los datos">
+                  <i class="bi bi-eye-fill"></i><span class="fb">👁</span>
+                </button>
+                <button (click)="prepararEdicion(p)" class="btn-dibujo edit" title="Editar">
+                  <i class="bi bi-pencil-fill"></i><span class="fb">✎</span>
+                </button>
+                <button (click)="eliminarPersona(p.id)" class="btn-dibujo delete" title="Eliminar">
+                  <i class="bi bi-trash3-fill"></i><span class="fb">✖</span>
+                </button>
               </div>
-            </td>
-
-            <td>
-              <span class="badge px-3 py-2" [ngClass]="{
-                'bg-success-soft text-success': u.persona?.tipo_trabajador === 'medico',
-                'bg-warning-soft text-warning': u.persona?.tipo_trabajador === 'enfermera',
-                'bg-primary-soft text-primary': u.persona?.tipo_trabajador === 'administrativo',
-                'bg-secondary-soft text-secondary': u.persona?.tipo_trabajador === 'manual'
-              }">
-                {{ u.persona?.tipo_trabajador | uppercase }}
-              </span>
-            </td>
-
-            <td class="text-end pe-4">
-              <div class="fw-bold text-dark">{{ u.persona?.tipo_salario }}</div>
-              <div class="text-primary small">Ítem: {{ u.persona?.numero_tipo_salario }}</div>
             </td>
           </tr>
         </tbody>

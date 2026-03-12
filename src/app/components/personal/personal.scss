@@ -1,41 +1,76 @@
-$dark-green: #1a4332; // Verde bosque oscuro
-$light-blue-hover: #f0f9ff; // Celeste muy claro
+/* --- COLORES E ICONOS --- */
+.text-hospital-green { color: #1a4f32 !important; }
+.bg-hospital-light { background-color: #f0f6f3 !important; }
+.bg-hospital-subtle { background-color: #e6eee9 !important; }
+.border-aqua { border: 1px solid #a3cfbb !important; }
 
-.hospital-container-premium {
-  background: white;
-  border: 3px solid $dark-green; // Encuadrado verde solicitado
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-
-  thead {
-    background-color: $dark-green;
-    color: white;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-  }
+.btn-group .btn:hover {
+    background-color: #28a745 !important;
+    color: white !important;
 }
 
-.row-hospital-hover {
-  transition: background-color 0.2s;
-  &:hover {
-    background-color: $light-blue-hover !important; // Impacto celeste al pasar el mouse
-  }
+/* Para asegurar que los iconos de Bootstrap se carguen */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css");
+
+/* BOTÓN NUEVO PERSONAL (Verde sólido solicitado) */
+.btn-nuevo-personal {
+    background-color: #28a745 !important;
+    color: white !important;
+    border-radius: 50px !important;
+    padding: 10px 24px !important;
+    font-weight: bold !important;
+    border: none !important;
+    transition: 0.3s;
+}
+.btn-nuevo-personal:hover {
+    background-color: #1e7e34 !important;
+    transform: translateY(-2px);
 }
 
-.badge-role {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
-
-  &[data-role="medico"] { color: #1e40af; background-color: #dbeafe; }
-  &[data-role="enfermera"] { color: #92400e; background-color: #fef3c7; }
-  &[data-role="administrativo"] { color: #065f46; background-color: #dcfce7; }
+/* BOTONES FILTRO (Verde Agua a Verde sólido) */
+.btn-filtro-aqua {
+    background-color: #e0f2f1 !important; /* Verde agua */
+    color: #00796b !important;
+    border: none !important;
+    padding: 8px 20px !important;
+    font-weight: 600 !important;
+}
+.btn-filtro-aqua:hover, .btn-filtro-aqua.active {
+    background-color: #28a745 !important; /* Verde sólido al pasar o estar activo */
+    color: white !important;
 }
 
-.btn-light-blue { background: #e0f2fe; color: #0369a1; border: none; }
-.btn-light-red { background: #fee2e2; color: #b91c1c; border: none; }
-.xx-small { font-size: 0.65rem; }
+/* TABLA EXCEL (Bordes verdes) */
+.card-excel {
+    border: 2px solid #1a4f32 !important;
+    border-radius: 12px !important;
+}
+.table-excel-grid td, .table-excel-grid th {
+    border: 1px solid #a3cfbb !important; /* Cuadrícula verde tipo Excel */
+    padding: 12px 8px !important;
+}
+
+/* BOTONES DE ACCIÓN (Los "Dibujos" visibles) */
+.btn-dibujo {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #dee2e6 !important;
+    background-color: #f8f9fa !important;
+    cursor: pointer !important;
+    transition: 0.2s;
+}
+/* Al pasar por encima se colorean */
+.btn-dibujo.edit:hover { background-color: #0d6efd !important; color: white !important; }
+.btn-dibujo.delete:hover { background-color: #dc3545 !important; color: white !important; }
+.btn-dibujo i { font-size: 1.1rem !important; }
+.btn-dibujo.edit { color: #0d6efd; }
+.btn-dibujo.delete { color: #dc3545; }
+
+/* EXTRAS */
+.avatar-excel { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.badge-cargo { background: #e8f5e9; color: #1a4f32; border: 1px solid #a3cfbb; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+.x-small { font-size: 0.72rem; }
