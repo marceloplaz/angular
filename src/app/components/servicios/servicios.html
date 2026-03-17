@@ -1,1 +1,96 @@
-<p>servicios works!</p>
+<div class="container-fluid mt-3">
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold text-success">
+        <i class="bi bi-hospital me-2"></i>Gestión de Servicios
+      </h5>
+      <button (click)="toggleFormulario()" class="btn btn-success btn-sm px-3 shadow-sm">
+        <i class="bi" [ngClass]="mostrarFormulario ? 'bi-dash-circle' : 'bi-plus-circle'"></i>
+        {{ mostrarFormulario ? ' Cancelar' : ' Nuevo Servicio' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="mostrarFormulario" class="card shadow-sm border-0 mb-4 animate__animated animate__fadeIn">
+    <div class="card-body bg-light">
+      <h6 class="fw-bold text-muted mb-3 text-uppercase small">{{operacion}} Unidad de Servicio</h6>
+      <form [formGroup]="form" (ngSubmit)="guardarServicio()" class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="small fw-bold text-muted">NOMBRE DEL SERVICIO</label>
+          <input formControlName="nombre" type="text" class="form-control form-control-sm" placeholder="Ej: Pediatría">
+        </div>
+        <div class="col-md-5">
+          <label class="small fw-bold text-muted">DESCRIPCIÓN DEL ÁREA</label>
+          <input formControlName="descripcion" type="text" class="form-control form-control-sm" placeholder="Descripción breve...">
+        </div>
+        <div class="col-md-2">
+          <label class="small fw-bold text-muted">CAP. PACIENTES</label>
+          <input formControlName="cantidad_pacientes" type="number" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-2">
+          <button [disabled]="form.invalid || loading" type="submit" class="btn btn-success btn-sm w-100 shadow-sm">
+            <i class="bi bi-save me-1"></i> {{operacion === 'Registrar' ? 'GUARDAR' : 'ACTUALIZAR'}}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow border-0">
+    <div class="card-body">
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-success" role="status"></div>
+      </div>
+
+      <div class="table-responsive" *ngIf="!loading">
+        <table class="table table-hover align-middle">
+          <thead class="table-light text-uppercase small fw-bold">
+            <tr>
+              <th class="ps-3">ID</th>
+              <th>Servicio</th>
+              <th>Descripción</th>
+              <th class="text-center">Capacidad</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of listServicios">
+              <td class="ps-3 text-muted">#{{s.id}}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2 fw-bold" 
+                       style="width: 32px; height: 32px; font-size: 0.8rem;">
+                    {{s.nombre.substring(0,1).toUpperCase()}}
+                  </div>
+                  <span class="fw-bold">{{s.nombre}}</span>
+                </div>
+              </td>
+              <td class="text-muted small">{{s.descripcion || 'Sin descripción'}}</td>
+              <td class="text-center">
+                <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3">
+                  <i class="bi bi-people-fill me-1"></i> {{s.cantidad_pacientes}}
+                </span>
+              </td>
+             <td class="text-end pe-3">
+  <div class="btn-group gap-1">
+    <button class="btn btn-light btn-sm text-primary border shadow-sm">
+      <i class="bi bi-eye"></i>
+    </button>
+    <button (click)="editarServicio(s)" class="btn btn-light btn-sm text-warning border shadow-sm">
+      <i class="bi bi-pencil-square"></i>
+    </button>
+    <button (click)="asignarPersonal(s.id!)" class="btn btn-light btn-sm text-info border shadow-sm">
+      <i class="bi bi-person-plus-fill"></i>
+    </button>
+    <button (click)="eliminarServicio(s.id!)" class="btn btn-light btn-sm text-danger border shadow-sm">
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
+</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
