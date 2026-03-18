@@ -1,56 +1,118 @@
-<div class="container mt-4">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Gestión de Categorías</h5>
+<div class="container-fluid py-4 bg-light">
+  <div class="row">
+    
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-plus-circle me-2"></i>Nueva Categoría</h6>
         </div>
         <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Nombre de Categoría</label>
-                    <input type="text" class="form-control" [(ngModel)]="nuevaCat.nombre" placeholder="Ej: Médicos Especialistas">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">Nivel</label>
-                    <input type="number" class="form-control" [(ngModel)]="nuevaCat.nivel" min="1" max="3">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Descripción</label>
-                    <input type="text" class="form-control" [(ngModel)]="nuevaCat.descripcion" placeholder="Opcional...">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-success w-100" (click)="guardar()">
-                        <i class="fas fa-save me-1"></i> Guardar
-                    </button>
-                </div>
-            </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Nombre de Categoría</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevaCat.nombre" placeholder="Ej: Especialistas">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Nivel Jerárquico</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevaCat.nivel" min="1" max="3">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Descripción (Opcional)</label>
+            <textarea class="form-control form-control-sm" [(ngModel)]="nuevaCat.descripcion" rows="2"></textarea>
+          </div>
+          <button class="btn btn-primary btn-sm w-100 shadow-sm" (click)="guardar()">
+            <i class="fas fa-save me-1"></i> Guardar Registro
+          </button>
         </div>
+      </div>
     </div>
 
-    <div class="table-responsive shadow-sm">
-        <table class="table table-hover align-middle bg-white">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Nivel</th>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th class="text-center">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let cat of categorias">
-                    <td>{{ cat.id }}</td>
-                    <td><span class="badge bg-info text-dark">Nivel {{ cat.nivel }}</span></td>
-                    <td><strong>{{ cat.nombre }}</strong></td>
-                    <td>{{ cat.descripcion || 'Sin descripción' }}</td>
-                    <td class="text-center">
-                       
-                    </td>
-                </tr>
-                <tr *ngIf="categorias.length === 0">
-                    <td colspan="5" class="text-center text-muted">No hay categorías registradas.</td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="col-md-9">
+      <div class="row">
+        
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+              <h6 class="mb-0 small fw-bold"><i class="fas fa-user-md me-2"></i>MÉDICOS (Cat. 1)</h6>
+              <span class="badge bg-white text-primary rounded-pill">{{ medicos.length }}</span>
+            </div>
+            <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+              <div *ngFor="let u of medicos" class="list-group-item list-group-item-action border-0 border-bottom">
+                <div class="d-flex align-items-center">
+                  <div class="avatar-circle bg-primary-subtle me-3 text-center">
+                    <i class="fas fa-user text-primary small"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark small">{{ u.name }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">{{ u.email }}</div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="medicos.length === 0" class="p-4 text-center text-muted small">No hay médicos registrados.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
+              <h6 class="mb-0 small fw-bold"><i class="fas fa-user-nurse me-2"></i>ENFERMERAS (Cat. 2)</h6>
+              <span class="badge bg-white text-success rounded-pill">{{ enfermeras.length }}</span>
+            </div>
+            <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+              <div *ngFor="let u of enfermeras" class="list-group-item list-group-item-action border-0 border-bottom">
+                <div class="d-flex align-items-center">
+                  <div class="avatar-circle bg-success-subtle me-3 text-center">
+                    <i class="fas fa-user text-success small"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark small">{{ u.name }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">{{ u.email }}</div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="enfermeras.length === 0" class="p-4 text-center text-muted small">No hay enfermeras registradas.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center py-3">
+              <h6 class="mb-0 small fw-bold"><i class="fas fa-broom me-2"></i>MANUAL (Cat. 3)</h6>
+              <span class="badge bg-dark text-white rounded-pill">{{ personalManual.length }}</span>
+            </div>
+            <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+              <div *ngFor="let u of personalManual" class="list-group-item list-group-item-action border-0 border-bottom">
+                <div class="d-flex align-items-center">
+                  <div class="avatar-circle bg-warning-subtle me-3 text-center">
+                    <i class="fas fa-user text-warning small"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark small">{{ u.name }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">{{ u.email }}</div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="personalManual.length === 0" class="p-4 text-center text-muted small">No hay personal manual.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
+
+  </div>
 </div>
+
+<style>
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    border-radius: 50%;
+  }
+  .bg-primary-subtle { background-color: #cfe2ff; }
+  .bg-success-subtle { background-color: #d1e7dd; }
+  .bg-warning-subtle { background-color: #fff3cd; }
+  .list-group-item { border-color: #f0f0f0; }
+</style>
