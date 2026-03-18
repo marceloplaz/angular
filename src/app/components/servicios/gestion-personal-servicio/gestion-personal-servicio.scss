@@ -1,0 +1,57 @@
+.card-header-servicio {
+  background: white;
+  border-left: 6px solid #28a745;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+
+  .icon-box {
+    background: #e9f7ef;
+    color: #28a745;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+}
+
+.avatar-info {
+  width: 40px;
+  height: 40px;
+  background: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #495057;
+  font-size: 12px;
+}
+
+.table {
+  thead th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #adb5bd;
+    border: none;
+  }
+  tbody td {
+    border-color: #f8f9fa;
+  }
+}
+
+.bg-success-subtle {
+  background-color: #e8f5e9 !important;
+}
+
+.list-group-item-action {
+  cursor: pointer;
+  &:hover {
+    background-color: #f1f8e9;
+  }
+}

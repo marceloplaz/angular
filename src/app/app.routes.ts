@@ -8,11 +8,12 @@ import { DashboardComponent } from './components/dashboard/dashboard';
 // Componentes de Gestión
 import { PersonalComponent } from './components/personal/personal';
 import { NuevoPersonalComponent } from './components/personal/nuevo-personal/nuevo-personal';
-// Importación correcta del nuevo componente
-// Debe ser exactamente igual al nombre de la clase que exportaste
 import { VerPersonalComponent } from './components/personal/ver-personal/ver-personal';
 import { TurnosComponent } from './components/turnos/turnos';
 import { ServiciosComponent } from './components/servicios/servicios';
+// IMPORTA EL NUEVO COMPONENTE AQUÍ
+import { GestionPersonalServicioComponent } from './components/servicios/gestion-personal-servicio/gestion-personal-servicio'; 
+
 import { CategoriasComponent } from './components/categorias/categorias';
 import { IncidenciasComponent } from './components/incidencias/incidencias';
 import { VacacionesComponent } from './components/vacaciones/vacaciones';
@@ -26,10 +27,14 @@ export const routes: Routes = [
     children: [
       { path: 'personal', component: PersonalComponent },
       { path: 'personal/nuevo', component: NuevoPersonalComponent },
-      // RUTA CORREGIDA: Se añade el parámetro :id y se corrige el nombre del componente
       { path: 'personal/ver/:id', component: VerPersonalComponent }, 
       { path: 'turnos', component: TurnosComponent },
+      
+      // RUTAS DE SERVICIOS
       { path: 'servicios', component: ServiciosComponent },
+      // Nueva ruta para la gestión de personal específica de un servicio
+      { path: 'servicios/:id/asignar', component: GestionPersonalServicioComponent }, 
+      
       { path: 'categorias', component: CategoriasComponent },
       { path: 'incidencias', component: IncidenciasComponent },
       { path: 'vacaciones', component: VacacionesComponent },

@@ -1,1 +1,56 @@
-<p>categorias works!</p>
+<div class="container mt-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Gestión de Categorías</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Nombre de Categoría</label>
+                    <input type="text" class="form-control" [(ngModel)]="nuevaCat.nombre" placeholder="Ej: Médicos Especialistas">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Nivel</label>
+                    <input type="number" class="form-control" [(ngModel)]="nuevaCat.nivel" min="1" max="3">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <input type="text" class="form-control" [(ngModel)]="nuevaCat.descripcion" placeholder="Opcional...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-success w-100" (click)="guardar()">
+                        <i class="fas fa-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nivel</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let cat of categorias">
+                    <td>{{ cat.id }}</td>
+                    <td><span class="badge bg-info text-dark">Nivel {{ cat.nivel }}</span></td>
+                    <td><strong>{{ cat.nombre }}</strong></td>
+                    <td>{{ cat.descripcion || 'Sin descripción' }}</td>
+                    <td class="text-center">
+                       
+                    </td>
+                </tr>
+                <tr *ngIf="categorias.length === 0">
+                    <td colspan="5" class="text-center text-muted">No hay categorías registradas.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

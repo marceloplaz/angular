@@ -21,9 +21,11 @@ getServicios(): Observable<any> {
     return this.http.post(`${this.myAppUrl}/${this.myApiUrl}`, servicio);
   }
 
-  updateServicio(id: number, servicio: Servicio): Observable<void> {
-    return this.http.put<void>(`${this.myAppUrl}/${this.myApiUrl}/${id}`, servicio);
-  }
+  // servicios.service.ts
+updateServicio(id: number, servicio: Servicio): Observable<void> {
+  // Usa solo UNA barra para separar la URL base del endpoint y el ID
+  return this.http.put<void>(`${this.myAppUrl}/${this.myApiUrl}/${id}`, servicio);
+}
 
   deleteServicio(id: number): Observable<any> {
     return this.http.delete(`${this.myAppUrl}/${this.myApiUrl}/${id}`);

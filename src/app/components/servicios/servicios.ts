@@ -1,13 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterLink, RouterModule } from '@angular/router';
 import { ServicioService } from '../../services/servicios'; 
 import { Servicio } from '../../interfaces/servicio';
 
 @Component({
   selector: 'app-servicios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    RouterModule
+  ],
   templateUrl: './servicios.html',
   styleUrl: './servicios.scss'
 })
@@ -16,7 +23,7 @@ export class ServiciosComponent implements OnInit {
   listServicios: Servicio[] = [];
   loading: boolean = false;
   form: FormGroup;
-  idSeleccionado: number | undefined;
+  id: number | undefined;
   operacion: string = 'Registrar';
 
   constructor(
@@ -33,31 +40,30 @@ export class ServiciosComponent implements OnInit {
   ngOnInit(): void {
     this.obtenerServicios();
   }
-obtenerServicios() {
-  this.loading = true;
-  this._servicioService.getServicios().subscribe({
-    next: (response: any) => {
-      // AQUÍ: Debes asignar response.data para que la tabla se llene
-      this.listServicios = response.data; 
-      this.loading = false;
-    },
-    error: (e) => {
-      this.loading = false;
-      console.error('La ruta fallida es: ', e.url);
-    }
-  });
-}
+
+  obtenerServicios() {
+    this.loading = true;
+    this._servicioService.getServicios().subscribe({
+      next: (response: any) => {
+        this.listServicios = response.data; 
+        this.loading = false;
+      },
+      error: (e) => {
+        this.loading = false;
+        console.error('Error al cargar servicios: ', e);
+      }
+    });
+  }
 
   toggleFormulario() {
     this.mostrarFormulario = !this.mostrarFormulario;
     if (!this.mostrarFormulario) {
       this.form.reset({ cantidad_pacientes: 0 });
+      this.operacion = 'Registrar';
+      this.id = undefined;
     }
   }
 
-  
-
-  // ACCIÓN: ELIMINAR
   eliminarServicio(id: number) {
     if (confirm('¿Está seguro de eliminar este servicio?')) {
       this.loading = true;
@@ -67,35 +73,33 @@ obtenerServicios() {
     }
   }
 
-  // ACCIÓN: PREPARAR EDICIÓN (Cargar datos en el formulario)
   editarServicio(servicio: Servicio) {
-    this.operacion = 'Modificar';
-    this.idSeleccionado = servicio.id;
+    this.id = servicio.id;
+    this.operacion = 'Editar';
     this.mostrarFormulario = true;
-    
-    // Rellenamos el formulario con los valores actuales
-    this.form.setValue({
+    this.form.patchValue({
       nombre: servicio.nombre,
       descripcion: servicio.descripcion,
       cantidad_pacientes: servicio.cantidad_pacientes
     });
   }
 
-  // ACCIÓN: GUARDAR (Sirve para Nuevo y Editar)
   guardarServicio() {
     if (this.form.invalid) return;
 
-    const servicio: Servicio = this.form.value;
-    this.loading = true;
+    const servicio: any = {
+      nombre: this.form.value.nombre,
+      descripcion: this.form.value.descripcion,
+      cantidad_pacientes: this.form.value.cantidad_pacientes
+    };
 
-    if (this.idSeleccionado !== undefined) {
-      // EDITAR
-      this._servicioService.updateServicio(this.idSeleccionado, servicio).subscribe({
+    this.loading = true;
+    if (this.id !== undefined) {
+      this._servicioService.updateServicio(this.id, servicio).subscribe({
         next: () => this.finalizarOperacion(),
         error: () => this.loading = false
       });
     } else {
-      // REGISTRAR NUEVO
       this._servicioService.createServicio(servicio).subscribe({
         next: () => this.finalizarOperacion(),
         error: () => this.loading = false
@@ -106,15 +110,9 @@ obtenerServicios() {
   finalizarOperacion() {
     this.loading = false;
     this.mostrarFormulario = false;
-    this.idSeleccionado = undefined;
+    this.id = undefined;
     this.operacion = 'Registrar';
     this.form.reset({ cantidad_pacientes: 0 });
     this.obtenerServicios();
-  }
-
-  // ACCIÓN: ASIGNAR PERSONAL (Lógica base)
-  asignarPersonal(id: number) {
-    console.log('Abriendo asignación para el servicio:', id);
-    // Aquí podrías abrir un modal o navegar a una ruta de gestión de personal
   }
 }
