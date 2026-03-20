@@ -102,3 +102,27 @@
     color: #2d5a42;
     font-weight: 600;
 }
+/* Estilo para los sub-ítems del menú */
+.nav-group .nav-item.small {
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+    opacity: 0.9;
+}
+
+/* Línea sutil a la izquierda para guiar el submenú */
+.border-start {
+    border-width: 2px !important;
+    border-color: #a3cfbb !important; /* El verde que estás usando en las tablas */
+}
+
+/* Animación de la flecha cuando se despliega (opcional) */
+.nav-item[aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+    transition: transform 0.3s;
+}
+
+/* Efecto hover suave para sub-ítems */
+.nav-group .nav-item.small:hover {
+    background-color: #f0f6f3;
+    color: #1a4f32;
+}

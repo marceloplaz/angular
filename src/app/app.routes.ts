@@ -17,7 +17,6 @@ import { GestionPersonalServicioComponent } from './components/servicios/gestion
 import { CategoriasComponent } from './components/categorias/categorias';
 import { IncidenciasComponent } from './components/incidencias/incidencias';
 import { VacacionesComponent } from './components/vacaciones/vacaciones';
-
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { 
@@ -25,19 +24,28 @@ export const routes: Routes = [
     component: DashboardComponent, 
     canActivate: [authGuard],
     children: [
-      { path: 'personal', component: PersonalComponent },
-      { path: 'personal/nuevo', component: NuevoPersonalComponent },
-      { path: 'personal/ver/:id', component: VerPersonalComponent }, 
-      { path: 'turnos', component: TurnosComponent },
-      
-      // RUTAS DE SERVICIOS
+      // SECCIÓN PERSONAL
+      {
+        path: 'personal',
+  children: [
+    { path: '', component: PersonalComponent },
+    { path: 'nuevo', component: NuevoPersonalComponent },
+    { path: 'editar/:id', component: NuevoPersonalComponent }, // <-- Añade esta línea
+    { path: 'ver/:id', component: VerPersonalComponent },
+        ]
+      },
+
+      // SECCIÓN SERVICIOS
       { path: 'servicios', component: ServiciosComponent },
-      // Nueva ruta para la gestión de personal específica de un servicio
       { path: 'servicios/:id/asignar', component: GestionPersonalServicioComponent }, 
       
+      // OTRAS SECCIONES
+      { path: 'turnos', component: TurnosComponent },
       { path: 'categorias', component: CategoriasComponent },
       { path: 'incidencias', component: IncidenciasComponent },
       { path: 'vacaciones', component: VacacionesComponent },
+      
+      // REDIRECCIÓN POR DEFECTO DENTRO DEL DASHBOARD
       { path: '', redirectTo: 'personal', pathMatch: 'full' }
     ]
   },

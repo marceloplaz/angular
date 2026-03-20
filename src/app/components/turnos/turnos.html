@@ -1,1 +1,73 @@
-<p>turnos works!</p>
+<div class="p-4" style="background-color: #f4f7f6; min-height: 100vh;">
+  
+  <div class="card shadow-sm border-0 mb-4 border-top-hospital">
+    <div class="card-body bg-hospital-light rounded">
+      <div class="grid p-fluid">
+<div class="col-12 md:col-3">
+  <label class="small text-muted">SERVICIO</label>
+  <select class="form-select form-select-sm" 
+          [(ngModel)]="filtro.servicio_id" 
+          (change)="cargarTurnos()"> <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
+  </select>
+</div>
+        <div class="col-12 md:col-2">
+          <label class="small text-muted">AÑO</label>
+          <input type="text" class="form-control form-control-sm bg-white" [value]="filtro.anio" readonly>
+        </div>
+        <div class="col-12 md:col-2">
+          <label class="small text-muted">MES</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filtro.mes_id" (change)="onCambioMes(filtro.mes_id)">
+            <option *ngFor="let m of mesesDisponibles" [value]="m.id">{{ m.nombre }}</option>
+          </select>
+        </div>
+        <div class="col-12 md:col-5">
+          <label class="small text-muted">SEMANA</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filtro.semana_id" (change)="cargarTurnos()">
+            <option *ngFor="let s of semanasDisponibles" [value]="s.id">
+              Semana {{ s.numero_semana }} ({{ s.fecha_inicio }} - {{ s.fecha_fin }})
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table mb-0 text-center align-middle">
+        <thead class="table-hospital text-white">
+          <tr>
+            <th class="py-3 text-start ps-4" style="width: 250px;">MÉDICO / PERSONAL</th>
+            <th *ngFor="let dia of diasSemana">{{ dia }}</th>
+            <th class="bg-dark text-white">HRS</th>
+          </tr>
+        </thead>
+       <tbody class="bg-white text-center">
+  <tr *ngIf="personalAgrupado.length === 0 && !cargando">
+    <td colspan="9" class="py-5 text-muted italic">
+      No hay personal registrado en el servicio seleccionado.
+    </td>
+  </tr>
+
+  <ng-container *ngFor="let grupo of personalAgrupado">
+    <tr class="bg-light border-bottom">
+      <td colspan="9" class="text-start fw-bold ps-4 py-2 text-success">
+        <i class="pi pi-users me-2"></i>{{ grupo.categoria | uppercase }}
+      </td>
+    </tr>
+
+    <tr *ngFor="let p of grupo.personal" class="border-bottom">
+      <td class="text-start fw-bold p-3 border-end">{{ p.nombre | titlecase }}</td>
+      <td *ngFor="let dia of diasSemana" class="p-2 border-end">
+        <button class="btn btn-link text-muted p-0 opacity-25" (click)="abrirModalAsignar(p, dia)">
+          <i class="pi pi-plus-circle fs-4"></i>
+        </button>
+      </td>
+      <td class="fw-bold bg-light">0h</td>
+    </tr>
+  </ng-container>
+</tbody>
+      </table>
+    </div>
+  </div>
+</div>

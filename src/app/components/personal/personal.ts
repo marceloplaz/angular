@@ -7,8 +7,9 @@ import { PersonaService } from '../../services/persona';
 @Component({
   selector: 'app-personal',
   standalone: true,
-  imports: [CommonModule, FormsModule], // Quitamos RouterLink porque no se usa
+  imports: [CommonModule, FormsModule, RouterLink], // Quitamos RouterLink porque no se usa
   templateUrl: './personal.html'
+  
 })
 export class PersonalComponent implements OnInit {
   private _personaService = inject(PersonaService);

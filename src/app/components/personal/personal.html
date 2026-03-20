@@ -4,9 +4,9 @@
     <div>
       <h1 class="h2 fw-bold mb-0" style="color: #1a4f32 !important;">GESTIÓN DE PERSONAL</h1>
     </div>
-    <button (click)="abrirModalNuevo()" class="btn shadow-sm" 
-       style="background-color: #28a745 !important; color: white !important; border-radius: 50px; padding: 8px 20px; font-weight: bold; border: none;">
-      <i class="bi bi-plus-circle me-2"></i> Nuevo Personal
+
+    <button class="btn btn-success shadow-sm rounded-pill px-4" routerLink="nuevo">
+      <i class="bi bi-person-plus-fill me-2"></i>Nuevo Personal
     </button>
   </div>
 
@@ -75,10 +75,10 @@
             </td>
             <td style="border: 1px solid #a3cfbb !important;" class="text-center">
               <div class="d-flex justify-content-center gap-2">
-                <button (click)="verDetalles(p)" class="btn btn-sm btn-outline-success" title="Ver Detalles">
+                <button [routerLink]="['ver', p.id]" class="btn btn-sm btn-outline-success" title="Ver Detalles">
                   <i class="bi bi-eye-fill"></i>
                 </button>
-                <button (click)="prepararEdicion(p)" class="btn btn-sm btn-outline-warning" title="Editar">
+                <button [routerLink]="['editar', p.id]" class="btn btn-sm btn-outline-warning" title="Editar">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
                 <button (click)="eliminarPersona(p.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
@@ -92,157 +92,4 @@
     </div>
   </div>
 
-  <div class="modal fade show" [class.d-block]="mostrarModal" tabindex="-1" *ngIf="mostrarModal" 
-       style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: block;">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-      <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; background-color: #ffffff; overflow: hidden;">
-        
-        <div class="modal-header border-bottom px-4 py-3 bg-white">
-          <h5 class="modal-title fw-bold text-success d-flex align-items-center">
-            <i class="bi me-2" [ngClass]="editando ? 'bi-pencil-square' : 'bi-person-plus-fill'"></i>
-            {{ editando ? 'EDITAR ESPECIALISTA' : 'REGISTRAR NUEVO ESPECIALISTA' }}
-          </h5>
-          <button type="button" class="btn-close" (click)="cerrarModal()"></button>
-        </div>
-
-        <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto;">
-          <form #personalForm="ngForm">
-            
-            <div class="mb-4">
-              <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">Información de Cuenta</h6>
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Nombre de Usuario (Login)</label>
-                  <input type="text" class="form-control border-success-subtle" name="name" [(ngModel)]="nuevoUsuario.name">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Correo Electrónico</label>
-                  <input type="email" class="form-control border-success-subtle" name="email" [(ngModel)]="nuevoUsuario.email">
-                </div>
-             <div class="row g-3 mb-3">
-  <div class="col-md-6">
-    <label class="form-label small fw-bold">Contraseña</label>
-    <input type="password" class="form-control" name="password" 
-           [(ngModel)]="nuevoUsuario.password" placeholder="Mínimo 8 caracteres">
   </div>
-  <div class="col-md-6">
-    <label class="form-label small fw-bold">Confirmar Contraseña</label>
-    <input type="password" class="form-control" name="password_confirmation" 
-           [(ngModel)]="nuevoUsuario.password_confirmation">
-  </div>
-</div>
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">Información Personal</h6>
-              <div class="row g-3">
-                <div class="col-md-8">
-                  <label class="form-label small fw-bold">Nombre Completo</label>
-                  <input type="text" class="form-control border-success-subtle" name="nombre_completo" [(ngModel)]="nuevoUsuario.nombre_completo">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">C.I.</label>
-                  <input type="text" class="form-control border-success-subtle" name="carnet_identidad" [(ngModel)]="nuevoUsuario.carnet_identidad">
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small fw-bold">Género</label>
-                  <select class="form-select border-success-subtle" name="genero" [(ngModel)]="nuevoUsuario.genero">
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small fw-bold">Teléfono / Celular</label>
-                  <input type="text" class="form-control border-success-subtle" name="telefono" [(ngModel)]="nuevoUsuario.telefono">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold">Dirección de Domicilio</label>
-                  <input type="text" class="form-control border-success-subtle" name="direccion" [(ngModel)]="nuevoUsuario.direccion">
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">Información Administrativa</h6>
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Categoría / Cargo</label>
-                  <select class="form-select border-success-subtle" name="categoria_id" [(ngModel)]="nuevoUsuario.categoria_id">
-                    <option value="1">Médicos</option>
-                    <option value="2">Enfermera</option>
-                    <option value="3">Administrativo</option>
-                    <option value="4">Manual</option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Tipo de Salario</label>
-                  <select class="form-select border-success-subtle" name="tipo_salario" [(ngModel)]="nuevoUsuario.tipo_salario">
-                    <option value="TGN">TGN</option>
-                    <option value="SUS">SUS</option>
-                    <option value="CONTRATO">CONTRATO</option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Monto Salario (Bs.)</label>
-                  <input type="number" class="form-control border-success-subtle" name="numero_tipo_salario" [(ngModel)]="nuevoUsuario.numero_tipo_salario">
-                </div>
-              </div>
-            </div>
-
-          </form>
-        </div>
-
-        <div class="modal-footer border-0 p-4" style="background-color: #f8f9fa;">
-          <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" (click)="cerrarModal()">Cancelar</button>
-          <button type="button" class="btn btn-success px-5 fw-bold shadow-sm rounded-pill" (click)="guardarUsuario()">
-            {{ editando ? 'Guardar Cambios' : 'Registrar Personal' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade show" [class.d-block]="mostrarDetallesModal" tabindex="-1" *ngIf="mostrarDetallesModal" 
-       style="background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: block;">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-        
-        <div class="modal-header bg-success text-white p-4">
-          <h5 class="modal-title fw-bold m-0">EXPEDIENTE DEL ESPECIALISTA</h5>
-          <button type="button" class="btn-close btn-close-white" (click)="cerrarDetalles()"></button>
-        </div>
-
-        <div class="modal-body p-0 bg-light">
-          <div class="p-4 bg-white mb-3 shadow-sm">
-             <div class="d-flex align-items-center mb-3">
-                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem;">
-                   {{ pSeleccionado?.name?.charAt(0) | uppercase }}
-                </div>
-                <div class="ms-3">
-                   <h4 class="fw-bold mb-0 text-dark">{{ personaDetalle?.nombre_completo }}</h4>
-                   <span class="badge bg-success-subtle text-success border border-success">{{ personaDetalle?.tipo_trabajador }}</span>
-                </div>
-             </div>
-             
-             <div class="row g-4 mt-2">
-                <div class="col-md-6">
-                   <p class="mb-1 text-muted small fw-bold text-uppercase">Correo de acceso</p>
-                   <p class="fw-semibold">{{ pSeleccionado?.email }}</p>
-                </div>
-                <div class="col-md-6">
-                   <p class="mb-1 text-muted small fw-bold text-uppercase">Cédula de Identidad</p>
-                   <p class="fw-semibold">{{ personaDetalle?.carnet_identidad }}</p>
-                </div>
-             </div>
-          </div>
-        </div>
-
-        <div class="modal-footer border-0 bg-white justify-content-center p-4">
-          <button type="button" class="btn btn-outline-success rounded-pill px-5 fw-bold" (click)="cerrarDetalles()">Cerrar Expediente</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
