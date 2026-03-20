@@ -1,7 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Persona } from '../interfaces/persona';
 import { environment } from '../../environments/environment.development';
 
 @Injectable({
@@ -9,13 +8,17 @@ import { environment } from '../../environments/environment.development';
 })
 export class PersonaService {
   private http = inject(HttpClient);
-  // Se cambia a /usuarios para que coincida con la ruta funcional de tu API
+  
+  // Usamos API_URL de forma consistente
   private readonly API_URL = `${environment.apiUrl}/usuarios`; 
 
-  // Función privada para obtener los headers con el token
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
-    return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return new HttpHeaders({ 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json' 
+    });
   }
 
   getPersonas(): Observable<any> {
@@ -26,13 +29,18 @@ export class PersonaService {
     return this.http.get<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
   }
 
-  crearPersona(persona: Persona): Observable<any> {
-    return this.http.post<any>(this.API_URL, persona, { headers: this.getHeaders() });
+  /**
+   * Registra un nuevo usuario con su respectiva persona y rol.
+   * Acepta el objeto anidado del Send Request
+   */
+  crearPersona(datos: any): Observable<any> {
+    // CORRECCIÓN: Se usa this.API_URL y se agregan los headers con el token
+    return this.http.post<any>(this.API_URL, datos, { headers: this.getHeaders() });
   }
 
   updatePersona(id: number, persona: any): Observable<any> {
-  return this.http.put<any>(`${this.API_URL}/${id}`, persona, { headers: this.getHeaders() });
-}
+    return this.http.put<any>(`${this.API_URL}/${id}`, persona, { headers: this.getHeaders() });
+  }
 
   deletePersona(id: number): Observable<any> {
     return this.http.delete<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });

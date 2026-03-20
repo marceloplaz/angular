@@ -1,101 +1,98 @@
-<div class="container-fluid py-4 bg-light-hospital">
-    <div class="row align-items-center mb-4 px-lg-5">
-        <div class="col-4">
-            <a routerLink="/dashboard/personal" class="btn-volver">
-                <i class="bi bi-arrow-left-circle"></i> <span>Volver al Listado</span>
-            </a>
+<div class="container-fluid py-4">
+  <form class="shadow-lg p-4 bg-white rounded-4 mx-lg-5">
+    
+    <div class="p-3 mb-4 rounded-3 border-start border-4 border-info bg-light">
+      <h6 class="text-info fw-bold mb-3">Acceso al Sistema</h6>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Usuario (Login)</label>
+          <input type="text" name="u_name" [(ngModel)]="nuevoUsuario.name" class="form-control form-control-sm">
         </div>
-        <div class="col-4 text-center">
-            <h2 class="hospital-title-centered mb-0">
-                <i class="bi bi-person-plus-fill"></i> Registro de Personal
-            </h2>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Email</label>
+          <input type="email" name="u_email" [(ngModel)]="nuevoUsuario.email" class="form-control form-control-sm">
         </div>
-        <div class="col-4"></div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Contraseña</label>
+          <input type="password" name="u_pass" [(ngModel)]="nuevoUsuario.password" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Confirmar Contraseña</label>
+          <input type="password" name="u_conf" [(ngModel)]="nuevoUsuario.password_confirmation" class="form-control form-control-sm">
+        </div>
+      </div>
     </div>
 
-    <form (ngSubmit)="guardar()" #personalForm="ngForm" class="hospital-form-container shadow-sm">
-        <div class="form-section bg-celeste-light">
-            <h5 class="section-title"><i class="bi bi-shield-lock"></i> Credenciales de Acceso</h5>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Correo electrónico institucional</label>
-                    <input type="email" name="email" [(ngModel)]="nuevoUsuario.email" class="form-control hospital-control" placeholder="@gmail.com" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Contraseña temporal</label>
-                    <input type="password" name="password" [(ngModel)]="nuevoUsuario.password" class="form-control hospital-control" placeholder="contraseña" required>
-                </div>
-            </div>
+    <div class="p-3 mb-4 rounded-3 border-start border-4 border-success bg-light">
+      <h6 class="text-success fw-bold mb-3">Información Personal</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Nombre Completo</label>
+          <input type="text" name="p_nom" [(ngModel)]="nuevoUsuario.persona.nombre_completo" class="form-control form-control-sm">
         </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">C.I.</label>
+          <input type="text" name="p_ci" [(ngModel)]="nuevoUsuario.persona.carnet_identidad" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Género</label>
+          <select name="p_gen" [(ngModel)]="nuevoUsuario.persona.genero" class="form-select form-select-sm">
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">F. Nacimiento</label>
+          <input type="date" name="p_fec" [(ngModel)]="nuevoUsuario.persona.fecha_nacimiento" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Teléfono</label>
+          <input type="text" name="p_tel" [(ngModel)]="nuevoUsuario.persona.telefono" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Nacionalidad</label>
+          <input type="text" name="p_nac" [(ngModel)]="nuevoUsuario.persona.nacionalidad" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label small fw-bold">Dirección de Domicilio</label>
+          <input type="text" name="p_dir" [(ngModel)]="nuevoUsuario.persona.direccion" class="form-control form-control-sm">
+        </div>
+      </div>
+    </div>
 
-        <div class="form-section">
-            <h5 class="section-title text-success"><i class="bi bi-person-vcard"></i> Datos del Empleado</h5>
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <label class="form-label">Nombre Completo</label>
-                    <input type="text" name="nombre_completo" [(ngModel)]="nuevoUsuario.nombre_completo" class="form-control hospital-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">C.I. / Documento</label>
-                    <input type="text" name="carnet_identidad" [(ngModel)]="nuevoUsuario.carnet_identidad" class="form-control hospital-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nacionalidad</label>
-                    <input type="text" name="nacionalidad" [(ngModel)]="nuevoUsuario.nacionalidad" class="form-control hospital-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Género</label>
-                    <select name="genero" [(ngModel)]="nuevoUsuario.genero" class="form-select hospital-control">
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Teléfono / Celular</label>
-                    <input type="text" name="telefono" [(ngModel)]="nuevoUsuario.telefono" class="form-control hospital-control">
-                </div>
-            </div>
+    <div class="p-3 mb-4 rounded-3 border-start border-4 border-warning bg-light">
+      <h6 class="text-warning fw-bold mb-3">Gestión Administrativa</h6>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Categoría / Cargo</label>
+          <select name="p_trab" [(ngModel)]="nuevoUsuario.persona.tipo_trabajador" class="form-select form-select-sm">
+            <option value="Medico">Médicos</option>
+            <option value="Enfermera">Enfermera</option>
+            <option value="Manual">Manual</option>
+          </select>
         </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Tipo de Salario</label>
+          <select name="p_tsal" [(ngModel)]="nuevoUsuario.persona.tipo_salario" class="form-select form-select-sm">
+            <option value="TGN">TGN</option>
+            <option value="Propio">Propios</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Monto Salario (Bs.)</label>
+          <input type="number" name="p_sueldo" [(ngModel)]="nuevoUsuario.persona.numero_tipo_salario" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Rol del Sistema</label>
+          <select name="u_rol" [(ngModel)]="rolSeleccionadoNombre" class="form-select form-select-sm">
+            <option *ngFor="let r of listaRoles" [value]="r.name">{{ r.name | uppercase }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-        <div class="form-section bg-verde-light">
-            <h5 class="section-title"><i class="bi bi-briefcase"></i> Asignación Laboral</h5>
-            <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label">Categoría / Rol</label>
-                    <select name="tipo_trabajador" [(ngModel)]="nuevoUsuario.tipo_trabajador" class="form-select hospital-control" required>
-                        <option value="medico">Médicos</option>
-                        <option value="enfermera">Enfermera</option>
-                        <option value="administrativo">Administrativo</option>
-                        <option value="manual">Manual</option>
-                    </select>
-                </div>
-                <div class="col-md-12">
-    <label class="form-label">Dirección de Domicilio</label>
-    <input type="text" name="direccion" [(ngModel)]="nuevoUsuario.direccion" class="form-control hospital-control" placeholder="Ej: Calle Bolívar #123" required>
-</div>
-<div class="col-md-4">
-    <label class="form-label">Fecha de Nacimiento</label>
-    <input type="date" name="fecha_nacimiento" [(ngModel)]="nuevoUsuario.fecha_nacimiento" class="form-control hospital-control" required>
-</div>
-                <div class="col-md-4">
-                    <label class="form-label">Tipo Salario</label>
-                    <select name="tipo_salario" [(ngModel)]="nuevoUsuario.tipo_salario" class="form-select hospital-control">
-                        <option value="TGN">TGN</option>
-                        <option value="CONTRATO">CONTRATO</option>
-                        <option value="SUS">SUS</option> </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">N° de Ítem / Contrato</label>
-                    <input type="text" name="numero_tipo_salario" [(ngModel)]="nuevoUsuario.numero_tipo_salario" class="form-control hospital-control" placeholder="Ejemplo: 9618">
-                </div>
-            </div>
-        </div>
-
-        <div class="form-footer">
-            <button type="button" class="btn btn-light rounded-pill px-4" routerLink="/dashboard/personal">Cancelar</button>
-            <button type="submit" class="btn btn-hospital-primary rounded-pill px-5 shadow-sm" [disabled]="!personalForm.form.valid">
-                <i class="bi bi-save-fill me-2"></i> GUARDAR EN SISTEMA
-            </button>
-        </div>
-    </form>
+    <div class="text-end mt-4">
+      <button type="button" (click)="guardar()" class="btn btn-success px-5 shadow">REGISTRAR AHORA</button>
+    </div>
+  </form>
 </div>
