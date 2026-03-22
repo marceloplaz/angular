@@ -1,15 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterModule } from '@angular/router'; // Importación esencial para [routerLink]
+
 import { PersonaService } from '../../services/persona';
 
 @Component({
   selector: 'app-personal',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink], // Quitamos RouterLink porque no se usa
-  templateUrl: './personal.html'
-  
+  // Agregamos RouterModule para habilitar la navegación en el HTML
+  imports: [CommonModule, FormsModule, RouterModule], 
+  templateUrl: './personal.html',
+   // Corregido: antes decía templateUrl de nuevo
 })
 export class PersonalComponent implements OnInit {
   private _personaService = inject(PersonaService);
@@ -25,31 +27,33 @@ export class PersonalComponent implements OnInit {
   public pSeleccionado: any = null;
   public personaDetalle: any = null;
 
+  // Estructura para nuevo usuario / edición
   public nuevoUsuario: any = {
-    name: '', email: '', password: '', 
+    name: '', 
+    email: '', 
+    password: '', 
     categoria_id: '1',
-    nombre_completo: '', carnet_identidad: '', genero: 'Masculino',
-    telefono: '', direccion: '', tipo_trabajador: 'Enfermera',
-    nacionalidad: 'Boliviana', tipo_salario: 'TGN', numero_tipo_salario: ''
+    nombre_completo: '', 
+    carnet_identidad: '', 
+    genero: 'Masculino',
+    telefono: '', 
+    direccion: '', 
+    tipo_trabajador: 'Enfermera',
+    nacionalidad: 'Boliviana', 
+    tipo_salario: 'TGN', 
+    numero_tipo_salario: ''
   };
 
-  ngOnInit(): void { this.cargarDatos(); }
-
-  verDetalles(p: any): void {
-    this.pSeleccionado = p;
-    this.personaDetalle = p.persona || {};
-    this.mostrarDetallesModal = true;
+  ngOnInit(): void { 
+    this.cargarDatos(); 
   }
 
-  cerrarDetalles(): void {
-    this.mostrarDetallesModal = false;
-    this.pSeleccionado = null;
-    this.personaDetalle = null;
-  }
+  // --- LÓGICA DE DATOS ---
 
   cargarDatos(): void {
     this._personaService.getPersonas().subscribe({
       next: (res: any) => {
+        // Ajuste según estructura de respuesta de Laravel
         this.listaPersonas = res.data ? res.data : (Array.isArray(res) ? res : []);
         this.personasFiltradas = [...this.listaPersonas];
         this.filtrarTodo();
@@ -67,10 +71,26 @@ export class PersonalComponent implements OnInit {
     this.personasFiltradas = this.listaPersonas.filter(item => {
       const cumpleFiltro = this.filtroActual === 'Todos' || item.persona?.tipo_salario === this.filtroActual;
       const busqueda = this.terminoBusqueda.toLowerCase();
-      return cumpleFiltro && (!busqueda || 
-             item.persona?.nombre_completo?.toLowerCase().includes(busqueda) ||
-             item.persona?.carnet_identidad?.includes(busqueda));
+      
+      const coincideNombre = item.persona?.nombre_completo?.toLowerCase().includes(busqueda);
+      const coincideCI = item.persona?.carnet_identidad?.includes(busqueda);
+
+      return cumpleFiltro && (!busqueda || coincideNombre || coincideCI);
     });
+  }
+
+  // --- GESTIÓN DE MODALES ---
+
+  verDetalles(p: any): void {
+    this.pSeleccionado = p;
+    this.personaDetalle = p.persona || {};
+    this.mostrarDetallesModal = true;
+  }
+
+  cerrarDetalles(): void {
+    this.mostrarDetallesModal = false;
+    this.pSeleccionado = null;
+    this.personaDetalle = null;
   }
 
   abrirModalNuevo() {
@@ -85,7 +105,7 @@ export class PersonalComponent implements OnInit {
     this.nuevoUsuario = {
       name: usuario.name,
       email: usuario.email,
-      password: '',
+      password: '', // Password se deja vacío en edición por seguridad
       categoria_id: usuario.categoria_id?.toString() || '1',
       nombre_completo: usuario.persona?.nombre_completo || '',
       carnet_identidad: usuario.persona?.carnet_identidad || '',
@@ -100,12 +120,17 @@ export class PersonalComponent implements OnInit {
     this.mostrarModal = true;
   }
 
-  // --- FUNCIÓN CORREGIDA PARA ELIMINAR EL ERROR TS2339 ---
+  cerrarModal() { 
+    this.mostrarModal = false; 
+  }
+
+  // --- ACCIONES DE API ---
+
   eliminarPersona(id: number): void {
     if (confirm('¿Está seguro de eliminar este registro?')) {
       this._personaService.deletePersona(id).subscribe({
         next: () => {
-          alert('Registro eliminado');
+          alert('Registro eliminado correctamente');
           this.cargarDatos();
         },
         error: (err) => console.error('Error al eliminar:', err)
@@ -113,61 +138,11 @@ export class PersonalComponent implements OnInit {
     }
   }
 
- guardarUsuario() {
-  // 1. Construcción de los datos básicos
-  const dataParaEnviar: any = {
-    name: this.nuevoUsuario.name,
-    email: this.nuevoUsuario.email,
-    categoria_id: Number(this.nuevoUsuario.categoria_id),
-    roles: [11], // Ajusta según el rol que necesites asignar
-    persona: { // Campos obligatorios para la tabla 'personas'
-      nombre_completo: this.nuevoUsuario.nombre_completo,
-      carnet_identidad: this.nuevoUsuario.carnet_identidad,
-      genero: this.nuevoUsuario.genero === 'Masculino' ? 'M' : 'F',
-      telefono: this.nuevoUsuario.telefono,
-      direccion: this.nuevoUsuario.direccion,
-      tipo_trabajador: this.nuevoUsuario.tipo_trabajador ? this.nuevoUsuario.tipo_trabajador.toLowerCase() : 'enfermera',
-      tipo_salario: this.nuevoUsuario.tipo_salario,
-      numero_tipo_salario: this.nuevoUsuario.numero_tipo_salario.toString(),
-      nacionalidad: 'Boliviana'
-    }
-  };
-
-  // 2. LÓGICA DE CONTRASEÑA: Solo se añade si el usuario escribió algo
-  if (this.nuevoUsuario.password && this.nuevoUsuario.password.trim() !== '') {
-    if (this.nuevoUsuario.password.length < 8) {
-      alert('La nueva contraseña debe tener al menos 8 caracteres.');
-      return;
-    }
-    dataParaEnviar.password = this.nuevoUsuario.password;
-    dataParaEnviar.password_confirmation = this.nuevoUsuario.password;
+  private manejarErrores(err: any) {
+    console.error('Errores detallados:', err.error?.errors);
+    const msg = err.error?.message || 'Error en los datos';
+    alert('No se pudo procesar la solicitud: ' + msg);
   }
-
-  // 3. Envío al servidor
-  if (this.editando && this.usuarioIdSeleccionado) {
-    this._personaService.updatePersona(this.usuarioIdSeleccionado, dataParaEnviar).subscribe({
-      next: () => {
-        alert('¡Registro y contraseña actualizados correctamente!');
-        this.finalizarOperacion(); 
-      },
-      error: (err) => {
-        console.error('Error al actualizar:', err.error);
-        alert('Error: ' + (err.error.message || 'No se pudo actualizar'));
-      }
-    });
-  } else {
-    // Aquí iría tu lógica de crearPersona(dataParaEnviar) si no estás editando
-  }
-}
-
-// Nueva función para ver qué campo exacto falta en la consola
-private manejarErrores(err: any) {
-  console.error('Errores detallados:', err.error.errors);
-  const msg = err.error.message || 'Error en los datos';
-  alert('No se pudo guardar: ' + msg);
-}
-
-  cerrarModal() { this.mostrarModal = false; }
 
   private finalizarOperacion() {
     this.cerrarModal();

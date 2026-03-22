@@ -1,73 +1,87 @@
 <div class="p-4" style="background-color: #f4f7f6; min-height: 100vh;">
   
-  <div class="card shadow-sm border-0 mb-4 border-top-hospital">
-    <div class="card-body bg-hospital-light rounded">
-      <div class="grid p-fluid">
-<div class="col-12 md:col-3">
-  <label class="small text-muted">SERVICIO</label>
-  <select class="form-select form-select-sm" 
-          [(ngModel)]="filtro.servicio_id" 
-          (change)="cargarTurnos()"> <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
-  </select>
-</div>
-        <div class="col-12 md:col-2">
-          <label class="small text-muted">AÑO</label>
-          <input type="text" class="form-control form-control-sm bg-white" [value]="filtro.anio" readonly>
-        </div>
-        <div class="col-12 md:col-2">
-          <label class="small text-muted">MES</label>
-          <select class="form-select form-select-sm" [(ngModel)]="filtro.mes_id" (change)="onCambioMes(filtro.mes_id)">
-            <option *ngFor="let m of mesesDisponibles" [value]="m.id">{{ m.nombre }}</option>
-          </select>
-        </div>
-        <div class="col-12 md:col-5">
-          <label class="small text-muted">SEMANA</label>
-          <select class="form-select form-select-sm" [(ngModel)]="filtro.semana_id" (change)="cargarTurnos()">
-            <option *ngFor="let s of semanasDisponibles" [value]="s.id">
-              Semana {{ s.numero_semana }} ({{ s.fecha_inicio }} - {{ s.fecha_fin }})
-            </option>
-          </select>
-        </div>
+  <div class="card shadow-sm border-0 mb-4 p-3 bg-white text-uppercase" style="font-size: 0.75rem;">
+    <div class="row g-3 align-items-end">
+      
+      <div class="col-12 md:col-3">
+        <label class="fw-bold text-muted mb-1">Servicio</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filters.servicio_id" (change)="onFilterChange()">
+          <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
+        </select>
       </div>
+
+      <div class="col-12 md:col-2">
+        <label class="fw-bold text-muted mb-1">Categoría</label>
+      <select class="form-select form-select-sm" [(ngModel)]="filters.categoria_id" (change)="onFilterChange()">
+  <option value="">Todas</option>
+  <option *ngFor="let c of categorias" [value]="c.id">
+    {{ c.nombre }}
+  </option>
+</select>
+      </div>
+
+      <div class="col-12 md:col-1">
+        <label class="fw-bold text-muted mb-1">Gestión</label>
+        <input type="text" class="form-control form-control-sm bg-light fw-bold" [value]="filters.gestion" readonly>
+      </div>
+
+      <div class="col-12 md:col-2">
+        <label class="fw-bold text-muted mb-1">Mes</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filters.mes_id" (change)="onCambioMes(filters.mes_id)">
+          <option *ngFor="let m of mesesDisponibles" [value]="m.id">{{ m.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="fw-bold text-muted mb-1">Semana</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filters.semana_id" (change)="cargarTurnos()">
+          <option *ngFor="let s of semanasDisponibles" [value]="s.id">
+            Semana {{ s.numero_semana }} ({{ s.fecha_inicio }} - {{ s.fecha_fin }})
+          </option>
+        </select>
+      </div>
+
     </div>
   </div>
 
   <div class="card shadow-sm border-0 overflow-hidden">
     <div class="table-responsive">
       <table class="table mb-0 text-center align-middle">
-        <thead class="table-hospital text-white">
+        <thead class="bg-dark text-white">
           <tr>
-            <th class="py-3 text-start ps-4" style="width: 250px;">MÉDICO / PERSONAL</th>
+            <th class="py-3 text-start ps-4" style="width: 280px;">PERSONAL / PROFESIONAL</th>
             <th *ngFor="let dia of diasSemana">{{ dia }}</th>
-            <th class="bg-dark text-white">HRS</th>
+            <th class="bg-secondary text-white">HRS</th>
           </tr>
         </thead>
-       <tbody class="bg-white text-center">
-  <tr *ngIf="personalAgrupado.length === 0 && !cargando">
-    <td colspan="9" class="py-5 text-muted italic">
-      No hay personal registrado en el servicio seleccionado.
+<tbody class="bg-white">
+  <tr *ngIf="cargando">
+    <td colspan="9" class="p-5 text-center text-success fw-bold">CARGANDO EQUIPO...</td>
+  </tr>
+  
+  <tr *ngFor="let p of personalAgrupado">
+    <td class="text-start p-3 border-end fw-bold text-dark">
+      <div class="d-flex align-items-center">
+        <i class="pi pi-user me-2 text-success"></i>
+        {{ p.usuario_nombre | uppercase }}
+      </div>
+      <small class="text-muted d-block" style="font-size: 0.65rem;">{{ p.categoria_nombre }}</small>
     </td>
+
+    <td *ngFor="let dia of diasSemana" class="p-2 border-end">
+      <button class="btn btn-link p-0 text-muted opacity-50" (click)="abrirModalAsignar(p, dia)">
+        <i class="pi pi-plus-circle" style="font-size: 1.2rem;"></i>
+      </button>
+    </td>
+
+    <td class="fw-bold bg-light">0h</td>
   </tr>
 
-  <ng-container *ngFor="let grupo of personalAgrupado">
-    <tr class="bg-light border-bottom">
-      <td colspan="9" class="text-start fw-bold ps-4 py-2 text-success">
-        <i class="pi pi-users me-2"></i>{{ grupo.categoria | uppercase }}
-      </td>
-    </tr>
-
-    <tr *ngFor="let p of grupo.personal" class="border-bottom">
-      <td class="text-start fw-bold p-3 border-end">{{ p.nombre | titlecase }}</td>
-      <td *ngFor="let dia of diasSemana" class="p-2 border-end">
-        <button class="btn btn-link text-muted p-0 opacity-25" (click)="abrirModalAsignar(p, dia)">
-          <i class="pi pi-plus-circle fs-4"></i>
-        </button>
-      </td>
-      <td class="fw-bold bg-light">0h</td>
-    </tr>
-  </ng-container>
+  <tr *ngIf="!cargando && personalAgrupado.length === 0">
+    <td colspan="9" class="p-4 text-center text-muted">No se encontró personal para este filtro.</td>
+  </tr>
 </tbody>
-      </table>
+      </table> 
     </div>
   </div>
 </div>
