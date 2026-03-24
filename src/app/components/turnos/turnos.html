@@ -1,46 +1,33 @@
 <div class="p-4" style="background-color: #f4f7f6; min-height: 100vh;">
-  
-  <div class="card shadow-sm border-0 mb-4 p-3 bg-white text-uppercase" style="font-size: 0.75rem;">
+  <div class="card shadow-sm border-0 mb-4 p-3 bg-white">
     <div class="row g-3 align-items-end">
-      
-      <div class="col-12 md:col-3">
-        <label class="fw-bold text-muted mb-1">Servicio</label>
+      <div class="col-md-3">
+        <label class="fw-bold small mb-1">Servicio</label>
         <select class="form-select form-select-sm" [(ngModel)]="filters.servicio_id" (change)="onFilterChange()">
           <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
         </select>
       </div>
-
-      <div class="col-12 md:col-2">
-        <label class="fw-bold text-muted mb-1">Categoría</label>
-      <select class="form-select form-select-sm" [(ngModel)]="filters.categoria_id" (change)="onFilterChange()">
-  <option value="">Todas</option>
-  <option *ngFor="let c of categorias" [value]="c.id">
-    {{ c.nombre }}
-  </option>
-</select>
+      <div class="col-md-2">
+        <label class="fw-bold small mb-1">Categoría</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filters.categoria_id" (change)="onFilterChange()">
+          <option value="">Todas</option>
+          <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
+        </select>
       </div>
-
-      <div class="col-12 md:col-1">
-        <label class="fw-bold text-muted mb-1">Gestión</label>
-        <input type="text" class="form-control form-control-sm bg-light fw-bold" [value]="filters.gestion" readonly>
-      </div>
-
-      <div class="col-12 md:col-2">
-        <label class="fw-bold text-muted mb-1">Mes</label>
+      <div class="col-md-2">
+        <label class="fw-bold small mb-1">Mes</label>
         <select class="form-select form-select-sm" [(ngModel)]="filters.mes_id" (change)="onCambioMes(filters.mes_id)">
           <option *ngFor="let m of mesesDisponibles" [value]="m.id">{{ m.nombre }}</option>
         </select>
       </div>
-
-      <div class="col-12 md:col-4">
-        <label class="fw-bold text-muted mb-1">Semana</label>
-        <select class="form-select form-select-sm" [(ngModel)]="filters.semana_id" (change)="cargarTurnos()">
+      <div class="col-md-5">
+        <label class="fw-bold small mb-1">Semana</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filters.semana_id" (change)="onFilterChange()">
           <option *ngFor="let s of semanasDisponibles" [value]="s.id">
-            Semana {{ s.numero_semana }} ({{ s.fecha_inicio }} - {{ s.fecha_fin }})
+            Semana {{ s.numero_semana }} ({{ s.fecha_inicio }} a {{ s.fecha_fin }})
           </option>
         </select>
       </div>
-
     </div>
   </div>
 
@@ -49,86 +36,97 @@
       <table class="table mb-0 text-center align-middle">
         <thead class="bg-dark text-white">
           <tr>
-            <th class="py-3 text-start ps-4" style="width: 280px;">PERSONAL / PROFESIONAL</th>
+            <th class="text-start ps-4" style="width: 280px;">PERSONAL</th>
             <th *ngFor="let dia of diasSemana">{{ dia }}</th>
-            <th class="bg-secondary text-white">HRS</th>
+            <th class="bg-secondary text-white" style="width: 110px;">HRS TOTAL</th>
           </tr>
         </thead>
-<tbody class="bg-white">
-  <tr *ngIf="cargando">
-    <td colspan="9" class="p-5 text-center text-success fw-bold">CARGANDO EQUIPO...</td>
-  </tr>
-  
-  <tr *ngFor="let p of personalAgrupado">
-    <td class="text-start p-3 border-end fw-bold text-dark">
-      <div class="d-flex align-items-center">
-        <i class="pi pi-user me-2 text-success"></i>
-        {{ p.usuario_nombre | uppercase }}
-      </div>
-      <small class="text-muted d-block" style="font-size: 0.65rem;">{{ p.categoria_nombre }}</small>
-    </td>
+        <tbody class="bg-white">
+          <tr *ngIf="cargando">
+            <td colspan="9" class="p-5 text-center">
+              <div class="spinner-border text-success" role="status"></div>
+              <div class="mt-2 text-success fw-bold">CARGANDO...</div>
+            </td>
+          </tr>
 
-    <td *ngFor="let dia of diasSemana" class="p-2 border-end">
-      
-      <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else botonNuevo">
-        <div class="badge bg-primary p-2 w-100 shadow-sm" 
-             style="cursor: pointer; font-size: 0.7rem;"
-             (click)="abrirModalAsignar(p, dia)">
-          {{ turno.nombre_turno }}
-          <small class="d-block border-top mt-1">{{ turno.duracion_horas }}h</small>
-        </div>
-      </ng-container>
+          <ng-container *ngIf="!cargando">
+            <tr *ngFor="let p of personalAgrupado">
+              <td class="text-start p-3 border-end">
+                <div class="fw-bold text-dark">{{ p.usuario_nombre | uppercase }}</div>
+                <small class="text-muted">{{ p.categoria_nombre }}</small>
+              </td>
 
-      <ng-template #botonNuevo>
-        <button class="btn btn-link p-0 text-muted opacity-50" (click)="abrirModalAsignar(p, dia)">
-          <i class="pi pi-plus-circle" style="font-size: 1.2rem;"></i>
-        </button>
-      </ng-template>
+              <td *ngFor="let dia of diasSemana" class="p-2 border-end" style="min-width: 150px;">
+                <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else botonNuevo">
+                  <div class="badge w-100 shadow-sm p-2 text-wrap" 
+                       [style.backgroundColor]="turno.color || '#52600c'"
+                       style="cursor: pointer; border: 1px solid rgba(0,0,0,0.1); color: white;"
+                       (click)="abrirModalAsignar(p, dia)">
+                    
+                    <div class="fw-bold mb-1" style="font-size: 0.75rem; text-transform: uppercase;">
+                      {{ turno.nombre_turno }} 
+                      <span class="opacity-75" style="font-size: 0.65rem;">
+                        ({{ obtenerHorasSolo(turno.horario) }}h)
+                      </span>
+                    </div>
+                    
+                    <div class="bg-white rounded-1 py-1 px-1 mt-1 d-flex justify-content-center align-items-center" 
+                         style="border: 1px solid rgba(0,0,0,0.05);">
+                      <i class="pi pi-clock me-1" style="color: #20c997; font-size: 0.6rem;"></i>
+                      <span style="color: #20c997; font-weight: bold; font-size: 0.65rem; font-family: monospace;">
+                        {{ turno.horario }}
+                      </span>
+                    </div>
+                  </div>
+                </ng-container>
 
-    </td> <td class="fw-bold bg-light">0h</td>
-  </tr>
+                <ng-template #botonNuevo>
+                  <button class="btn btn-link p-0 text-muted opacity-25" (click)="abrirModalAsignar(p, dia)">
+                    <i class="pi pi-plus-circle" style="font-size: 1.2rem;"></i>
+                  </button>
+                </ng-template>
+              </td>
 
-  <tr *ngIf="!cargando && personalAgrupado.length === 0">
-    <td colspan="9" class="p-4 text-center text-muted">No se encontró personal para este filtro.</td>
-  </tr>
-</tbody>
+              <td class="fw-bold bg-light border-start text-center">
+                <div class="py-2">
+                  <div class="text-muted small mb-0" style="font-size: 0.6rem; text-transform: uppercase;">Total Semana</div>
+                  <div class="fs-5 text-dark" [class.text-success]="calcularTotalHoras(p) > 0">
+                    {{ calcularTotalHoras(p) }}<span class="small" style="font-size: 0.7rem;">h</span>
+                  </div>
+                </div>
+              </td>
+            </tr> 
+          </ng-container>
 
-
-
-      </table> 
+          <tr *ngIf="!cargando && personalAgrupado.length === 0">
+            <td colspan="9" class="p-4 text-center text-muted">No hay datos.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
-<div class="modal fade show" [ngStyle]="{'display': mostrarModal ? 'block' : 'none'}" 
-     style="background: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content border-0 shadow-lg">
-      
-      <div class="modal-header bg-success text-white py-2">
-        <h6 class="modal-title text-uppercase fw-bold">Asignar Turno</h6>
+
+<div class="modal fade show" *ngIf="mostrarModal" style="display: block; background: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0">
+      <div class="modal-header bg-success text-white">
+        <h6 class="modal-title fw-bold">ASIGNAR TURNO</h6>
         <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
       </div>
-
       <div class="modal-body p-4 text-center">
-  <p class="text-muted small mb-3">
-    Asignando para: <strong>{{ personalSeleccionado?.usuario_nombre }}</strong> el día <strong>{{ diaSeleccionado }}</strong>
-  </p>
-  
-  <select class="form-select form-select-sm shadow-sm" [(ngModel)]="turnoIdSeleccionado">
-    <option [ngValue]="null" disabled selected>Seleccione un turno...</option>
-    <option *ngFor="let t of listaTurnos" [value]="t.id">
-      {{ t.nombre_turno }} ({{ t.duracion_horas }}h)
-    </option>
-  </select>
-</div>
-
-      <div class="modal-footer bg-light py-2">
-        <button type="button" class="btn btn-secondary btn-sm px-3" (click)="cerrarModal()">CANCELAR</button>
-        <button type="button" class="btn btn-success btn-sm px-4 fw-bold" (click)="guardarAsignacion()">
-          GUARDAR
-        </button>
+        <p class="text-muted small">Personal: <strong>{{ personalSeleccionado?.usuario_nombre }}</strong></p>
+        <select class="form-select border-success" [(ngModel)]="turnoIdSeleccionado">
+          <option [ngValue]="null" disabled>Seleccione un horario...</option>
+          <option *ngFor="let t of listaTurnos" [value]="t.id">
+            {{ t.nombre_turno }} ({{ t.duracion_horas }}h)
+          </option>
+        </select>
       </div>
-
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarModal()">CANCELAR</button>
+        <button type="button" class="btn btn-success btn-sm px-4" (click)="guardarAsignacion()">GUARDAR</button>
+      </div>
     </div>
   </div>
 </div>
