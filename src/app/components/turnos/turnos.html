@@ -69,19 +69,66 @@
     </td>
 
     <td *ngFor="let dia of diasSemana" class="p-2 border-end">
-      <button class="btn btn-link p-0 text-muted opacity-50" (click)="abrirModalAsignar(p, dia)">
-        <i class="pi pi-plus-circle" style="font-size: 1.2rem;"></i>
-      </button>
-    </td>
+      
+      <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else botonNuevo">
+        <div class="badge bg-primary p-2 w-100 shadow-sm" 
+             style="cursor: pointer; font-size: 0.7rem;"
+             (click)="abrirModalAsignar(p, dia)">
+          {{ turno.nombre_turno }}
+          <small class="d-block border-top mt-1">{{ turno.duracion_horas }}h</small>
+        </div>
+      </ng-container>
 
-    <td class="fw-bold bg-light">0h</td>
+      <ng-template #botonNuevo>
+        <button class="btn btn-link p-0 text-muted opacity-50" (click)="abrirModalAsignar(p, dia)">
+          <i class="pi pi-plus-circle" style="font-size: 1.2rem;"></i>
+        </button>
+      </ng-template>
+
+    </td> <td class="fw-bold bg-light">0h</td>
   </tr>
 
   <tr *ngIf="!cargando && personalAgrupado.length === 0">
     <td colspan="9" class="p-4 text-center text-muted">No se encontró personal para este filtro.</td>
   </tr>
 </tbody>
+
+
+
       </table> 
+    </div>
+  </div>
+</div>
+<div class="modal fade show" [ngStyle]="{'display': mostrarModal ? 'block' : 'none'}" 
+     style="background: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      
+      <div class="modal-header bg-success text-white py-2">
+        <h6 class="modal-title text-uppercase fw-bold">Asignar Turno</h6>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
+      </div>
+
+      <div class="modal-body p-4 text-center">
+  <p class="text-muted small mb-3">
+    Asignando para: <strong>{{ personalSeleccionado?.usuario_nombre }}</strong> el día <strong>{{ diaSeleccionado }}</strong>
+  </p>
+  
+  <select class="form-select form-select-sm shadow-sm" [(ngModel)]="turnoIdSeleccionado">
+    <option [ngValue]="null" disabled selected>Seleccione un turno...</option>
+    <option *ngFor="let t of listaTurnos" [value]="t.id">
+      {{ t.nombre_turno }} ({{ t.duracion_horas }}h)
+    </option>
+  </select>
+</div>
+
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3" (click)="cerrarModal()">CANCELAR</button>
+        <button type="button" class="btn btn-success btn-sm px-4 fw-bold" (click)="guardarAsignacion()">
+          GUARDAR
+        </button>
+      </div>
+
     </div>
   </div>
 </div>

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-turnos',
@@ -12,14 +13,15 @@ import { TurnoService } from '../../services/turno';
 export class TurnosComponent implements OnInit {
   private turnoService = inject(TurnoService);
 
-  // Listas para los combos
+  // --- LISTAS PARA COMBOS Y DATOS ---
   servicios: any[] = [];
   categorias: any[] = [];
-  equipoVisible: any[] = []; // Aquí guardaremos 'equipo_visible'
   mesesDisponibles: any[] = [];
   semanasDisponibles: any[] = [];
+  listaTurnos: any[] = []; // Para el select del modal
+  personalAgrupado: any[] = []; // Datos de la tabla
   
-  // Objeto de filtros unificado
+  // --- FILTROS ---
   filters = { 
     servicio_id: null as any, 
     categoria_id: '' as any,
@@ -28,22 +30,31 @@ export class TurnosComponent implements OnInit {
     semana_id: null as any 
   };
 
+  // --- VARIABLES DE ESTADO ---
   diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-  personalAgrupado: any[] = []; 
   cargando: boolean = false;
 
-  // Variables para el Modal
+  // --- VARIABLES DEL MODAL ---
   mostrarModal = false;
-  medicoSeleccionado: any = null;
+  personalSeleccionado: any = null;
   diaSeleccionado: string = '';
+  turnoIdSeleccionado: any = null; 
 
   ngOnInit() {
     this.cargarConfiguracionInicial();
+    this.cargarTiposDeTurnos();
+  }
 
+  cargarTiposDeTurnos() {
+    this.turnoService.getTurnos().subscribe({
+      next: (res: any) => {
+        this.listaTurnos = res.data || res; 
+      },
+      error: (err) => console.error("Error al cargar tipos de turnos", err)
+    });
   }
 
   cargarConfiguracionInicial() {
-    // 1. Cargar Servicios
     this.turnoService.getServicios().subscribe((res: any) => {
       this.servicios = res.data; 
       if (this.servicios?.length > 0) {
@@ -52,10 +63,8 @@ export class TurnosComponent implements OnInit {
       }
     });
 
-    // 2. Cargar Calendario (Gestión)
     this.turnoService.getConfiguracionCalendario().subscribe((res: any) => {
       const data = res.data || res;
-      // CORRECCIÓN: Usamos gestion para buscar en la data del servidor
       const gestionActual = data.gestiones?.find((g: any) => g.año == this.filters.gestion);
       
       if (gestionActual) {
@@ -69,47 +78,123 @@ export class TurnosComponent implements OnInit {
             this.filters.semana_id = this.semanasDisponibles[0].id;
           }
         }
+        this.cargarTurnos();
       }
     });
   }
-
-  cargarCategorias() {
-   this.turnoService.getCategorias().subscribe({
-  next: (res: any) => {
-    // IMPORTANTE: Acceder a .data que es lo que envía tu Laravel
-    this.categorias = res.data; 
-    console.log('Categorías cargadas:', this.categorias);
-  },
-  error: (err) => console.error('Error cargando categorías', err)
-});
-  }
+// En tu turnos.ts
+cargarCategorias() {
+  this.turnoService.getCategorias().subscribe({
+    next: (res: any) => {
+      // Como tu ruta es pública y el controlador devuelve los datos:
+      this.categorias = res.data || res; 
+    },
+    error: (err) => console.error("Error categorías", err)
+  });
+}
 
   onFilterChange() {
-    this.personalAgrupado = [];
     this.cargarTurnos();
   }
 
   cargarTurnos() {
- 
-    if (!this.filters.servicio_id) return;
+    if (!this.filters.servicio_id || !this.filters.semana_id) return;
 
     this.cargando = true;
-// Llamamos a tu servicio con los filtros actuales
-    this.turnoService.getEquipoPorFiltros(this.filters.servicio_id, this.filters.categoria_id)
-      .subscribe({
-        next: (res: any) => {
-          // MAPEO CRÍTICO: Aquí asignamos 'equipo_visible' a 'personalAgrupado'
-          // para que coincida con lo que vimos en tu consola de red.
-          this.personalAgrupado = res.equipo_visible || [];
-          this.cargando = false;
-          console.log("Personal cargado en tabla:", this.personalAgrupado);
-        },
-        error: (err) => {
-          console.error("Error cargando turnos:", err);
-          this.cargando = false;
-          this.personalAgrupado = [];
-        }
-      });
+    this.turnoService.getEquipoPorFiltros(
+      this.filters.servicio_id, 
+      this.filters.categoria_id, 
+      this.filters.semana_id
+    ).subscribe({
+      next: (res: any) => {
+        this.personalAgrupado = res?.equipo_visible || res?.data || [];
+        this.cargando = false;
+      },
+      error: (err) => {
+        this.cargando = false;
+        this.personalAgrupado = [];
+      }
+    });
+  }
+
+  // --- LÓGICA DE ASIGNACIÓN Y MODAL ---
+
+  abrirModalAsignar(personal: any, dia: string) {
+    this.personalSeleccionado = { ...personal }; 
+    this.diaSeleccionado = dia;
+    this.turnoIdSeleccionado = null; 
+    this.mostrarModal = true; // Abre el modal visualmente
+  }
+
+  cerrarModal() {
+    this.mostrarModal = false;
+    this.personalSeleccionado = null;
+    this.turnoIdSeleccionado = null;
+    this.diaSeleccionado = '';
+  }
+
+  guardarAsignacion() {
+    if (!this.turnoIdSeleccionado) {
+      alert("Por favor seleccione un turno");
+      return;
+    }
+
+    const payload = {
+      usuario_id: Number(this.personalSeleccionado.usuario_id),
+      servicio_id: Number(this.filters.servicio_id),
+      turno_id: Number(this.turnoIdSeleccionado),
+      semana_id: Number(this.filters.semana_id),
+      mes_id: Number(this.filters.mes_id),
+      gestion_id: 1, 
+      fecha: this.obtenerFechaReal(this.diaSeleccionado),
+      estado: 'programado'
+    };
+
+    this.turnoService.asignarTurno(payload).subscribe({
+      next: () => {
+        this.cerrarModal();
+        this.cargarTurnos(); // Refresca la tabla
+      },
+      error: (err) => console.error("Error al guardar", err)
+    });
+  }
+
+  // ✅ Busca si existe un turno para la fecha de la columna
+  obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
+    if (!usuario.turnos || usuario.turnos.length === 0) return null;
+    const fechaColumna = this.obtenerFechaReal(nombreDiaColumna);
+    return usuario.turnos.find((t: any) => t.fecha === fechaColumna);
+  }
+
+  // ✅ Suma las horas de la columna HRS
+calcularTotalHoras(usuario: any): number {
+  if (!usuario.turnos || usuario.turnos.length === 0) return 0;
+  
+  return usuario.turnos.reduce((acc: number, t: any) => {
+    // Intenta leer 'duracion_horas' o 'horas'. Asegúrate que coincida con tu JSON
+    const h = t.duracion_horas || t.horas || 0;
+    return acc + (parseFloat(h) || 0);
+  }, 0);
+}
+
+  // ✅ Genera la fecha YYYY-MM-DD exacta según el nombre del día
+  obtenerFechaReal(nombreDia: string): string {
+    const semanaActual = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
+    if (!semanaActual) return '';
+
+    const partes = semanaActual.fecha_inicio.split('-'); 
+    const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+    
+    const indiceDia = this.diasSemana.indexOf(nombreDia);
+    if (indiceDia !== -1) {
+      fecha.setDate(fecha.getDate() + indiceDia);
+    }
+
+    const y = fecha.getFullYear();
+    const m = String(fecha.getMonth() + 1).padStart(2, '0');
+    const d = String(fecha.getDate()).padStart(2, '0');
+    
+    return `${y}-${m}-${d}`;
   }
 
   onCambioMes(mesId: any) {
@@ -119,13 +204,5 @@ export class TurnosComponent implements OnInit {
       this.filters.semana_id = this.semanasDisponibles[0].id;
       this.cargarTurnos();
     }
-  }
-
-  // MÉTODO QUE FALTABA
-  abrirModalAsignar(personal: any, dia: string) {
-    this.medicoSeleccionado = personal;
-    this.diaSeleccionado = dia;
-    this.mostrarModal = true;
-    console.log('Asignando a:', personal.usuario_nombre, 'Día:', dia);
   }
 }
