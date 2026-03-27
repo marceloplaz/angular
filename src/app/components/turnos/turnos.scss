@@ -1,0 +1,135 @@
+/* =========================================
+   REDISEÑO PROFESIONAL - ESTILO GESTIÓN
+========================================= */
+
+/* Fondo de la página y tipografía */
+:host {
+    --verde-agua: #1abc9c;
+    --verde-hover: #16a085;
+    --gris-suave: #f8fafc;
+    --borde-color: #e2e8f0;
+}
+
+/* Tabla Minimalista */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Cabecera idéntica a tu sección de Gestión de Personal */
+.table thead th {
+    background-color: #ffffff !important;
+    color: #334155;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 8px;
+    border-bottom: 2px solid var(--verde-agua) !important; /* Línea verde agua distintiva */
+}
+
+/* Filas con efecto hover suave */
+.row-hover {
+    transition: background-color 0.2s ease;
+}
+
+.row-hover:hover {
+    background-color: #f0fdfa !important; /* Verde agua ultra suave */
+}
+
+/* Celda de Personal (Nombre y Categoría) */
+.col-personal {
+    min-width: 200px;
+}
+
+.small-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.extra-small {
+    font-size: 0.65rem;
+    color: #64748b;
+}
+
+/* El botón "+" (Rediseño para que no sea desagradable) */
+.btn-add-soft {
+    border: none;
+    background: transparent;
+    color: #cbd5e0; /* Gris casi invisible por defecto */
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+/* Solo se vuelve verde y visible cuando pasas el mouse por la FILA o el botón */
+.row-hover:hover .btn-add-soft {
+    color: #94a3b8;
+}
+
+.btn-add-soft:hover {
+    color: var(--verde-agua) !important;
+    transform: scale(1.25);
+}
+
+/* Badges de Turnos (Estilo Moderno) */
+.badge-turno {
+    border-radius: 6px;
+    padding: 5px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.badge-turno:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.turno-title {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.turno-time-box {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    font-size: 0.55rem;
+    margin-top: 3px;
+    padding: 1px 0;
+}
+
+/* Columna de Totales */
+.col-total {
+    background-color: var(--gris-suave);
+    width: 90px;
+}
+
+.total-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.total-label {
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: #94a3b8;
+}
+
+.total-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--verde-agua);
+}
+
+.total-val span {
+    font-size: 0.7rem;
+    margin-left: 1px;
+}

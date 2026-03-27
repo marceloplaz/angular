@@ -17,20 +17,20 @@ export class TurnoService {
   getServicios(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/servicios`);
   }
-getCategorias(): Observable<any> {
-  return this.http.get(`${this.apiUrl}/categorias-lista`);
-}
-// Asegúrate de que la función reciba los 3 parámetros en este orden
-// En turno.service.ts
-getEquipoPorFiltros(servicioId: any, categoriaId: any, semanaId: any): Observable<any> {
-  return this.http.get(`${this.apiUrl}/equipo-filtrado`, {
-    params: { 
-      servicio_id: servicioId || '',
-      categoria_id: categoriaId || '', // Si es "Todas", enviará cadena vacía
-      semana_id: semanaId || ''
-    }
-  });
-}
+
+  getCategorias(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/categorias-lista`);
+  }
+
+  getEquipoPorFiltros(servicioId: any, categoriaId: any, semanaId: any): Observable<any> {
+    return this.http.get(`${this.apiUrl}/equipo-filtrado`, {
+      params: { 
+        servicio_id: servicioId || '',
+        categoria_id: categoriaId || '', 
+        semana_id: semanaId || ''
+      }
+    });
+  }
 
   asignarTurno(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/turnos-asignados`, data);
@@ -38,5 +38,39 @@ getEquipoPorFiltros(servicioId: any, categoriaId: any, semanaId: any): Observabl
 
   getTurnos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/turnos`);
+  }
+
+  // --- 🆕 NUEVAS ACCIONES MASIVAS ---
+
+  /**
+   * Replica los turnos de la semana actual a todas las semanas del mes
+   */
+  replicarSemanaEnMes(servicioId: number, mesId: number, semanaId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/turnos-asignados/replicar-mes`, {
+      servicio_id: servicioId,
+      mes_id: mesId,
+      semana_id: semanaId
+    });
+  }
+
+  /**
+   * Rota al personal del mes actual al mes siguiente
+   */
+  rotarPersonalMensual(servicioId: number, mesBaseId: number, mesDestId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
+      servicio_id: servicioId,
+      mes_base_id: mesBaseId,
+      mes_dest_id: mesDestId
+    });
+  }
+
+  /**
+   * Elimina todos los turnos programados del mes para un servicio
+   */
+  vaciarMes(servicioId: number, mesId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/turnos-asignados/vaciar-mes`, {
+      servicio_id: servicioId,
+      mes_id: mesId
+    });
   }
 }

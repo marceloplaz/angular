@@ -1,1 +1,135 @@
-<p>incidencias works!</p>
+<div class="p-4" style="background-color: #f4f7f6; min-height: 100vh;">
+  
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold text-dark mb-0">REPORTES TÉCNICOS</h4>
+      <p class="text-muted small">Gestión de averías y mantenimiento del hospital</p>
+    </div>
+    <button class="btn btn-success shadow-sm px-4 fw-bold" (click)="abrirModal()">
+      <i class="pi pi-plus-circle me-2"></i>NUEVO REPORTE
+    </button>
+  </div>
+
+  <div class="card shadow-sm border-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead class="bg-dark text-white text-center">
+          <tr>
+            <th class="text-start ps-4" style="width: 250px;">SERVICIO / FECHA</th>
+            <th>DESCRIPCIÓN DEL FALLO</th>
+            <th>PRIORIDAD</th>
+            <th>ESTADO</th>
+            <th class="pe-4">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="cargando">
+            <td colspan="5" class="p-5 text-center">
+              <div class="spinner-border text-success" role="status"></div>
+              <div class="mt-2 text-muted fw-bold">Buscando reportes...</div>
+            </td>
+          </tr>
+
+          <tr *ngFor="let item of listaIncidencias" class="text-center border-bottom">
+            <td class="text-start ps-4 p-3">
+              <div class="fw-bold text-dark">
+    {{ item['servicio']?.nombre || 'Sin Servicio' }}
+</div>
+              <div class="text-muted" style="font-size: 0.75rem;">
+                <i class="pi pi-calendar me-1"></i>{{ item.fecha | date:'dd/MM/yyyy' }}
+              </div>
+            </td>
+            <td class="text-start small text-muted px-3" style="max-width: 300px;">
+              <div class="text-truncate-2">
+                {{ item.descripcion }}
+              </div>
+            </td>
+            <td>
+              <span class="badge rounded-pill px-3 py-2 text-uppercase" 
+                    [ngClass]="{
+                      'bg-danger': item.prioridad === 'alta',
+                      'bg-warning text-dark': item.prioridad === 'media',
+                      'bg-info text-white': item.prioridad === 'baja'
+                    }" style="font-size: 0.65rem;">
+                {{ item.prioridad }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center justify-content-center fw-bold small">
+                <span class="rounded-circle me-2" 
+                      [style.width.px]="10" [style.height.px]="10"
+                      [style.backgroundColor]="item.estado === 'solucionado' ? '#20c997' : '#f39c12'">
+                </span>
+                <span [style.color]="item.estado === 'solucionado' ? '#20c997' : '#f39c12'">
+                  {{ item.estado | uppercase }}
+                </span>
+              </div>
+            </td>
+            <td class="pe-4">
+              <button class="btn btn-light btn-sm border shadow-sm me-1" title="Ver detalles">
+                <i class="pi pi-eye text-primary"></i>
+              </button>
+              <button class="btn btn-light btn-sm border shadow-sm" title="Eliminar">
+                <i class="pi pi-trash text-danger"></i>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!cargando && listaIncidencias.length === 0">
+            <td colspan="5" class="p-5 text-center text-muted italic">
+              No se han encontrado reportes técnicos registrados.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade show" *ngIf="mostrarModal" style="display: block; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-success text-white border-0">
+        <h6 class="modal-title fw-bold"><i class="pi pi- megaphone me-2"></i>NUEVO REPORTE TÉCNICO</h6>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="fw-bold small mb-1 text-uppercase text-muted">Servicio Afectado</label>
+          <select class="form-select border-success shadow-sm" [(ngModel)]="nuevaIncidencia.servicio_id">
+            <option [ngValue]="null" disabled>Seleccione el área del problema...</option>
+            <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="fw-bold small mb-1 text-uppercase text-muted">Detalle del Fallo</label>
+          <textarea class="form-control border-success shadow-sm" rows="4" 
+                    [(ngModel)]="nuevaIncidencia.descripcion" 
+                    placeholder="Ej: Falla eléctrica en el tomacorriente de la cama 4..."></textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <label class="fw-bold small mb-1 text-uppercase text-muted">Prioridad</label>
+            <select class="form-select border-success shadow-sm" [(ngModel)]="nuevaIncidencia.prioridad">
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta / Crítica</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="fw-bold small mb-1 text-uppercase text-muted">Fecha del Evento</label>
+            <input type="date" class="form-control border-success shadow-sm" [(ngModel)]="nuevaIncidencia.fecha">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-0">
+        <button type="button" class="btn btn-secondary btn-sm px-3" (click)="cerrarModal()">CANCELAR</button>
+        <button type="button" class="btn btn-success btn-sm px-4 fw-bold shadow-sm" (click)="guardar()">
+          <i class="pi pi-send me-1"></i> ENVIAR AL EQUIPO
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

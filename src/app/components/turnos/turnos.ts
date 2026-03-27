@@ -236,4 +236,87 @@ calcularTotalHoras(usuario: any): number {
       this.onFilterChange();
     }
   }
+  // ... después de tu método onCambioMes(mesId: any) { ... }
+
+  // 1. REPLICAR SEMANA A TODO EL MES
+  onReplicarMes() {
+    if (!this.filters.semana_id || !this.filters.servicio_id) {
+      alert("Selecciona un servicio y una semana modelo.");
+      return;
+    }
+
+    if (confirm(`¿Deseas copiar los turnos de la semana actual a todas las semanas de este mes?`)) {
+      this.turnoService.replicarSemanaEnMes(
+        this.filters.servicio_id, 
+        this.filters.mes_id, 
+        this.filters.semana_id
+      ).subscribe({
+        next: (res) => {
+          alert("¡Estructura de mes completada!");
+          this.cargarTurnos(); // Refresca la tabla
+        },
+        error: (err) => alert("Error: " + err.error.message)
+      });
+    }
+  }
+
+  // 2. ROTAR PERSONAL AL MES SIGUIENTE
+  onRotarMensual() {
+    const idMesDestino = prompt("Introduce el ID del MES DESTINO para la rotación:");
+    
+    if (idMesDestino) {
+      this.turnoService.rotarPersonalMensual(
+        this.filters.servicio_id,
+        this.filters.mes_id, 
+        Number(idMesDestino) 
+      ).subscribe({
+        next: (res: any) => {
+          alert("Personal rotado exitosamente.");
+          this.cargarTurnos();
+        },
+        error: (err: any) => alert("Error en rotación: " + err.error.message)
+      });
+    }
+  }
+
+  // 3. VACIAR MES COMPLETO
+  onVaciarMes() {
+    if (confirm("¡CUIDADO! Se eliminarán TODOS los turnos de este mes. ¿Continuar?")) {
+      this.turnoService.vaciarMes(this.filters.servicio_id, this.filters.mes_id).subscribe({
+        next: (res) => {
+          alert("Calendario del mes limpiado.");
+          this.cargarTurnos();
+        },
+        error: (err) => alert("No se pudo vaciar el mes.")
+      });
+    }
+  }
+  vaciarCalendario() {
+  // 1. Validamos que los filtros tengan valores seleccionados
+  const servicioId = this.filters.servicio_id;
+  const mesId = this.filters.mes_id;
+
+  if (!servicioId || !mesId) {
+    alert("Por favor, selecciona un servicio y un mes primero.");
+    return;
+  }
+
+  // 2. Confirmación de seguridad
+  if (confirm('¡ATENCIÓN! Se eliminarán TODOS los turnos de este mes para el servicio seleccionado. ¿Deseas continuar?')) {
+    
+    this.turnoService.vaciarMes(servicioId, mesId).subscribe({
+      next: (res: any) => {
+        // Mostramos el mensaje de éxito que viene de Laravel
+        alert(res.message || "Calendario vaciado correctamente.");
+        this.cargarTurnos(); // Recarga la tabla de turnos para que se vea vacía
+      },
+      error: (err) => {
+        // Capturamos el error 403 o cualquier otro del backend
+        const errorMsg = err.error?.message || "No se pudo vaciar el mes.";
+        alert("Error: " + errorMsg);
+        console.error("Detalle del error:", err);
+      }
+    });
+  }
+}
 }
