@@ -36,9 +36,11 @@ export class TurnoService {
     return this.http.post(`${this.apiUrl}/turnos-asignados`, data);
   }
 
-  getTurnos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/turnos`);
-  }
+getTurnos(filtros: any): Observable<any[]> {
+  // Asegúrate de que esta ruta también coincida con el backend
+  // Si moviste 'equipo-filtrado' dentro del grupo, añade el prefijo aquí también
+  return this.http.get<any[]>(`${this.apiUrl}/turnos-asignados/equipo-filtrado`, { params: filtros });
+}
 
   // --- 🆕 NUEVAS ACCIONES MASIVAS ---
 
@@ -73,4 +75,10 @@ export class TurnoService {
       mes_id: mesId
     });
   }
+ 
+actualizarPosicion(payload: any): Observable<any> {
+  // Asegúrate de que el payload sea un objeto con los IDs necesarios
+  return this.http.post(`${this.apiUrl}/turnos-asignados/actualizar`, payload);
+}
+
 }

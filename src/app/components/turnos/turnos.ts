@@ -2,24 +2,46 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
+import { 
+  DragDropModule, 
+  CdkDragDrop, 
+  CdkDropListGroup, 
+  CdkDropList, 
+  CdkDrag, 
+  CdkDragPlaceholder 
+} from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-turnos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './turnos.html'
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    DragDropModule, 
+    CdkDropListGroup, 
+    CdkDropList, 
+    CdkDrag, 
+    CdkDragPlaceholder 
+  ],
+  templateUrl: './turnos.html',
+  styleUrl: './turnos.scss',
 })
 export class TurnosComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private cdRef = inject(ChangeDetectorRef);
 
-  // Propiedades
+  // Propiedades de datos
   servicios: any[] = [];
   categorias: any[] = [];
   mesesDisponibles: any[] = [];
   semanasDisponibles: any[] = [];
   personalAgrupado: any[] = []; 
   listaTurnos: any[] = [];
+  
+  // Propiedades de Historial y Modales
+  historialCambios: any[] = []; 
+  mostrarConfirmacion: boolean = false;
+  datosTemporal: any = {};
   
   filters = { 
     servicio_id: null as any, 
@@ -42,25 +64,25 @@ export class TurnosComponent implements OnInit {
     this.cargarConfiguracionInicial();
   }
 
-  // ✅ Método faltante 1
+  // --- CARGA DE DATOS ---
+
   cargarCategorias() {
     this.turnoService.getCategorias().subscribe({
       next: (res: any) => {
         this.categorias = res.data || res;
         this.cdRef.detectChanges();
       },
-      error: (err) => console.error("Error categorías", err)
+      error: (err: any) => console.error("Error categorías", err)
     });
   }
 
-  // ✅ Método faltante 2
   cargarTiposDeTurnos() {
-    this.turnoService.getTurnos().subscribe({
+    this.turnoService.getTurnos({}).subscribe({ 
       next: (res: any) => {
         this.listaTurnos = res.data || res;
         this.cdRef.detectChanges();
       },
-      error: (err) => console.error("Error tipos turnos", err)
+      error: (err: any) => console.error("Error tipos turnos", err)
     });
   }
 
@@ -86,11 +108,6 @@ export class TurnosComponent implements OnInit {
     });
   }
 
-  onFilterChange() {
-    this.personalAgrupado = [];
-    this.cargarTurnos();
-  }
-
   cargarTurnos() {
     if (!this.filters.servicio_id || !this.filters.semana_id) return;
     this.cargando = true;
@@ -103,130 +120,172 @@ export class TurnosComponent implements OnInit {
           this.cargando = false;
           this.cdRef.detectChanges();
         },
-        error: () => { 
+        error: (err: any) => { 
           this.cargando = false; 
           this.cdRef.detectChanges(); 
         }
       });
   }
 
-guardarAsignacion() {
-  if (!this.turnoIdSeleccionado) {
-    alert("Por favor seleccione un turno");
-    return;
+  // --- LÓGICA DE MOVIMIENTO (DRAG & DROP) ---
+
+  onTurnoMovido(event: CdkDragDrop<any>) {
+    if (event.previousContainer === event.container && event.previousIndex === event.currentIndex) return;
+
+    const origen = event.previousContainer.data;
+    const destino = event.container.data;
+    const turno = event.item.data;
+
+    this.datosTemporal = {
+      payload: {
+        turno_id: turno.id_asignacion || turno.id,
+        nuevo_usuario_id: destino.usuario_id,
+        nueva_fecha: this.obtenerFechaReal(destino.fecha)
+      },
+      origenNombre: origen.usuario_nombre,
+      destinoNombre: destino.usuario_nombre,
+      fechaDestino: destino.fecha,
+      nombreTurno: turno.nombre_turno,
+      esIntercambio: !!destino.usuario_id 
+    };
+
+    if (!this.datosTemporal.payload.turno_id) return;
+
+    this.mostrarConfirmacion = true; 
   }
 
-  // Preparamos los datos exactamente como los espera tu API de Laravel
-  const payload = {
-    usuario_id: this.personalSeleccionado.usuario_id,
-    servicio_id: this.filters.servicio_id,
-    turno_id: this.turnoIdSeleccionado,
-    semana_id: this.filters.semana_id,
-    mes_id: this.filters.mes_id,
-    gestion_id: 1, // Ajusta según tu lógica de gestiones
-    fecha: this.obtenerFechaReal(this.diaSeleccionado),
-    estado: 'programado'
-  };
+  confirmarMovimiento() {
+    this.turnoService.actualizarPosicion(this.datosTemporal.payload).subscribe({
+      next: (res: any) => {
+        const accion = res.intercambio ? 'intercambió' : 'reasignó';
+        this.historialCambios.unshift({
+          texto: `Se ${accion} el turno de ${this.datosTemporal.origenNombre} con ${this.datosTemporal.destinoNombre}`,
+          hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          fecha_movimiento: new Date()
+        });
 
-  this.turnoService.asignarTurno(payload).subscribe({
-    next: (res: any) => {
-      console.log("Respuesta del servidor:", res);
-      
-      // 1. Cerramos el modal inmediatamente
-      this.cerrarModal();
-
-      // 2. Limpiamos la tabla para que el usuario vea el refresco
-      this.personalAgrupado = [];
-      
-      // 3. Volvemos a llamar al servidor para traer los datos nuevos
-      // donde ya vendrá el turno que acabamos de guardar
-      this.cargarTurnos();
-
-      // 4. Forzamos a Angular a procesar los cambios visuales
-      this.cdRef.detectChanges();
-    },
-    error: (err) => {
-      console.error("Error al guardar:", err);
-      alert("Error al guardar el turno. Revisa la consola de desarrollador.");
-    }
-  });
-}
-
-
-  abrirModalAsignar(personal: any, dia: string) {
-    this.personalSeleccionado = { ...personal };
-    this.diaSeleccionado = dia;
-    this.turnoIdSeleccionado = null;
-    this.mostrarModal = true;
-  }
-
-  cerrarModal() {
-    this.mostrarModal = false;
-  }
-obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
-  if (!usuario.turnos || usuario.turnos.length === 0) return null;
-  
-  const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
-  
-  // Debug para consola: borra esto después de probar
-  // console.log(`Buscando para ${usuario.usuario_nombre} en fecha: ${fechaBuscada}`);
-
-  // Buscamos el turno que coincida con la fecha de la columna
-  return usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
-}
- 
-// Calcula las horas de un solo turno para mostrar en el badge (ej: 12h)
-obtenerHorasSolo(horario: string): number {
-  if (!horario || !horario.includes(' - ')) return 0;
-  try {
-    const [inicio, fin] = horario.split(' - ');
-    const h1 = parseInt(inicio.split(':')[0]);
-    const h2 = parseInt(fin.split(':')[0]);
-    
-    let diff = h2 - h1;
-    if (diff <= 0) diff += 24; // Maneja turnos nocturnos que pasan de medianoche
-    return diff;
-  } catch (e) {
-    return 0;
-  }
-}
-
-
-
-
-
-
-calcularTotalHoras(usuario: any): number {
-  if (!usuario || !usuario.turnos || usuario.turnos.length === 0) return 0;
-
-  return usuario.turnos.reduce((acc: number, t: any) => {
-    if (t.horario && t.horario.includes(' - ')) {
-      try {
-        const [inicio, fin] = t.horario.split(' - ');
-        const h1 = parseInt(inicio.split(':')[0]);
-        const h2 = parseInt(fin.split(':')[0]);
-
-        let diff = h2 - h1;
-        // Si el turno termina al día siguiente (ej. 19:00 a 07:00)
-        if (diff <= 0) diff += 24; 
-        
-        return acc + diff;
-      } catch (e) {
-        return acc;
+        this.cerrarConfirmacion();
+        this.cargarTurnos();
+      },
+      error: (err: any) => {
+        alert("Error al mover el turno");
+        this.cerrarConfirmacion();
       }
+    });
+  }
+
+  cancelarMovimiento() {
+    this.cerrarConfirmacion();
+  }
+
+  cerrarConfirmacion() {
+    this.mostrarConfirmacion = false;
+    this.datosTemporal = {};
+  }
+
+  // --- ASIGNACIÓN MANUAL ---
+
+  guardarAsignacion() {
+    if (!this.turnoIdSeleccionado) return;
+
+    const payload = {
+      usuario_id: this.personalSeleccionado.usuario_id,
+      servicio_id: this.filters.servicio_id,
+      turno_id: this.turnoIdSeleccionado,
+      semana_id: this.filters.semana_id,
+      mes_id: this.filters.mes_id,
+      gestion_id: 1, 
+      fecha: this.obtenerFechaReal(this.diaSeleccionado),
+      estado: 'programado'
+    };
+
+    this.turnoService.asignarTurno(payload).subscribe({
+      next: () => {
+        this.cerrarModal();
+        this.cargarTurnos();
+      },
+      error: (err: any) => console.error("Error al guardar:", err)
+    });
+  }
+
+  // --- ACCIONES MASIVAS ---
+
+  onReplicarMes() {
+    if (confirm(`¿Replicar esta semana a todo el mes?`)) {
+      this.turnoService.replicarSemanaEnMes(this.filters.servicio_id, this.filters.mes_id, this.filters.semana_id)
+        .subscribe(() => { alert("Mes replicado"); this.cargarTurnos(); });
     }
-    return acc;
-  }, 0);
-}
+  }
+
+  onRotarMensual() {
+    const idMesDestino = prompt("Introduce el ID del MES al que deseas rotar el personal:");
+    if (!idMesDestino) return;
+    
+    this.turnoService.rotarPersonalMensual(this.filters.servicio_id, this.filters.mes_id, Number(idMesDestino))
+      .subscribe({
+        next: () => {
+          alert("Personal rotado exitosamente.");
+          this.cargarTurnos();
+        },
+        error: (err: any) => alert("Error en rotación: " + (err.error?.message || 'Error desconocido'))
+      });
+  }
+
+  // Se renombra para que coincida con el (click)="vaciarCalendario()" de tu HTML
+  vaciarCalendario() {
+    if (confirm("¿Estás seguro de vaciar todos los turnos del mes?")) {
+      this.turnoService.vaciarMes(this.filters.servicio_id, this.filters.mes_id)
+        .subscribe({
+          next: () => {
+            alert("Calendario vaciado.");
+            this.cargarTurnos();
+          },
+          error: (err: any) => console.error("Error al vaciar:", err)
+        });
+    }
+  }
+
+  // --- MÉTODOS AUXILIARES ---
+
+  obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
+    if (!usuario.turnos) return null;
+    const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
+    return usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
+  }
+
   obtenerFechaReal(nombreDia: string): string {
     const semanaActual = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
     if (!semanaActual) return '';
+
     const partes = semanaActual.fecha_inicio.split('-');
-    const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+    const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]), 12, 0, 0);
+    
     const indiceDia = this.diasSemana.indexOf(nombreDia);
-    if (indiceDia !== -1) fecha.setDate(fecha.getDate() + indiceDia);
-    return fecha.toISOString().split('T')[0];
+    if (indiceDia !== -1) {
+      fecha.setDate(fecha.getDate() + indiceDia);
+    }
+
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    
+    return `${año}-${mes}-${dia}`;
   }
+
+  calcularTotalHoras(usuario: any): number {
+    if (!usuario?.turnos) return 0;
+    return usuario.turnos.reduce((acc: number, t: any) => {
+      if (t.horario?.includes(' - ')) {
+        const [inicio, fin] = t.horario.split(' - ');
+        let diff = parseInt(fin) - parseInt(inicio);
+        if (diff <= 0) diff += 24;
+        return acc + diff;
+      }
+      return acc;
+    }, 0);
+  }
+
+  onFilterChange() { this.cargarTurnos(); }
 
   onCambioMes(mesId: any) {
     const mes = this.mesesDisponibles.find(m => m.id == mesId);
@@ -236,87 +295,13 @@ calcularTotalHoras(usuario: any): number {
       this.onFilterChange();
     }
   }
-  // ... después de tu método onCambioMes(mesId: any) { ... }
 
-  // 1. REPLICAR SEMANA A TODO EL MES
-  onReplicarMes() {
-    if (!this.filters.semana_id || !this.filters.servicio_id) {
-      alert("Selecciona un servicio y una semana modelo.");
-      return;
-    }
-
-    if (confirm(`¿Deseas copiar los turnos de la semana actual a todas las semanas de este mes?`)) {
-      this.turnoService.replicarSemanaEnMes(
-        this.filters.servicio_id, 
-        this.filters.mes_id, 
-        this.filters.semana_id
-      ).subscribe({
-        next: (res) => {
-          alert("¡Estructura de mes completada!");
-          this.cargarTurnos(); // Refresca la tabla
-        },
-        error: (err) => alert("Error: " + err.error.message)
-      });
-    }
+  abrirModalAsignar(personal: any, dia: string) {
+    this.personalSeleccionado = { ...personal };
+    this.diaSeleccionado = dia;
+    this.turnoIdSeleccionado = null;
+    this.mostrarModal = true;
   }
 
-  // 2. ROTAR PERSONAL AL MES SIGUIENTE
-  onRotarMensual() {
-    const idMesDestino = prompt("Introduce el ID del MES DESTINO para la rotación:");
-    
-    if (idMesDestino) {
-      this.turnoService.rotarPersonalMensual(
-        this.filters.servicio_id,
-        this.filters.mes_id, 
-        Number(idMesDestino) 
-      ).subscribe({
-        next: (res: any) => {
-          alert("Personal rotado exitosamente.");
-          this.cargarTurnos();
-        },
-        error: (err: any) => alert("Error en rotación: " + err.error.message)
-      });
-    }
-  }
-
-  // 3. VACIAR MES COMPLETO
-  onVaciarMes() {
-    if (confirm("¡CUIDADO! Se eliminarán TODOS los turnos de este mes. ¿Continuar?")) {
-      this.turnoService.vaciarMes(this.filters.servicio_id, this.filters.mes_id).subscribe({
-        next: (res) => {
-          alert("Calendario del mes limpiado.");
-          this.cargarTurnos();
-        },
-        error: (err) => alert("No se pudo vaciar el mes.")
-      });
-    }
-  }
-  vaciarCalendario() {
-  // 1. Validamos que los filtros tengan valores seleccionados
-  const servicioId = this.filters.servicio_id;
-  const mesId = this.filters.mes_id;
-
-  if (!servicioId || !mesId) {
-    alert("Por favor, selecciona un servicio y un mes primero.");
-    return;
-  }
-
-  // 2. Confirmación de seguridad
-  if (confirm('¡ATENCIÓN! Se eliminarán TODOS los turnos de este mes para el servicio seleccionado. ¿Deseas continuar?')) {
-    
-    this.turnoService.vaciarMes(servicioId, mesId).subscribe({
-      next: (res: any) => {
-        // Mostramos el mensaje de éxito que viene de Laravel
-        alert(res.message || "Calendario vaciado correctamente.");
-        this.cargarTurnos(); // Recarga la tabla de turnos para que se vea vacía
-      },
-      error: (err) => {
-        // Capturamos el error 403 o cualquier otro del backend
-        const errorMsg = err.error?.message || "No se pudo vaciar el mes.";
-        alert("Error: " + errorMsg);
-        console.error("Detalle del error:", err);
-      }
-    });
-  }
-}
+  cerrarModal() { this.mostrarModal = false; }
 }
