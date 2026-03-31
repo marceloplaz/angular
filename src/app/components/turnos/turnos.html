@@ -94,6 +94,7 @@
                 <div class="badge-turno shadow-sm" 
                      cdkDrag
                      [cdkDragData]="turno"
+                     [class.es-intercambio]="turno.es_intercambio"
                      [style.backgroundColor]="turno.editado ? '#ff9800' : (turno.color || '#1abc9c')"
                      (click)="abrirModalAsignar(p, dia)">
                   
@@ -135,14 +136,14 @@
             <p class="mb-0 mt-2 fw-bold small">{{ personalSeleccionado?.usuario_nombre }}</p>
             <small class="text-muted">{{ diaSeleccionado }}</small>
           </div>
-          
-          <select class="form-select form-select-sm border-teal-soft" [(ngModel)]="turnoIdSeleccionado">
-            <option [ngValue]="null" disabled>Seleccione horario...</option>
-            <option *ngFor="let t of listaTurnos" [value]="t.id">
-              {{ t.nombre_turno }} ({{ t.duracion_horas }}h)
-            </option>
-          </select>
-        </div>
+          <select class="form-select form-select-sm" [(ngModel)]="turnoIdSeleccionado">
+  <option [ngValue]="null" disabled>Seleccione horario...</option>
+  <option *ngFor="let t of listaTurnos" [value]="t.id">
+    {{ t.nombre_turno }} ({{ t.hora_inicio }} - {{ t.hora_fin }})
+  </option>
+</select>
+
+                  </div>
         <div class="modal-footer border-0 pt-0 justify-content-center">
           <button type="button" class="btn btn-light btn-sm px-3" (click)="cerrarModal()">CANCELAR</button>
           <button type="button" class="btn btn-teal-actions btn-sm px-4" (click)="guardarAsignacion()">GUARDAR</button>
@@ -151,28 +152,47 @@
     </div>
   </div>
 
-  <div *ngIf="historialCambios.length > 0" class="contenedor-auditoria mt-4">
-    <div class="titulo-auditoria d-flex align-items-center justify-content-between">
-      <span><i class="pi pi-history me-2"></i> LOG DE ACTIVIDAD</span>
-      <span class="badge bg-dark-subtle text-muted small">{{ historialCambios.length }} registros</span>
-    </div>
+  <div *ngIf="historialCambios.length > 0" class="contenedor-auditoria mt-4 animate__animated animate__fadeIn">
+  
+  <div class="titulo-auditoria d-flex align-items-center justify-content-between">
+    <span class="fw-bold"><i class="pi pi-history me-2 text-info"></i> LOG DE ACTIVIDAD</span>
+    <span class="badge bg-dark-subtle text-muted extra-small">{{ historialCambios.length }} MOVIMIENTOS</span>
+  </div>
 
-    <div class="lista-movimientos">
-      <div *ngFor="let cambio of historialCambios; let i = index" class="fila-movimiento">
-        <div class="d-flex align-items-center w-100">
-          <span class="hora-log me-3">{{ cambio.hora }}</span>
-          <div class="cuerpo-log flex-grow-1">
-            <span class="text-secondary">{{ cambio.texto }}</span>
-          </div>
-          <div class="fecha-log ms-auto">
+  <div class="lista-movimientos">
+    <div *ngFor="let cambio of historialCambios; let i = index" 
+         class="fila-movimiento"
+         [class.primero]="i === 0">
+      
+      <div class="d-flex align-items-center w-100">
+        
+        <div class="hora-log me-3">
+          <i class="pi pi-clock me-1" style="font-size: 0.7rem;"></i>
+          {{ cambio.hora }}
+        </div>
+
+        <div class="me-3">
+          <i class="pi" 
+             [ngClass]="cambio.texto.includes('intercambió') ? 'pi-sync text-warning' : 'pi-arrow-right text-success'"
+             style="font-size: 0.8rem;">
+          </i>
+        </div>
+
+        <div class="cuerpo-log flex-grow-1">
+          <span class="text-light opacity-75" [innerHTML]="cambio.texto"></span>
+        </div>
+
+        <div class="fecha-log ms-auto d-none d-md-block">
+          <small class="opacity-50">
             <i class="pi pi-calendar me-1"></i>
             {{ cambio.fecha_movimiento | date:'dd/MM/yyyy' }}
-          </div>
+          </small>
         </div>
+
       </div>
     </div>
   </div>
-
+</div>
   <div class="modal fade show" *ngIf="mostrarConfirmacion" style="display: block; background: rgba(0,0,0,0.6);">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">

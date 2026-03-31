@@ -1,5 +1,5 @@
 /* =========================================
-   REDISEÑO PROFESIONAL - ESTILO GESTIÓN
+   REDISEÑO PROFESIONAL - SISTEMA DE TURNOS
 ========================================= */
 
 :host {
@@ -8,25 +8,15 @@
     --gris-suave: #f8fafc;
     --borde-color: #e2e8f0;
     --dark-panel: #1e293b;
+    --amarillo-swap: #fbbf24; // Color para intercambios
 }
 
-/* Botón de acciones Teal (Consistencia con tu HTML) */
-.btn-teal-actions {
-    background-color: var(--verde-agua);
-    color: white;
-    border: none;
-    transition: all 0.2s;
-    &:hover {
-        background-color: var(--verde-hover);
-        color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-}
+/* --- ESTRUCTURA GENERAL Y TABLA --- */
 
-/* Tabla Minimalista */
 .table {
     border-collapse: separate;
     border-spacing: 0;
+    width: 100%;
     
     thead th {
         background-color: #ffffff !important;
@@ -37,6 +27,7 @@
         letter-spacing: 0.5px;
         padding: 12px 8px;
         border-bottom: 2px solid var(--verde-agua) !important;
+        text-align: center;
     }
 }
 
@@ -44,42 +35,64 @@
     background-color: #f0fdfa !important;
 }
 
-/* Celda de Personal */
-.small-name {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 2px;
-}
+/* Celdas de caída (Drop Zones) */
+.cell-drop {
+    min-height: 60px;
+    vertical-align: middle;
+    transition: background-color 0.2s ease;
+    border: 1px solid var(--borde-color);
 
-/* Botón "+" sutil */
-.btn-add-soft {
-    border: none;
-    background: transparent;
-    color: #cbd5e0;
-    font-size: 1.2rem;
-    transition: all 0.2s ease;
-    &:hover {
-        color: var(--verde-agua) !important;
-        transform: scale(1.2);
+    &.cdk-drop-list-receiving {
+        background-color: rgba(26, 188, 156, 0.1) !important;
+        border: 1px dashed var(--verde-agua);
     }
 }
 
-/* Badges de Turnos */
+/* --- COMPONENTE TURNO (BADGE) --- */
+
 .badge-turno {
     border-radius: 6px;
     padding: 6px;
     color: white;
     cursor: grab;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     border: 1px solid rgba(0,0,0,0.1);
     display: block;
     width: 100%;
+    position: relative;
+    user-select: none;
     
     &:active { cursor: grabbing; }
+    
     &:hover {
         filter: brightness(1.1);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
+    }
+
+    /* ESTADO: INTERCAMBIADO (Resaltado visual) */
+    &.es-intercambio {
+        border: 2px dashed var(--amarillo-swap) !important;
+        animation: pulse-yellow 2s ease-out;
+
+        &::after {
+            content: '\21C4'; // Icono ⇄
+            position: absolute;
+            top: -8px;
+            right: -5px;
+            background: var(--amarillo-swap);
+            color: #1e293b;
+            font-size: 10px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
     }
 }
 
@@ -88,6 +101,7 @@
     font-weight: 800;
     text-transform: uppercase;
     display: block;
+    line-height: 1.1;
 }
 
 .turno-time-box {
@@ -97,44 +111,40 @@
     margin-top: 3px;
     padding: 2px;
     font-weight: 600;
+    text-align: center;
 }
 
-/* Columna de Totales */
-.col-total {
-    background-color: #f1f5f9;
-    .total-val {
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--verde-agua);
-        span { font-size: 0.7rem; margin-left: 2px; color: #64748b; }
+/* --- BOTONES Y ACCIONES --- */
+
+.btn-teal-actions {
+    background-color: var(--verde-agua);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+    
+    &:hover {
+        background-color: var(--verde-hover);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 }
 
-/* --- ESTILOS DRAG & DROP (Obligatorios para CDK) --- */
-
-.cdk-drag-preview {
-    box-sizing: border-box;
-    border-radius: 6px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    opacity: 0.9;
+.btn-add-soft {
+    border: none;
+    background: transparent;
+    color: #cbd5e0;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        color: var(--verde-agua) !important;
+        transform: scale(1.2);
+    }
 }
 
-.cdk-drag-placeholder {
-    opacity: 0.3;
-    background: #cbd5e1;
-    border: 2px dashed #94a3b8;
-    border-radius: 6px;
-}
-
-.cdk-drag-animating {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-.cell-drop.cdk-drop-list-dragging .badge-turno:not(.cdk-drag-placeholder) {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-/* --- CONTENEDOR AUDITORÍA (ESTILO DARK) --- */
+/* --- AUDITORÍA (MODO DARK) --- */
 
 .contenedor-auditoria {
     margin-top: 30px;
@@ -151,11 +161,12 @@
         border-bottom: 1px solid #334155;
         padding-bottom: 12px;
         margin-bottom: 15px;
+        text-transform: uppercase;
     }
 
     .fila-movimiento {
         background: #334155;
-        padding: 12px 15px;
+        padding: 10px 15px;
         border-radius: 8px;
         margin-bottom: 8px;
         font-size: 0.85rem;
@@ -169,31 +180,114 @@
             animation: pulse-green 2s infinite;
         }
 
-        .hora-log { color: #64748b; font-family: 'Courier New', monospace; font-weight: bold; }
-        .badge-persona { color: #fbbf24; font-weight: 700; }
-        .fecha-log { color: #94a3b8; font-size: 0.75rem; }
+        .hora-log { 
+            color: #64748b; 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold; 
+            margin-right: 10px;
+        }
+       .badge-persona {
+    color: #fbbf24; // El amarillo que combina con tu modal de confirmación
+    font-weight: 700;
+    text-transform: capitalize;
+} 
+       }
+    }
+
+
+/* --- MODALES --- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 450px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: none;
+
+    .modal-header {
+        background: var(--verde-agua);
+        color: white;
+        padding: 15px 20px;
+        font-weight: 700;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        padding: 25px;
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        
+        strong { color: var(--dark-panel); font-weight: 800; }
+        
+        .destaque-swap {
+            background: #fffbeb;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #fde68a;
+            margin-top: 15px;
+        }
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        background: var(--gris-suave);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
     }
 }
 
+/* --- ANIMACIONES Y CDK --- */
+
+.cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 6px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    opacity: 0.8;
+}
+
+.cdk-drag-placeholder {
+    opacity: 0.2;
+    background: #cbd5e1;
+    border: 2px dashed #94a3b8;
+    border-radius: 6px;
+}
 
 @keyframes pulse-green {
-    0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.2); }
+    0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
     70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
     100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+
+@keyframes pulse-yellow {
+    0% { background-color: rgba(251, 191, 36, 0.4); }
+    100% { background-color: transparent; }
 }
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 400px;
-  overflow: hidden;
+
+/* Columna de Totales */
+.col-total {
+    background-color: #f1f5f9;
+    text-align: center;
+    .total-val {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--verde-agua);
+        span { font-size: 0.7rem; margin-left: 2px; color: #64748b; }
+    }
 }

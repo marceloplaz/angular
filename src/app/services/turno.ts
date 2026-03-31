@@ -35,11 +35,9 @@ export class TurnoService {
   asignarTurno(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/turnos-asignados`, data);
   }
-
-getTurnos(filtros: any): Observable<any[]> {
-  // Asegúrate de que esta ruta también coincida con el backend
-  // Si moviste 'equipo-filtrado' dentro del grupo, añade el prefijo aquí también
-  return this.http.get<any[]>(`${this.apiUrl}/turnos-asignados/equipo-filtrado`, { params: filtros });
+getTurnos(params: any): Observable<any> {
+  // Cambia la dirección para que use la nueva ruta de Laravel
+  return this.http.get(`${this.apiUrl}/lista-turnos-disponibles`, { params });
 }
 
   // --- 🆕 NUEVAS ACCIONES MASIVAS ---
@@ -75,10 +73,9 @@ getTurnos(filtros: any): Observable<any[]> {
       mes_id: mesId
     });
   }
- 
-actualizarPosicion(payload: any): Observable<any> {
-  // Asegúrate de que el payload sea un objeto con los IDs necesarios
-  return this.http.post(`${this.apiUrl}/turnos-asignados/actualizar`, payload);
+ // En tu TurnoService
+actualizarPosicion(data: { turno_id: number, nuevo_usuario_id: number, nueva_fecha: string }): Observable<any> {
+    // CORRECCIÓN: Añadimos 'v1/turnos-asignados/' antes de 'actualizar'
+    return this.http.post(`${this.apiUrl}/turnos-asignados/actualizar`, data);
 }
-
 }

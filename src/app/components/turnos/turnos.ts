@@ -75,16 +75,22 @@ export class TurnosComponent implements OnInit {
       error: (err: any) => console.error("Error categorías", err)
     });
   }
-
-  cargarTiposDeTurnos() {
-    this.turnoService.getTurnos({}).subscribe({ 
-      next: (res: any) => {
-        this.listaTurnos = res.data || res;
-        this.cdRef.detectChanges();
-      },
-      error: (err: any) => console.error("Error tipos turnos", err)
-    });
-  }
+cargarTiposDeTurnos() {
+  this.turnoService.getTurnos({}).subscribe({ 
+    next: (res: any) => {
+      // Laravel suele envolver los datos en una propiedad 'data'
+      this.listaTurnos = res.data || res;
+      
+      // Si este log muestra los 24 registros, el modal ya no estará vacío
+      console.log("Turnos cargados correctamente:", this.listaTurnos);
+      
+      this.cdRef.detectChanges();
+    },
+    error: (err) => {
+      console.error("Error al cargar turnos. Verifica que la ruta en api.php sea correcta", err);
+    }
+  });
+}
 
   cargarConfiguracionInicial() {
     this.turnoService.getServicios().subscribe((res: any) => {
@@ -154,26 +160,44 @@ export class TurnosComponent implements OnInit {
     this.mostrarConfirmacion = true; 
   }
 
-  confirmarMovimiento() {
-    this.turnoService.actualizarPosicion(this.datosTemporal.payload).subscribe({
-      next: (res: any) => {
-        const accion = res.intercambio ? 'intercambió' : 'reasignó';
-        this.historialCambios.unshift({
-          texto: `Se ${accion} el turno de ${this.datosTemporal.origenNombre} con ${this.datosTemporal.destinoNombre}`,
-          hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          fecha_movimiento: new Date()
-        });
+confirmarMovimiento() {
+  this.cargando = true;
 
-        this.cerrarConfirmacion();
-        this.cargarTurnos();
-      },
-      error: (err: any) => {
-        alert("Error al mover el turno");
-        this.cerrarConfirmacion();
+  this.turnoService.actualizarPosicion(this.datosTemporal.payload).subscribe({
+    next: (res: any) => {
+      // 1. Preparamos los nombres con negritas para el innerHTML
+      const nombreOrigen = `<strong class="badge-persona">${this.datosTemporal.origenNombre}</strong>`;
+      const nombreDestino = `<strong class="badge-persona">${this.datosTemporal.destinoNombre}</strong>`;
+      
+      // 2. Determinamos el tipo de acción para el mensaje
+      const accion = res.intercambio ? 'intercambió' : 'movió';
+      const conector = res.intercambio ? 'con' : 'a la posición de';
+
+      // 3. Insertamos al principio del arreglo (unshift)
+      this.historialCambios.unshift({
+        texto: `Se ${accion} el turno de ${nombreOrigen} ${conector} ${nombreDestino}`,
+        hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        fecha_movimiento: new Date(),
+        tipo: res.intercambio ? 'swap' : 'move' // Utilidad para iconos si decides usarlos
+      });
+
+      // 4. Limpieza y refresco
+      this.cerrarConfirmacion();
+      this.cargarTurnos();
+      this.cargando = false;
+      
+      // Opcional: Limitar el historial a los últimos 20 registros para no saturar la memoria
+      if (this.historialCambios.length > 20) {
+        this.historialCambios.pop();
       }
-    });
-  }
-
+    },
+    error: (err: any) => {
+      this.cargando = false;
+      console.error("Error en el movimiento:", err);
+      alert("No se pudo completar el movimiento: " + (err.error?.message || 'Error del servidor'));
+    }
+  });
+}
   cancelarMovimiento() {
     this.cerrarConfirmacion();
   }
@@ -300,8 +324,14 @@ export class TurnosComponent implements OnInit {
     this.personalSeleccionado = { ...personal };
     this.diaSeleccionado = dia;
     this.turnoIdSeleccionado = null;
+  
+if (this.listaTurnos.length === 0) {
+      this.cargarTiposDeTurnos();
+    }
+
     this.mostrarModal = true;
   }
+
 
   cerrarModal() { this.mostrarModal = false; }
 }
