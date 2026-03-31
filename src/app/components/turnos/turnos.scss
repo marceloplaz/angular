@@ -131,16 +131,31 @@
     }
 }
 
+/* --- BOTONES DE AGREGAR (CÍRCULOS DISCRETOS) --- */
 .btn-add-soft {
-    border: none;
+    border: 2px dashed #cbd5e0; // Borde punteado para que parezca un espacio vacío
     background: transparent;
     color: #cbd5e0;
-    font-size: 1.2rem;
+    width: 32px;               // Tamaño fijo para que no se deforme
+    height: 32px;
+    border-radius: 50%;        // Forma circular
+    display: flex;             // Centrado del icono +
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;            // Centrado en la celda
     transition: all 0.2s ease;
+    cursor: pointer;
+    
+    i {
+        font-size: 0.9rem;
+    }
     
     &:hover {
         color: var(--verde-agua) !important;
-        transform: scale(1.2);
+        border: 2px solid var(--verde-agua);
+        background-color: rgba(26, 188, 156, 0.05);
+        transform: scale(1.1);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 }
 

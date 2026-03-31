@@ -37,11 +37,14 @@ export class TurnosComponent implements OnInit {
   semanasDisponibles: any[] = [];
   personalAgrupado: any[] = []; 
   listaTurnos: any[] = [];
-  
+  fechasRealesDeLaSemana: string[] = [];  
   // Propiedades de Historial y Modales
   historialCambios: any[] = []; 
   mostrarConfirmacion: boolean = false;
   datosTemporal: any = {};
+  mostrarModalCRUD: boolean = false;
+  turnoSeleccionado: any = null;
+  
   
   filters = { 
     servicio_id: null as any, 
@@ -209,30 +212,28 @@ confirmarMovimiento() {
 
   // --- ASIGNACIÓN MANUAL ---
 
-  guardarAsignacion() {
-    if (!this.turnoIdSeleccionado) return;
+ guardarAsignacion() {
+  if (!this.turnoIdSeleccionado) return;
 
-    const payload = {
-      usuario_id: this.personalSeleccionado.usuario_id,
-      servicio_id: this.filters.servicio_id,
-      turno_id: this.turnoIdSeleccionado,
-      semana_id: this.filters.semana_id,
-      mes_id: this.filters.mes_id,
-      gestion_id: 1, 
-      fecha: this.obtenerFechaReal(this.diaSeleccionado),
-      estado: 'programado'
-    };
+  const payload = {
+    usuario_id: this.personalSeleccionado.usuario_id,
+    servicio_id: this.filters.servicio_id,
+    turno_id: this.turnoIdSeleccionado,
+    semana_id: this.filters.semana_id,
+    mes_id: this.filters.mes_id,
+    gestion_id: 1, 
+    fecha: this.obtenerFechaReal(this.diaSeleccionado),
+    estado: 'programado'
+  };
 
-    this.turnoService.asignarTurno(payload).subscribe({
-      next: () => {
-        this.cerrarModal();
-        this.cargarTurnos();
-      },
-      error: (err: any) => console.error("Error al guardar:", err)
-    });
-  }
-
-  // --- ACCIONES MASIVAS ---
+  this.turnoService.asignarTurno(payload).subscribe({
+    next: () => {
+      this.cerrarModal(); // Esto pone mostrarModal en false
+      this.cargarTurnos(); // Esto refresca la cuadrícula
+    },
+    error: (err: any) => console.error("Error al guardar:", err)
+  });
+}
 
   onReplicarMes() {
     if (confirm(`¿Replicar esta semana a todo el mes?`)) {
@@ -295,6 +296,58 @@ confirmarMovimiento() {
     
     return `${año}-${mes}-${dia}`;
   }
+
+generarFechasDeLaSemana(fechaInicio: string) {
+    this.fechasRealesDeLaSemana = [];
+    for (let i = 0; i < 7; i++) {
+        const fecha = new Date(fechaInicio);
+        fecha.setDate(fecha.getDate() + i);
+        this.fechasRealesDeLaSemana.push(fecha.toISOString().split('T')[0]);
+    }
+}
+
+//capturamos el click para update
+abrirOpcionesTurno(turno: any, personal: any) {
+  this.turnoSeleccionado = { 
+    ...turno, 
+    // Guardamos el nombre para que el modal diga "Editando a: Lic. Pérez"
+    usuario_nombre: personal.usuario_nombre || personal.nombre, 
+    // Aseguramos que el ID del tipo de turno esté listo para el <select>
+    turno_id: turno.turno_id || turno.id_turno 
+  };
+  
+  this.mostrarModalCRUD = true;
+}
+
+// 2. Método para Actualizar
+confirmarActualizacion() {
+  const id = this.turnoSeleccionado.id_asignacion; // El ID de la tabla turnos_asignados
+  const data = {
+    turno_id: this.turnoSeleccionado.turno_id,
+    observacion: this.turnoSeleccionado.observacion
+  };
+
+  this.turnoService.actualizarTurnoAsignado(id, data).subscribe({
+    next: () => {
+      this.mostrarModalCRUD = false;
+      this.cargarTurnos(); // Recarga la tabla para ver el cambio
+    }
+  });
+}
+
+// 3. Método para Eliminar
+eliminarTurno() {
+  if (confirm('¿Estás seguro de eliminar esta asignación?')) {
+    this.turnoService.eliminarTurnoAsignado(this.turnoSeleccionado.id_asignacion).subscribe({
+      next: () => {
+        this.mostrarModalCRUD = false;
+        this.cargarTurnos();
+      }
+    });
+  }
+}
+
+
 
   calcularTotalHoras(usuario: any): number {
     if (!usuario?.turnos) return 0;

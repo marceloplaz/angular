@@ -78,4 +78,13 @@ actualizarPosicion(data: { turno_id: number, nuevo_usuario_id: number, nueva_fec
     // CORRECCIÓN: Añadimos 'v1/turnos-asignados/' antes de 'actualizar'
     return this.http.post(`${this.apiUrl}/turnos-asignados/actualizar`, data);
 }
+actualizarTurnoAsignado(id: number, data: any): Observable<any> {
+  // Usamos una coma para evitar errores de slash manuales si es necesario
+  return this.http.put(`${this.apiUrl}/turnos-asignados/${id}`, data);
+}
+
+eliminarTurnoAsignado(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/turnos-asignados/${id}`);
+}
+
 }
