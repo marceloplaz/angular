@@ -235,27 +235,68 @@ confirmarMovimiento() {
   });
 }
 
-  onReplicarMes() {
-    if (confirm(`¿Replicar esta semana a todo el mes?`)) {
-      this.turnoService.replicarSemanaEnMes(this.filters.servicio_id, this.filters.mes_id, this.filters.semana_id)
-        .subscribe(() => { alert("Mes replicado"); this.cargarTurnos(); });
-    }
+ onReplicarMes() {
+  if (confirm(`¿Estás seguro de replicar esta semana a todo el mes?`)) {
+    this.cargando = true;
+    this.turnoService.replicarSemanaEnMes(
+      this.filters.servicio_id, 
+      this.filters.mes_id, 
+      this.filters.semana_id
+    ).subscribe({
+      next: () => {
+        alert("La semana se ha replicado en todo el mes exitosamente.");
+        this.cargarTurnos();
+        this.cargando = false;
+      },
+      error: (err) => {
+        this.cargando = false;
+        alert("Error al replicar: " + (err.error?.message || 'Intente nuevamente'));
+      }
+    });
   }
+}
 
   onRotarMensual() {
-    const idMesDestino = prompt("Introduce el ID del MES al que deseas rotar el personal:");
-    if (!idMesDestino) return;
-    
-    this.turnoService.rotarPersonalMensual(this.filters.servicio_id, this.filters.mes_id, Number(idMesDestino))
-      .subscribe({
-        next: () => {
-          alert("Personal rotado exitosamente.");
-          this.cargarTurnos();
-        },
-        error: (err: any) => alert("Error en rotación: " + (err.error?.message || 'Error desconocido'))
-      });
+  const servicioId = this.filters.servicio_id;
+  const mesActualId = this.filters.mes_id;
+  const gestionActual = this.filters.gestion; // 2026
+
+  let mesDestinoId: number;
+  let gestionDestino: number = gestionActual;
+
+  // Lógica de salto de mes y año
+  if (mesActualId === 12) {
+    mesDestinoId = 1; // De Diciembre saltamos a Enero
+    gestionDestino = Number(gestionActual) + 1; // Saltamos a 2027
+  } else {
+    mesDestinoId = Number(mesActualId) + 1;
   }
 
+  // Confirmación al usuario
+  if (confirm(`¿Deseas rotar circularmente el personal al mes ${mesDestinoId} de ${gestionDestino}?`)) {
+    this.cargando = true;
+    
+    this.turnoService.rotarPersonalMensual(servicioId, mesActualId, mesDestinoId).subscribe({
+      next: (res: any) => {
+        alert(`¡Éxito! Personal rotado correctamente.`);
+
+        // Actualizamos los filtros para "viajar" al nuevo mes
+        this.filters.mes_id = mesDestinoId;
+        this.filters.gestion = gestionDestino;
+
+        // Forzamos la actualización de semanas disponibles para el nuevo mes
+        this.onCambioMes(mesDestinoId); 
+        
+        this.cargando = false;
+      },
+      error: (err: any) => {
+        this.cargando = false;
+        console.error("Error en la rotación:", err);
+        alert("No se pudo rotar: " + (err.error?.message || 'Error del servidor'));
+      }
+    });
+  }
+}
   // Se renombra para que coincida con el (click)="vaciarCalendario()" de tu HTML
   vaciarCalendario() {
     if (confirm("¿Estás seguro de vaciar todos los turnos del mes?")) {
@@ -364,14 +405,19 @@ eliminarTurno() {
 
   onFilterChange() { this.cargarTurnos(); }
 
-  onCambioMes(mesId: any) {
-    const mes = this.mesesDisponibles.find(m => m.id == mesId);
-    this.semanasDisponibles = mes ? mes.semanas : [];
-    if (this.semanasDisponibles.length > 0) {
-      this.filters.semana_id = this.semanasDisponibles[0].id;
-      this.onFilterChange();
-    }
+ onCambioMes(mesId: any) {
+  // Aseguramos que el filtro tenga el ID correcto
+  this.filters.mes_id = mesId;
+  
+  const mes = this.mesesDisponibles.find(m => m.id == mesId);
+  this.semanasDisponibles = mes ? mes.semanas : [];
+  
+  if (this.semanasDisponibles.length > 0) {
+    // Seleccionamos la primera semana del nuevo mes
+    this.filters.semana_id = this.semanasDisponibles[0].id;
+    this.cargarTurnos();
   }
+}
 
   abrirModalAsignar(personal: any, dia: string) {
     this.personalSeleccionado = { ...personal };

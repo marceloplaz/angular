@@ -56,13 +56,13 @@ getTurnos(params: any): Observable<any> {
   /**
    * Rota al personal del mes actual al mes siguiente
    */
-  rotarPersonalMensual(servicioId: number, mesBaseId: number, mesDestId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
-      servicio_id: servicioId,
-      mes_base_id: mesBaseId,
-      mes_dest_id: mesDestId
-    });
-  }
+ rotarPersonalMensual(servicioId: number, mesId: number, mesDestinoId: number): Observable<any> {
+  return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
+    servicio_id: servicioId,
+    mes_id: mesId,          // Coincide con el backend
+    mes_destino: mesDestinoId // Coincide con el backend
+  });
+}
 
   /**
    * Elimina todos los turnos programados del mes para un servicio
