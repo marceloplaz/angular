@@ -1,0 +1,74 @@
+<div class="card border-0 shadow-sm overflow-hidden">
+  <div class="card-header text-white p-3" style="background-color: #166534;">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-journal-plus fs-4 me-2"></i>
+      <div>
+        <h6 class="mb-0 fw-bold">Registrar Novedad Laboral</h6>
+        <small class="opacity-75">ID Turno Origen: {{ turnoOrigenId() }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body p-4" style="background-color: #f0f9ff;">
+    <form [formGroup]="novedadForm">
+      
+      <div class="mb-4">
+        <label class="form-label fw-bold text-secondary">
+          <i class="bi bi-person-check me-1"></i> Personal de Reemplazo
+        </label>
+        <select class="form-select border-2" 
+                formControlName="usuario_reemplazo_id"
+                [class.is-invalid]="novedadForm.get('usuario_reemplazo_id')?.touched && novedadForm.get('usuario_reemplazo_id')?.invalid">
+          <option value="" disabled selected>Seleccione quién cubrirá el turno...</option>
+          @for (persona of personalDisponible(); track persona.id) {
+            <option [value]="persona.id">{{ persona.nombre_completo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-bold text-secondary">
+          <i class="bi bi-tag me-1"></i> Tipo de Novedad
+        </label>
+        <select class="form-select border-2" formControlName="tipo_novedad">
+          <option value="permiso">Permiso Administrativo</option>
+          <option value="baja_medica">Baja Médica</option>
+          <option value="vacacion">Vacaciones</option>
+          <option value="licencia">Licencia</option>
+          <option value="devolucion_turno">Devolución de Turno</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold text-secondary">
+          <i class="bi bi-chat-left-text me-1"></i> Detalles / Observación
+        </label>
+        <textarea class="form-control border-2" 
+                  formControlName="observacion" 
+                  rows="3" 
+                  placeholder="Escriba información adicional aquí..."></textarea>
+      </div>
+    </form>
+  </div>
+
+  <div class="card-footer bg-white p-3 d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-light px-4 fw-semibold text-secondary" 
+            [disabled]="isSaving()">
+      Cancelar
+    </button>
+    
+    <button type="button" 
+            class="btn text-white px-4 fw-bold shadow-sm" 
+            style="background-color: #166534;"
+            (click)="registrarNovedad()"
+            [disabled]="novedadForm.invalid || isSaving()">
+      
+      @if (isSaving()) {
+        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        Procesando...
+      } @else {
+        <i class="bi bi-check-circle me-1"></i> Confirmar Registro
+      }
+    </button>
+  </div>
+</div>

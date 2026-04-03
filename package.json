@@ -11,6 +11,7 @@
   "private": true,
   "packageManager": "npm@11.8.0",
   "dependencies": {
+    "@angular/animations": "^21.2.0",
     "@angular/cdk": "^21.2.4",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
@@ -23,6 +24,7 @@
     "admin-lte": "^4.0.0-rc7",
     "bootstrap": "^5.3.8",
     "jquery": "^4.0.0",
+    "ngx-toastr": "^20.0.5",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.2",

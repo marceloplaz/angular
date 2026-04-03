@@ -212,6 +212,7 @@
 
 /* --- MODALES --- */
 
+/* Modifica tu clase actual en el SCSS */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -220,8 +221,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 9999; /* El estándar */
     backdrop-filter: blur(2px);
+
+    /* Añade esta sub-clase para cuando necesites un modal sobre otro */
+    &.superior {
+        z-index: 10001 !important; 
+        background: rgba(0,0,0,0.75); // Un poco más oscuro para resaltar
+    }
 }
 
 .modal-content {

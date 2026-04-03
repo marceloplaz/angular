@@ -2,13 +2,14 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
+import { NovedadComponent } from '../novedad/novedad';
 import { 
   DragDropModule, 
   CdkDragDrop, 
   CdkDropListGroup, 
   CdkDropList, 
   CdkDrag, 
-  CdkDragPlaceholder 
+  CdkDragPlaceholder, 
 } from '@angular/cdk/drag-drop';
 
 @Component({
@@ -21,7 +22,8 @@ import {
     CdkDropListGroup, 
     CdkDropList, 
     CdkDrag, 
-    CdkDragPlaceholder 
+    CdkDragPlaceholder, 
+    NovedadComponent
   ],
   templateUrl: './turnos.html',
   styleUrl: './turnos.scss',
@@ -30,6 +32,8 @@ export class TurnosComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private cdRef = inject(ChangeDetectorRef);
 
+  mostrarModalNovedad = false; 
+  idTurnoParaNovedad: number | null = null;
   // Propiedades de datos
   servicios: any[] = [];
   categorias: any[] = [];
@@ -68,6 +72,37 @@ export class TurnosComponent implements OnInit {
   }
 
   // --- CARGA DE DATOS ---
+
+  get personalParaReemplazo() {
+    return this.personalAgrupado.map(p => ({
+      id: p.usuario_id,
+      nombre_completo: p.usuario_nombre
+    }));
+  }
+
+  // En turnos.ts
+abrirRegistroNovedad(turno: any) {
+  console.log('Intentando abrir novedad para:', turno); // <--- Agrega este log para debuguear
+  
+  if (!turno) {
+    alert('Por favor, selecciona primero un turno de la tabla para reportar la novedad.');
+    return;
+  }
+
+  this.idTurnoParaNovedad = turno.id_asignacion || turno.id;
+  this.mostrarModalNovedad = true;
+  this.cdRef.detectChanges(); // Fuerza a Angular a notar el cambio
+}
+
+// Y no olvides el método para cuando termine de guardar
+onNovedadProcesada() {
+  this.mostrarModalNovedad = false;
+  this.idTurnoParaNovedad = null;
+  this.cargarTurnos(); // Refresca la tabla
+}
+
+
+
 
   cargarCategorias() {
     this.turnoService.getCategorias().subscribe({
