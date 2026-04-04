@@ -1,67 +1,135 @@
-import { Component, inject, signal, input, output, DestroyRef } from '@angular/core'; 
+import { Component, inject, signal, OnInit, DestroyRef, output, input,effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { NovedadService } from '../../services/novedad'; // Ajusta según tu ruta
-import { ToastrService } from 'ngx-toastr';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NovedadService } from '../../services/novedad';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NovedadListar } from '../../interfaces/novedad';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-novedad',
   standalone: true,
-  // Importamos lo necesario para formularios y directivas básicas
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './novedad.html',
   styleUrl: './novedad.scss'
 })
-export class NovedadComponent {
-  // 1. Inyección de dependencias funcional (v21)
-  private readonly _fb = inject(FormBuilder);
+export class NovedadComponent implements OnInit {
   private readonly _novedadService = inject(NovedadService);
-  private readonly _toastr = inject(ToastrService);
   private readonly _destroyRef = inject(DestroyRef);
-  // 2. Entradas y Salidas basadas en Signals
-  // El ID del turno que el usuario seleccionó en la tabla principal
-  turnoOrigenId = input.required<number>();
-  // Lista de personal médico disponible para el reemplazo
+  private readonly _fb = inject(FormBuilder);
+  private readonly _toastr = inject(ToastrService);
+
+  // --- INPUTS (Datos desde el componente Turnos) ---
+  turnoOrigenId = input<number | null>(null);
   personalDisponible = input<any[]>([]);
-  // Avisa al componente padre (la tabla) que debe refrescar los datos
+  
+  // --- OUTPUTS (Comunicación hacia el padre) ---
   novedadGuardada = output<void>();
+  cerrarNovedades = output<void>();
 
-  // 3. Estado reactivo para la UI
-  isSaving = signal(false);
+  // --- ESTADOS (Signals) ---
+  modoRegistro = signal(false); 
+  cargando = signal(false);
+  listaNovedades = signal<NovedadListar[]>([]); 
 
-  // 4. Definición del Formulario
+  // --- FORMULARIO ---
   novedadForm = this._fb.nonNullable.group({
     usuario_reemplazo_id: ['', [Validators.required]],
     tipo_novedad: ['permiso', [Validators.required]],
     observacion: ['', [Validators.maxLength(250)]]
   });
 
-  registrarNovedad(): void {
-  if (this.novedadForm.invalid || this.isSaving()) return;
-
-  this.isSaving.set(true);
-
-  const payload = {
-    ...this.novedadForm.getRawValue(),
-    id_origen: this.turnoOrigenId()
-  };
-
-  this._novedadService.registrarNovedad(payload)
-    // Cambia la línea de abajo para incluir el ref:
-    .pipe(takeUntilDestroyed(this._destroyRef)) 
-    .subscribe({
-      next: (res) => {
-        this._toastr.success('Cambio registrado con éxito');
-        this.novedadGuardada.emit();
-        this.isSaving.set(false);
-        this.novedadForm.reset();
-      },
-      error: (err) => {
-        this._toastr.error('Error al procesar');
-        this.isSaving.set(false);
+  constructor() {
+    // 1. Sincronización automática: Cuando llega un ID desde el padre, activamos el formulario
+    effect(() => {
+      const id = this.turnoOrigenId();
+      if (id) {
+        console.log("ID de turno detectado en el hijo:", id);
+        this.modoRegistro.set(true);
       }
     });
+  }
+
+  ngOnInit(): void {
+    // 1. Cargamos el historial siempre al iniciar
+    this.obtenerHistorial();
+    // 2. Si el padre nos pasa un ID de turno, activamos el formulario automáticamente
+    if (this.turnoOrigenId()) {
+      this.modoRegistro.set(true);
+    }
+  }
+  // --- LÓGICA DE REGISTRO ---
+// src/app/components/novedad/novedad.ts
+
+// ... dentro de la clase NovedadComponent ...
+
+
+
+
+registrarNovedad(): void {
+  if (this.novedadForm.invalid || this.cargando() || !this.turnoOrigenId()) {
+    this._toastr.warning('Faltan datos obligatorios o el ID del turno');
+    return;
+  }
+this.cargando.set(true);
+    
+    // Construimos el objeto exacto que espera Laravel
+    const payload = {
+      ...this.novedadForm.getRawValue(),
+      id_origen: this.turnoOrigenId(), // Este campo soluciona el error 422 de tu consola
+      asignacion_id: this.turnoOrigenId() 
+    };
+
+  this._novedadService.registrarNovedad(payload)
+    .pipe(takeUntilDestroyed(this._destroyRef))
+    .subscribe({
+      next: () => {
+        this._toastr.success('Novedad registrada correctamente');
+        this.novedadGuardada.emit(); 
+        this.limpiarFormularioDespuesDeGuardar();
+      },
+      error: (err) => {
+        this.cargando.set(false);
+        // Esto te dirá exactamente qué campo falta según Laravel
+        console.error("Error del servidor:", err.error);
+        this._toastr.error(err.error?.message || 'Error al validar datos');
+      }
+           });
 }
-  
+private limpiarFormularioDespuesDeGuardar(): void {
+    this.modoRegistro.set(false);
+    this.cargando.set(false);
+    this.novedadForm.reset({ 
+      tipo_novedad: 'permiso' // Asegúrate de que coincida con el valor de tu <option>
+    });
+    this.obtenerHistorial();
+  }
+// También agrega esta para evitar otro error en el HTML
+cancelarRegistro(): void {
+  this.modoRegistro.set(false);
+  this.novedadForm.reset({ tipo_novedad: 'permiso' });
+}
+
+  // --- LÓGICA DE LISTADO ---
+  obtenerHistorial(): void {
+    this.cargando.set(true);
+    this._novedadService.getNovedades()
+      .pipe(takeUntilDestroyed(this._destroyRef))
+      .subscribe({
+        next: (res) => {
+          const data = (res as any).data || res;
+          this.listaNovedades.set(data);
+          this.cargando.set(false);
+        },
+        error: (err) => {
+          console.error('Error al obtener novedades:', err);
+          this.cargando.set(false);
+        }
+      });
+  }
+
+  // --- CIERRE DEL COMPONENTE ---
+  volver(): void {
+    this.cerrarNovedades.emit();
+  }
 }

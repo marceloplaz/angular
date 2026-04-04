@@ -1,8 +1,31 @@
-.form-select:focus, .form-control:focus {
-    border-color: #166534;
-    box-shadow: 0 0 0 0.25rem rgba(22, 101, 52, 0.1);
-}
+/* novedad.scss */
 
 .card {
-    border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border-radius: 12px; // Bordes más suaves para que coincida con tu diseño
+}
+
+.table-responsive {
+  max-height: 400px; 
+  overflow-y: auto;
+  
+  /* Opcional: Personalizar el scroll para que se vea más fino */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
+}
+
+// Para que el select no se vea tan pegado al borde en móviles
+.form-select {
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.1);
+  }
 }

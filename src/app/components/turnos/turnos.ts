@@ -48,6 +48,7 @@ export class TurnosComponent implements OnInit {
   datosTemporal: any = {};
   mostrarModalCRUD: boolean = false;
   turnoSeleccionado: any = null;
+  verNovedades: boolean = false;        // Para el Historial de novedades
   
   
   filters = { 
@@ -65,6 +66,18 @@ export class TurnosComponent implements OnInit {
   diaSeleccionado: string = '';
   turnoIdSeleccionado: any = null;
 
+
+
+  get personalParaReemplazo() {
+  if (!this.personalAgrupado || !Array.isArray(this.personalAgrupado)) {
+    return [];
+  }
+  return this.personalAgrupado.map(p => ({
+    id: p.usuario_id || p.id, 
+    nombre_completo: p.usuario_nombre || p.nombre || 'Sin nombre'
+  }));
+}
+  
   ngOnInit() {
     this.cargarCategorias();
     this.cargarTiposDeTurnos();
@@ -73,15 +86,11 @@ export class TurnosComponent implements OnInit {
 
   // --- CARGA DE DATOS ---
 
-  get personalParaReemplazo() {
-    return this.personalAgrupado.map(p => ({
-      id: p.usuario_id,
-      nombre_completo: p.usuario_nombre
-    }));
-  }
+
 
   // En turnos.ts
-abrirRegistroNovedad(turno: any) {
+
+  abrirRegistroNovedad(turno: any) {
   console.log('Intentando abrir novedad para:', turno); // <--- Agrega este log para debuguear
   
   if (!turno) {
@@ -100,8 +109,13 @@ onNovedadProcesada() {
   this.idTurnoParaNovedad = null;
   this.cargarTurnos(); // Refresca la tabla
 }
-
-
+// Este es el método que te pide el error del compilador
+  finalizarNovedad(): void {
+    this.verNovedades = false;        // Cierra el historial si estuviera abierto
+    this.mostrarModalNovedad = false; // Cierra el formulario de registro
+    this.idTurnoParaNovedad = null;   // Limpia el ID seleccionado
+    this.cargarTurnos();              // Refresca la tabla de turnos
+  }
 
 
   cargarCategorias() {

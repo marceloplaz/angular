@@ -231,7 +231,6 @@
     </div>
   </div>
 
-
 @if (mostrarModalNovedad) {
   <div class="modal-overlay" 
        style="z-index: 11000 !important; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;">
@@ -240,13 +239,13 @@
            style="min-width: 450px; position: relative; z-index: 11001;">
           
           <app-novedad 
-            [turnoOrigenId]="idTurnoParaNovedad!" 
-            [personalDisponible]="personalParaReemplazo"
-            (novedadGuardada)="onNovedadProcesada()">
-          </app-novedad>
-
-          <button class="btn btn-sm btn-light mt-3 w-100" (click)="mostrarModalNovedad = false">
-             Cancelar y Volver
+  [turnoOrigenId]="idTurnoParaNovedad" 
+  [personalDisponible]="personalParaReemplazo" 
+  (cerrarNovedades)="finalizarNovedad()" 
+  (novedadGuardada)="finalizarNovedad()">
+</app-novedad>
+          <button class="btn btn-sm btn-light mt-3 w-100" (click)="finalizarNovedad()">
+              Cancelar y Volver
           </button>
       </div>
   </div>

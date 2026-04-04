@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment'; // Ajusta la ruta según tu proyecto
-
+import { NovedadListar } from '../interfaces/novedad';
 @Injectable({
   providedIn: 'root'
 })
@@ -12,6 +12,9 @@ export class NovedadService {
 
   private readonly _apiUrl = `${environment.apiUrl}/novedades`;
   
+getNovedades(): Observable<NovedadListar[]> {
+    return this._http.get<NovedadListar[]>(this._apiUrl);
+  }
 
   /**
    * Registra una novedad laboral o permuta de turnos.
@@ -21,11 +24,14 @@ export class NovedadService {
     // Debe ser /permutar-turnos para que coincida con tu api.php
     return this._http.post(`${this._apiUrl}/permutar-turnos`, datos); 
 }
+permutarTurnos(datos: any): Observable<any> {
+    return this._http.post(`${this._apiUrl}/permutar-turnos`, datos);
+  }
 
   /**
    * Opcional: Obtener historial de novedades por servicio
    */
-  getHistorialNovedades(servicioId: number): Observable<any[]> {
-    return this._http.get<any[]>(`${this._apiUrl}/historial/${servicioId}`);
+  getNovedadById(id: number): Observable<NovedadListar> {
+    return this._http.get<NovedadListar>(`${this._apiUrl}/${id}`);
   }
 }
