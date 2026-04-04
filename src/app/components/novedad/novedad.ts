@@ -1,10 +1,11 @@
-import { Component, inject, signal, OnInit, DestroyRef, output, input,effect } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef, output, input, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NovedadService } from '../../services/novedad';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NovedadListar } from '../../interfaces/novedad';
 import { ToastrService } from 'ngx-toastr';
+
 
 @Component({
   selector: 'app-novedad',
@@ -27,11 +28,11 @@ export class NovedadComponent implements OnInit {
   novedadGuardada = output<void>();
   cerrarNovedades = output<void>();
 
-  // --- ESTADOS (Signals) ---
-  modoRegistro = signal(false); 
-  cargando = signal(false);
-  listaNovedades = signal<NovedadListar[]>([]); 
-
+  novedades = signal<any[]>([]); // Fuente original de datos
+  searchTerm = signal<string>(''); // Texto del buscador
+  cargando = signal<boolean>(false);
+  modoRegistro = signal<boolean>(false);
+  
   // --- FORMULARIO ---
   novedadForm = this._fb.nonNullable.group({
     usuario_reemplazo_id: ['', [Validators.required]],
@@ -40,7 +41,7 @@ export class NovedadComponent implements OnInit {
   });
 
   constructor() {
-    // 1. Sincronización automática: Cuando llega un ID desde el padre, activamos el formulario
+    // Sincronización automática: reacciona cuando cambia turnoOrigenId
     effect(() => {
       const id = this.turnoOrigenId();
       if (id) {
@@ -50,18 +51,51 @@ export class NovedadComponent implements OnInit {
     });
   }
 
+novedadesFiltradas = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const lista = this.novedades();
+
+    if (!term) return lista;
+
+    return lista.filter(n => 
+      n.solicitante?.persona?.nombre_completo?.toLowerCase().includes(term) ||
+      n.reemplazo?.persona?.nombre_completo?.toLowerCase().includes(term) ||
+      n.asignacion?.servicio?.nombre?.toLowerCase().includes(term) ||
+      n.tipo_novedad?.toLowerCase().includes(term)
+    );
+  });
+
+  
+
+ 
+
   ngOnInit(): void {
     // 1. Cargamos el historial siempre al iniciar
+    this.cargarDatos();
     this.obtenerHistorial();
     // 2. Si el padre nos pasa un ID de turno, activamos el formulario automáticamente
     if (this.turnoOrigenId()) {
       this.modoRegistro.set(true);
     }
   }
-  // --- LÓGICA DE REGISTRO ---
-// src/app/components/novedad/novedad.ts
+  
+  cargarDatos() {
+    this.cargando.set(true);
+    this._novedadService.getNovedades().subscribe({
+      next: (data) => {
+        // IMPORTANTE: .set(data) llena la señal y activa el filtrado
+        this.novedades.set(data);
+        this.cargando.set(false);
+      },
+      error: () => this.cargando.set(false)
+    });
+  }
 
-// ... dentro de la clase NovedadComponent ...
+  // 3. ACTUALIZAR BUSCADOR
+  updateSearch(value: string) {
+    this.searchTerm.set(value);
+  }
+
 
 
 
@@ -96,6 +130,23 @@ this.cargando.set(true);
       }
            });
 }
+
+confirmarDevolucion(id: number): void {
+  this.cargando.set(true);
+  this._novedadService.devolverTurno(id)
+    .pipe(takeUntilDestroyed(this._destroyRef))
+    .subscribe({
+      next: () => {
+        this._toastr.success('Estado actualizado: Turno Devuelto');
+        this.obtenerHistorial(); // Esto refresca la tabla y cambia el badge a verde
+      },
+      error: (err) => {
+        this.cargando.set(false);
+        this._toastr.error('No se pudo actualizar el estado');
+      }
+    });
+}
+
 private limpiarFormularioDespuesDeGuardar(): void {
     this.modoRegistro.set(false);
     this.cargando.set(false);
@@ -118,7 +169,7 @@ cancelarRegistro(): void {
       .subscribe({
         next: (res) => {
           const data = (res as any).data || res;
-          this.listaNovedades.set(data);
+          this.novedades.set(data);
           this.cargando.set(false);
         },
         error: (err) => {

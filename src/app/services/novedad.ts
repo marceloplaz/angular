@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment'; // Ajusta la ruta según tu proyecto
 import { NovedadListar } from '../interfaces/novedad';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -12,7 +13,8 @@ export class NovedadService {
 
   private readonly _apiUrl = `${environment.apiUrl}/novedades`;
   
-getNovedades(): Observable<NovedadListar[]> {
+
+  getNovedades(): Observable<NovedadListar[]> {
     return this._http.get<NovedadListar[]>(this._apiUrl);
   }
 
@@ -27,7 +29,11 @@ getNovedades(): Observable<NovedadListar[]> {
 permutarTurnos(datos: any): Observable<any> {
     return this._http.post(`${this._apiUrl}/permutar-turnos`, datos);
   }
-
+// Línea 32 corregida
+devolverTurno(id: number): Observable<any> {
+  // Usamos _apiUrl que es como la declaraste arriba
+  return this._http.put(`${this._apiUrl}/${id}/devolver`, {});
+}
   /**
    * Opcional: Obtener historial de novedades por servicio
    */
