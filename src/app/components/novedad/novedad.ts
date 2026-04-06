@@ -95,42 +95,51 @@ novedadesFiltradas = computed(() => {
   updateSearch(value: string) {
     this.searchTerm.set(value);
   }
-
-
+// Signal que limpia la lista que viene del padre
+listaPersonalFormateada = computed(() => {
+  const lista = this.personalDisponible(); // El input() que ya tienes
+  return lista.map(p => ({
+    id: p.id || p.usuario_id,
+    // Busca el nombre en cualquier propiedad posible
+    nombre: p.nombre_completo || p.usuario_nombre || p.nombre || 'Usuario sin nombre'
+  }));
+});
 
 
 
 registrarNovedad(): void {
+  // 1. Validamos el formulario y que tengamos el ID del turno de origen
   if (this.novedadForm.invalid || this.cargando() || !this.turnoOrigenId()) {
-    this._toastr.warning('Faltan datos obligatorios o el ID del turno');
+    this._toastr.warning('Faltan datos obligatorios');
     return;
   }
-this.cargando.set(true);
-    
-    // Construimos el objeto exacto que espera Laravel
-    const payload = {
-      ...this.novedadForm.getRawValue(),
-      id_origen: this.turnoOrigenId(), // Este campo soluciona el error 422 de tu consola
-      asignacion_id: this.turnoOrigenId() 
-    };
 
+  this.cargando.set(true);
+    
+  // 2. Construimos el payload. 
+  // 'id_origen' y 'asignacion_id' suelen ser necesarios para vincular la novedad al turno
+  const payload = {
+    ...this.novedadForm.getRawValue(),
+    id_origen: this.turnoOrigenId(), 
+    asignacion_id: this.turnoOrigenId() 
+  };
+
+  // 3. Llamada al servicio
   this._novedadService.registrarNovedad(payload)
     .pipe(takeUntilDestroyed(this._destroyRef))
     .subscribe({
       next: () => {
         this._toastr.success('Novedad registrada correctamente');
-        this.novedadGuardada.emit(); 
-        this.limpiarFormularioDespuesDeGuardar();
+        this.novedadGuardada.emit(); // Avisa al padre para refrescar el calendario
+        this.limpiarFormularioDespuesDeGuardar(); // Vuelve a la tabla y resetea
       },
       error: (err) => {
         this.cargando.set(false);
-        // Esto te dirá exactamente qué campo falta según Laravel
         console.error("Error del servidor:", err.error);
         this._toastr.error(err.error?.message || 'Error al validar datos');
       }
-           });
+    });
 }
-
 confirmarDevolucion(id: number): void {
   this.cargando.set(true);
   this._novedadService.devolverTurno(id)
@@ -146,6 +155,7 @@ confirmarDevolucion(id: number): void {
       }
     });
 }
+
 
 private limpiarFormularioDespuesDeGuardar(): void {
     this.modoRegistro.set(false);

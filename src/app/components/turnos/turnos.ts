@@ -67,14 +67,16 @@ export class TurnosComponent implements OnInit {
   turnoIdSeleccionado: any = null;
 
 
-
-  get personalParaReemplazo() {
+// En turnos.ts
+get personalParaReemplazo() {
   if (!this.personalAgrupado || !Array.isArray(this.personalAgrupado)) {
     return [];
   }
   return this.personalAgrupado.map(p => ({
+    // ID del usuario para la base de datos
     id: p.usuario_id || p.id, 
-    nombre_completo: p.usuario_nombre || p.nombre || 'Sin nombre'
+    // Mapeamos el nombre asegurando que siempre haya un valor
+    nombre_completo: p.usuario_nombre || p.nombre || (p.persona ? p.persona.nombre_completo : 'Sin nombre')
   }));
 }
   
@@ -91,20 +93,33 @@ export class TurnosComponent implements OnInit {
   // En turnos.ts
 
   abrirRegistroNovedad(turno: any) {
-  console.log('Intentando abrir novedad para:', turno); // <--- Agrega este log para debuguear
+  console.log('Intentando abrir novedad para:', turno);
   
   if (!turno) {
-    alert('Por favor, selecciona primero un turno de la tabla para reportar la novedad.');
+    alert('Por favor, selecciona primero un turno de la tabla.');
     return;
   }
 
-  this.idTurnoParaNovedad = turno.id_asignacion || turno.id;
+  // 1. Capturamos el ID de la asignación
+  const idAsignacion = turno.id_asignacion || turno.id;
+
+  // 2. Cerramos el modal de "Gestionar Asignación" (el de los botones verde/rojo/amarillo)
+  this.mostrarModalCRUD = false;
+
+  // 3. Activamos el modo registro en el componente Novedad
+  this.idTurnoParaNovedad = idAsignacion;
   this.mostrarModalNovedad = true;
-  this.cdRef.detectChanges(); // Fuerza a Angular a notar el cambio
+
+  // 4. Aseguramos que el historial no esté bloqueando la vista
+  this.verNovedades = false;
+
+  // Forzamos la detección de cambios para que Angular renderice el @if(modoRegistro)
+  this.cdRef.detectChanges();
 }
 
 // Y no olvides el método para cuando termine de guardar
 onNovedadProcesada() {
+  console.log('Novedad guardada con éxito, refrescando tabla...');
   this.mostrarModalNovedad = false;
   this.idTurnoParaNovedad = null;
   this.cargarTurnos(); // Refresca la tabla
