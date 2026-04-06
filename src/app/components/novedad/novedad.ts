@@ -140,18 +140,21 @@ registrarNovedad(): void {
       }
     });
 }
+
 confirmarDevolucion(id: number): void {
   this.cargando.set(true);
+  
   this._novedadService.devolverTurno(id)
-    .pipe(takeUntilDestroyed(this._destroyRef))
     .subscribe({
-      next: () => {
-        this._toastr.success('Estado actualizado: Turno Devuelto');
-        this.obtenerHistorial(); // Esto refresca la tabla y cambia el badge a verde
+      next: (res) => {
+        this._toastr.success('¡Estado actualizado!');
+        
+        // ESTA LÍNEA ES LA QUE CAMBIA LA IMAGEN A VERDE
+        this.obtenerHistorial(); 
       },
       error: (err) => {
         this.cargando.set(false);
-        this._toastr.error('No se pudo actualizar el estado');
+        this._toastr.error('Error al actualizar en el servidor');
       }
     });
 }
