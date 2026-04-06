@@ -1,33 +1,53 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs'; 
-import { Servicio } from '../interfaces/servicio';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
-@Injectable({ providedIn: 'root' })
+
+@Injectable({
+  providedIn: 'root'
+})
 export class ServicioService {
-  
-  private myAppUrl: string = environment.apiUrl; // http://127.0.0.1:8000/api/v1
-  private myApiUrl = 'servicios';
+  // Usamos directamente la variable del environment sin añadir nada más
+  private readonly url: string = environment.apiUrl; 
 
   constructor(private http: HttpClient) { }
 
- // servicios.service.ts
-getServicios(): Observable<any> {
-  // Al añadir '/' aquí, la URL será: http://127.0.0.1:8000/api/v1/servicios
-  return this.http.get(`${this.myAppUrl}/${this.myApiUrl}`);
-}
-
-  createServicio(servicio: Servicio): Observable<any> {
-    return this.http.post(`${this.myAppUrl}/${this.myApiUrl}`, servicio);
+  // Obtener todos los servicios
+  getServicios(): Observable<any> {
+    return this.http.get(`${this.url}/servicios`);
   }
 
-  // servicios.service.ts
-updateServicio(id: number, servicio: Servicio): Observable<void> {
-  // Usa solo UNA barra para separar la URL base del endpoint y el ID
-  return this.http.put<void>(`${this.myAppUrl}/${this.myApiUrl}/${id}`, servicio);
-}
+  // Obtener un solo servicio (Corregido: sin llaves extra)
+  getServicio(id: number): Observable<any> {
+    return this.http.get(`${this.url}/servicios/${id}`);
+  }
 
+  // Eliminar servicio
   deleteServicio(id: number): Observable<any> {
-    return this.http.delete(`${this.myAppUrl}/${this.myApiUrl}/${id}`);
+    return this.http.get(`${this.url}/servicios/${id}`); // Cambiar a .delete si tu API lo requiere
+  }
+
+  // Crear servicio
+  createServicio(servicio: any): Observable<any> {
+    return this.http.post(`${this.url}/servicios`, servicio);
+  }
+
+  // Actualizar servicio
+  updateServicio(id: number, servicio: any): Observable<any> {
+    return this.http.put(`${this.url}/servicios/${id}`, servicio);
+  }
+
+  // --- GESTIÓN DE PERSONAL ---
+
+  buscarProfesionales(termino: string): Observable<any> {
+    return this.http.get(`${this.url}/buscar-profesionales?buscar=${termino}`);
+  }
+
+  vincularProfesional(datos: any): Observable<any> {
+    return this.http.post(`${this.url}/usuario-servicio`, datos);
+  }
+
+  desvincularProfesional(id: number): Observable<any> {
+    return this.http.delete(`${this.url}/usuario-servicio/${id}`);
   }
 }

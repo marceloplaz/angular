@@ -55,3 +55,12 @@
     background-color: #f1f8e9;
   }
 }
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.list-group {
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
