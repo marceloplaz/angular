@@ -19,13 +19,13 @@ export class PersonalComponent implements OnInit {
   public listaPersonas: any[] = [];
   public personasFiltradas: any[] = [];
   public mostrarModal: boolean = false;
-  public mostrarDetallesModal: boolean = false;
+//  public mostrarDetallesModal: boolean = false;
   public editando: boolean = false;
   public usuarioIdSeleccionado: number | null = null;
   public filtroActual: string = 'Todos';
   public terminoBusqueda: string = '';
-  public pSeleccionado: any = null;
-  public personaDetalle: any = null;
+  //public pSeleccionado: any = null;
+  //public personaDetalle: any = null;
 
   // Estructura para nuevo usuario / edición
   public nuevoUsuario: any = {
@@ -81,17 +81,17 @@ export class PersonalComponent implements OnInit {
 
   // --- GESTIÓN DE MODALES ---
 
-  verDetalles(p: any): void {
-    this.pSeleccionado = p;
-    this.personaDetalle = p.persona || {};
-    this.mostrarDetallesModal = true;
-  }
+//  verDetalles(p: any): void {
+ //   this.pSeleccionado = p;
+   // this.personaDetalle = p.persona || {};
+    //this.mostrarDetallesModal = true;
+ // }
 
-  cerrarDetalles(): void {
-    this.mostrarDetallesModal = false;
-    this.pSeleccionado = null;
-    this.personaDetalle = null;
-  }
+  //cerrarDetalles(): void {
+    //this.mostrarDetallesModal = false;
+    //this.pSeleccionado = null;
+    //this.personaDetalle = null;
+  //}
 
   abrirModalNuevo() {
     this.editando = false;

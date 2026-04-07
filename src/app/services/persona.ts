@@ -11,6 +11,7 @@ export class PersonaService {
   
   // Usamos API_URL de forma consistente
   private readonly API_URL = `${environment.apiUrl}/usuarios`; 
+  
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
@@ -21,13 +22,18 @@ export class PersonaService {
     });
   }
 
+  // En services/persona.ts
+getEspecialista(id: string | number) {
+  return this.http.get(`${this.API_URL}/${id}`);
+}
   getPersonas(): Observable<any> {
     return this.http.get<any>(this.API_URL, { headers: this.getHeaders() });
   }
 
-  getPersona(id: number): Observable<any> {
-    return this.http.get<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
-  }
+ getPersona(id: number): Observable<any> {
+  // Esto llamará a: api/v1/persona/{id}
+  return this.http.get<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
+}
 
   /**
    * Registra un nuevo usuario con su respectiva persona y rol.

@@ -151,3 +151,17 @@
     box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
   }
 }
+.btn-sm {
+  border-radius: 8px; // Bordes más redondeados
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: translateY(-2px); // Pequeño salto al pasar el mouse
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+  }
+}

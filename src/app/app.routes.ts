@@ -31,7 +31,7 @@ export const routes: Routes = [
   children: [
     { path: '', component: PersonalComponent },
     { path: 'nuevo', component: NuevoPersonalComponent },
-    { path: 'editar/:id', component: NuevoPersonalComponent }, // <-- Añade esta línea
+    { path: 'editar/:id', component: NuevoPersonalComponent }, 
     { path: 'ver/:id', component: VerPersonalComponent },
         ]
       },
