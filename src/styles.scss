@@ -1,40 +1,26 @@
-/* 1. IMPORTACIONES EXTERNAS */
-/* Usamos la tilde (~) para que Angular busque en node_modules correctamente */
-@import "primeicons/primeicons.css";
-@import "primeflex/primeflex.css";
+/* --- 1. IMPORTACIONES EXTERNAS (Solo CDN) --- */
 
-/* Mantenemos Bootstrap vía CDN si no quieres pelear con las rutas locales, 
-   o asegúrate de que esté en angular.json */
-@import "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
-@import "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css";
 
-/* 2. CONFIGURACIÓN GLOBAL Y PALETA */
+/* --- 2. CONFIGURACIÓN GLOBAL --- */
 :root {
-    /* Paleta Verde Hospitalario - jugadordeunbit */
-    --hospital-green: #2ecc71;       /* Verde base */
-    --hospital-green-dark: #27ae60;  /* Botones y Hover */
-    --hospital-green-light: #e8f8f1; /* Fondos de tarjetas y filas */
-    --hospital-mint: #a3e4d7;        /* Acentos suaves */
-    --text-main: #2c3e50;            /* Color de texto principal (oscuro para lectura) */
-    
+    --hospital-green: #2ecc71;
+    --hospital-green-dark: #27ae60;
+    --hospital-green-light: #e8f8f1;
+    --hospital-mint: #a3e4d7;
+    --text-main: #2c3e50;
     --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
     margin: 0;
     font-family: var(--font-family);
-    background-color: #f4f7f6; /* Gris muy claro verdoso para el fondo general */
+    background-color: #f4f7f6;
     color: var(--text-main);
 }
 
-/* 3. CLASES DE UTILIDAD PERSONALIZADAS */
+/* --- 3. CLASES DE UTILIDAD --- */
+.bg-hospital-light { background-color: var(--hospital-green-light) !important; }
 
-/* Fondos verdes suaves para tarjetas */
-.bg-hospital-light {
-    background-color: var(--hospital-green-light) !important;
-}
-
-/* Botones con el estilo verde hospitalario */
 .btn-hospital {
     background-color: var(--hospital-green) !important;
     border: none !important;
@@ -48,72 +34,14 @@ body {
     transform: translateY(-1px);
 }
 
-/* Bordes superiores decorativos */
-.border-top-hospital {
-    border-top: 4px solid var(--hospital-green) !important;
+/* Estilos para el Paginador de PrimeNG */
+:ng-deep .p-paginator {
+    background-color: #ffffff !important;
+    border: 1px solid var(--hospital-mint) !important;
+    border-radius: 0 0 8px 8px;
 }
 
-/* Estilo para las tablas de turnos */
-.table-hospital thead {
-    background-color: var(--hospital-green-dark) !important;
+:ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background-color: var(--hospital-green) !important;
     color: white !important;
-}
-
-/* 4. CORRECCIONES DE VISIBILIDAD (CRÍTICO PARA SELECTORES) */
-
-/* Forzar que el texto de los selects e inputs sea siempre visible y oscuro */
-.form-control, 
-.form-select, 
-select {
-    color: var(--text-main) !important; 
-    background-color: #ffffff !important;
-    border: 1px solid #ced4da !important;
-    font-size: 0.9rem !important;
-}
-
-/* Asegurar que las opciones dentro del desplegable se vean */
-select option {
-    color: var(--text-main) !important;
-    background-color: #ffffff !important;
-}
-
-/* Estilo para los labels de los filtros (Servicio, Mes, etc.) */
-label {
-    color: #546e7a !important; 
-    font-weight: 700 !important;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-}
-
-/* 5. AJUSTES DE COMPONENTES ESPECÍFICOS */
-
-/* Card de gestión */
-.card {
-    border-radius: 8px !important;
-    border: none !important;
-}
-
-/* Estilo para el botón de Intercambiar en la tabla */
-.btn-intercambiar {
-    background-color: #6c757d;
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-}
-
-/* Estilo de la celda de la tabla cuando está vacía */
-.td-turno-vacio {
-    background-color: #fafafa;
-    transition: background 0.2s;
-}
-
-.td-turno-vacio:hover {
-    background-color: #f0f0f0;
-}
-
-/* Iconos de PrimeIcons */
-.pi {
-    vertical-align: middle;
 }

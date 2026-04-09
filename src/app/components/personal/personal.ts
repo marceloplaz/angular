@@ -2,22 +2,30 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router'; // Importación esencial para [routerLink]
-
 import { PersonaService } from '../../services/persona';
 
 @Component({
   selector: 'app-personal',
   standalone: true,
-  // Agregamos RouterModule para habilitar la navegación en el HTML
-  imports: [CommonModule, FormsModule, RouterModule], 
+
+  imports: [CommonModule, FormsModule, RouterModule,], 
   templateUrl: './personal.html',
-   // Corregido: antes decía templateUrl de nuevo
+  styleUrl: './personal.scss'
+
 })
 export class PersonalComponent implements OnInit {
   private _personaService = inject(PersonaService);
 
+ 
+  totalRecords: number = 0;
+  rows: number = 10;
+  first: number = 0;
+  paginaActual: number = 1;
+
   public listaPersonas: any[] = [];
   public personasFiltradas: any[] = [];
+  
+
   public mostrarModal: boolean = false;
 //  public mostrarDetallesModal: boolean = false;
   public editando: boolean = false;
@@ -44,17 +52,24 @@ export class PersonalComponent implements OnInit {
     numero_tipo_salario: ''
   };
 
+  
+
   ngOnInit(): void { 
     this.cargarDatos(); 
   }
 
   // --- LÓGICA DE DATOS ---
 
-  cargarDatos(): void {
+  cargarDatos( page: number = 1): void {
+    this.paginaActual = page; // Actualizamos la página actual
+    this.first = (page - 1) * this.rows; 
+
     this._personaService.getPersonas().subscribe({
+    
       next: (res: any) => {
         // Ajuste según estructura de respuesta de Laravel
         this.listaPersonas = res.data ? res.data : (Array.isArray(res) ? res : []);
+        this.totalRecords = res.total || this.listaPersonas.length;
         this.personasFiltradas = [...this.listaPersonas];
         this.filtrarTodo();
       },
@@ -157,4 +172,41 @@ export class PersonalComponent implements OnInit {
       nacionalidad: 'Boliviana', tipo_salario: 'TGN', numero_tipo_salario: ''
     };
   }
+ 
+onPageChange(event: any) {
+    this.first = event.first;
+    this.rows = event.rows;
+    // PrimeNG usa índice 0, Laravel necesita página 1, 2, 3...
+    const pagina = event.page + 1;
+    this.cargarDatos(pagina); 
+  }
+
+  exportarPdf(): void {
+ 
+
+  this._personaService.exportarPdf().subscribe({
+    next: (data: Blob) => {
+      // 1. Crear un objeto URL para el Blob recibido
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      // 2. Crear un elemento 'a' invisible para disparar la descarga
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Reporte_Hospital_${new Date().getTime()}.pdf`;
+      
+      // 3. Simular el clic y limpiar
+      link.click();
+      window.URL.revokeObjectURL(url);
+      link.remove();
+      
+      // Swal.close();
+    },
+    error: (err) => {
+      console.error('Error al descargar el PDF:', err);
+      // Swal.fire('Error', 'No se pudo generar el reporte', 'error');
+    }
+  });
+}
+
 }

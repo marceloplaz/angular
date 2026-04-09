@@ -6,8 +6,9 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-ver-personal',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,],
   templateUrl: './ver-personal.html',
+  
 })
 export class VerPersonalComponent implements OnInit {
   especialista: any = null;

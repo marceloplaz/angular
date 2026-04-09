@@ -1,167 +1,99 @@
-/* --- COLORES E ICONOS --- */
-.text-hospital-green { color: #1a4f32 !important; }
-.bg-hospital-light { background-color: #f0f6f3 !important; }
-.bg-hospital-subtle { background-color: #e6eee9 !important; }
-.border-aqua { border: 1px solid #a3cfbb !important; }
+/* --- 1. IMPORTACIONES EXTERNAS (SOLO CDN) --- */
+/* No importamos node_modules aquí para evitar errores de compilación */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 
-.btn-group .btn:hover {
-    background-color: #28a745 !important;
-    color: white !important;
-}
-
-/* Para asegurar que los iconos de Bootstrap se carguen */
-@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css");
-
-/* BOTÓN NUEVO PERSONAL (Verde sólido solicitado) */
-.btn-nuevo-personal {
-    background-color: #28a745 !important;
-    color: white !important;
-    border-radius: 50px !important;
-    padding: 10px 24px !important;
-    font-weight: bold !important;
-    border: none !important;
-    transition: 0.3s;
-}
-.btn-nuevo-personal:hover {
-    background-color: #1e7e34 !important;
-    transform: translateY(-2px);
-}
-
-/* BOTONES FILTRO (Verde Agua a Verde sólido) */
-.btn-filtro-aqua {
-    background-color: #e0f2f1 !important; /* Verde agua */
-    color: #00796b !important;
-    border: none !important;
-    padding: 8px 20px !important;
-    font-weight: 600 !important;
-}
-.btn-filtro-aqua:hover, .btn-filtro-aqua.active {
-    background-color: #28a745 !important; /* Verde sólido al pasar o estar activo */
-    color: white !important;
-}
-
-/* TABLA EXCEL (Bordes verdes) */
-.card-excel {
-    border: 2px solid #1a4f32 !important;
-    border-radius: 12px !important;
-}
-.table-excel-grid td, .table-excel-grid th {
-    border: 1px solid #a3cfbb !important; /* Cuadrícula verde tipo Excel */
-    padding: 12px 8px !important;
-}
-
-/* BOTONES DE ACCIÓN (Los "Dibujos" visibles) */
-.btn-dibujo {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 1px solid #dee2e6 !important;
-    background-color: #f8f9fa !important;
-    cursor: pointer !important;
-    transition: 0.2s;
-}
-/* Al pasar por encima se colorean */
-.btn-dibujo.edit:hover { background-color: #0d6efd !important; color: white !important; }
-.btn-dibujo.delete:hover { background-color: #dc3545 !important; color: white !important; }
-.btn-dibujo i { font-size: 1.1rem !important; }
-.btn-dibujo.edit { color: #0d6efd; }
-.btn-dibujo.delete { color: #dc3545; }
-
-/* EXTRAS */
-.avatar-excel { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-.badge-cargo { background: #e8f5e9; color: #1a4f32; border: 1px solid #a3cfbb; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-.x-small { font-size: 0.72rem; }
-/* --- CORRECCIÓN DE MODAL (FONDO CLARO) --- */
-
-/* Forza el fondo blanco en el contenedor del modal */
-.modal-content {
-    background-color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
-    color: #333 !important; /* Texto oscuro para legibilidad */
-}
-
-/* Estilo para el fondo semi-transparente detrás del modal */
-.modal.fade.show {
-    background: rgba(26, 79, 50, 0.4) !important; /* Verde hospital muy transparente */
-    backdrop-filter: blur(4px); /* Efecto de desenfoque elegante */
-}
-
-/* Estilo para los inputs dentro del modal para que no se vean grises */
-.modal-body {
-    background-color: #ffffff !important;
+/* --- 2. CONFIGURACIÓN GLOBAL Y PALETA (jugadordeunbit) --- */
+:root {
+    --hospital-green: #2ecc71;       /* Verde base */
+    --hospital-green-dark: #27ae60;  /* Botones y Hover */
+    --hospital-green-light: #e8f8f1; /* Fondos de tarjetas y filas */
+    --hospital-mint: #a3e4d7;        /* Acentos suaves */
+    --text-main: #2c3e50;            /* Color de texto principal */
     
-    .form-label {
-        color: #1a4f32 !important; /* Verde hospital para etiquetas */
-        margin-bottom: 0.3rem;
-    }
-
-    .form-control, .form-select {
-        background-color: #ffffff !important;
-        border: 1px solid #a3cfbb !important; /* Bordes verde aqua como tu tabla */
-        color: #212529 !important;
-        padding: 10px !important;
-        
-        &:focus {
-            border-color: #28a745 !important;
-            box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.15);
-        }
-    }
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Pie del modal con fondo sutil */
-.modal-footer {
-    background-color: #f8f9fa !important;
-    border-top: 1px solid #e6eee9 !important;
-    border-radius: 0 0 12px 12px;
+body {
+    margin: 0;
+    font-family: var(--font-family);
+    background-color: #f4f7f6; /* Fondo grisáceo verdoso claro */
+    color: var(--text-main);
 }
 
-/* Botón Ver (Ojo) que faltaba en tus dibujos */
-.btn-dibujo.ver { color: #28a745; }
-.btn-dibujo.ver:hover { background-color: #28a745 !important; color: white !important; }
+/* --- 3. CLASES DE UTILIDAD PERSONALIZADAS --- */
 
-/* Ajuste de visibilidad para el botón de cerrar (X) */
-.btn-close {
-    filter: brightness(0.5); /* Hace la X más visible en fondo blanco */
-}
-.ls-2 { letter-spacing: 2px; }
-
-.info-item {
-  padding: 8px 0;
-  border-bottom: 1px dashed #f0f0f0;
-  
-  &:last-child {
-    border-bottom: none;
-  }
+.bg-hospital-light {
+    background-color: var(--hospital-green-light) !important;
 }
 
-.avatar-circle {
-  transition: transform 0.3s ease;
-  &:hover {
-    transform: scale(1.05);
-  }
+.btn-hospital {
+    background-color: var(--hospital-green) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    font-weight: 600;
 }
+
+.btn-hospital:hover {
+    background-color: var(--hospital-green-dark) !important;
+    transform: translateY(-1px);
+}
+
+.border-top-hospital {
+    border-top: 4px solid var(--hospital-green) !important;
+}
+
+.table-hospital thead {
+    background-color: var(--hospital-green-dark) !important;
+    color: white !important;
+}
+
+/* --- 4. CORRECCIONES DE VISIBILIDAD PARA FORMULARIOS --- */
+
+.form-control, 
+.form-select, 
+select {
+    color: var(--text-main) !important; 
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    font-size: 0.9rem !important;
+}
+
+select option {
+    color: var(--text-main) !important;
+    background-color: #ffffff !important;
+}
+
+label {
+    color: #546e7a !important; 
+    font-weight: 700 !important;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+/* --- 5. AJUSTES ESPECÍFICOS DE COMPONENTES --- */
 
 .card {
-  transition: all 0.3s ease;
-  &:hover {
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
-  }
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
 }
-.btn-sm {
-  border-radius: 8px; // Bordes más redondeados
-  transition: all 0.2s ease;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  &:hover {
-    transform: translateY(-2px); // Pequeño salto al pasar el mouse
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
-  }
+/* Personalización del Paginador PrimeNG */
+:ng-deep .p-paginator {
+    background-color: #ffffff !important;
+    border: 1px solid var(--hospital-mint) !important;
+    border-radius: 0 0 8px 8px;
+    padding: 0.5rem !important;
+}
+
+:ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background-color: var(--hospital-green) !important;
+    color: white !important;
+    border-color: var(--hospital-green) !important;
+}
+
+:ng-deep .p-paginator .p-link {
+    color: var(--hospital-green-dark) !important;
 }
