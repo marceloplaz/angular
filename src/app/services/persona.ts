@@ -28,16 +28,9 @@ getEspecialista(id: string | number) {
 }
 
 exportarPdf(): Observable<Blob> {
-  // Opción A: Si tu API_URL ya tiene "/usuarios", la limpiamos:
+  // "/usuarios","" , la limpiamos:
   const urlLimpia = this.API_URL.replace('/usuarios', '') + '/personal/exportar-pdf';
-  
-  // Opción B (Más segura): Escribe la ruta completa para probar
-  // const urlLimpia = 'http://127.0.0.1:8000/api/v1/personal/exportar-pdf';
-
-  return this.http.get(urlLimpia, {
-    headers: this.getHeaders(),
-    responseType: 'blob'
-  });
+   return this.http.get(urlLimpia, { headers: this.getHeaders(), responseType: 'blob'  });
 }
 
 getPersonas(): Observable<any> {

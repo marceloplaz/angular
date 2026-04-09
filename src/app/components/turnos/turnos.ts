@@ -3,14 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
 import { NovedadComponent } from '../novedad/novedad';
-import { 
-  DragDropModule, 
-  CdkDragDrop, 
-  CdkDropListGroup, 
-  CdkDropList, 
-  CdkDrag, 
-  CdkDragPlaceholder, 
-} from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop,  CdkDropListGroup,  CdkDropList,  CdkDrag,   } from '@angular/cdk/drag-drop';
+import { CdkDragPlaceholder } from '@angular/cdk/drag-drop'; //relativo para pdf
+
+import { jsPDF } from 'jspdf';// imagen de pdf
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-turnos',
@@ -22,15 +19,19 @@ import {
     CdkDropListGroup, 
     CdkDropList, 
     CdkDrag, 
+    CdkDragPlaceholder,
     CdkDragPlaceholder, 
-    NovedadComponent
+    NovedadComponent    
+    
   ],
   templateUrl: './turnos.html',
   styleUrl: './turnos.scss',
 })
+
 export class TurnosComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private cdRef = inject(ChangeDetectorRef);
+  alias: string = 'Usuario Administrativo';
 
   mostrarModalNovedad = false; 
   idTurnoParaNovedad: number | null = null;
@@ -81,6 +82,12 @@ get personalParaReemplazo() {
 }
   
   ngOnInit() {
+    
+    const usuarioLogueado = localStorage.getItem('usuario_nombre');
+    
+    if (usuarioLogueado) {
+      this.alias = usuarioLogueado;
+    }
     this.cargarCategorias();
     this.cargarTiposDeTurnos();
     this.cargarConfiguracionInicial();
@@ -320,6 +327,95 @@ confirmarMovimiento() {
   }
 }
 
+async capturarPantalla() {
+  const doc = new jsPDF('l', 'mm', 'a4'); // Orientación horizontal (Landscape)
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // 1. CONFIGURACIÓN DE ENCABEZADO (Estilo profesional)
+  doc.setFontSize(16);
+  doc.setTextColor(40, 167, 69); // Verde médico
+  doc.setFont("helvetica", "bold");
+  
+  const nombreServicio = this.servicios.find(s => s.id == this.filters.servicio_id)?.nombre || 'SERVICIO';
+  const titulo = `ROL DE TURNOS: ${nombreServicio}`.toUpperCase();
+  doc.text(titulo, pageWidth / 2, 15, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.setFont("helvetica", "normal");
+  
+  const semanaActual = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
+  const periodo = `Periodo: ${semanaActual?.fecha_inicio || ''} al ${semanaActual?.fecha_fin || ''}`;
+  doc.text(periodo, pageWidth / 2, 22, { align: 'center' });
+
+  // Línea decorativa verde
+  doc.setDrawColor(40, 167, 69);
+  doc.setLineWidth(1);
+  doc.line(15, 25, pageWidth - 15, 25);
+
+  // 2. PREPARACIÓN DE DATOS PARA LA TABLA
+  const bodyData = this.personalAgrupado.map(p => {
+    const fila = [p.usuario_nombre.toUpperCase()];
+    
+    this.diasSemana.forEach(dia => {
+      const turno = this.obtenerTurnoAsignado(p, dia);
+      // Formato multilínea: Nombre del turno y debajo el horario
+      fila.push(turno ? `${turno.nombre_turno}\n${turno.horario}` : '');
+    });
+
+    fila.push(`${this.calcularTotalHoras(p)}h`);
+    return fila;
+  });
+
+  // 3. GENERACIÓN DE TABLA AUTOMÁTICA
+  autoTable(doc, {
+    startY: 30,
+    head: [['PERSONAL', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM', 'TOTAL']],
+    body: bodyData,
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [40, 167, 69], 
+      halign: 'center', 
+      fontSize: 9,
+      cellPadding: 3
+    },
+    columnStyles: {
+      0: { cellWidth: 45, fontStyle: 'bold' }, // Columna de nombres
+      8: { halign: 'center', fontStyle: 'bold', textColor: [0, 123, 255] } // Columna de horas
+    },
+    styles: { 
+      fontSize: 8, 
+      halign: 'center', 
+      valign: 'middle', 
+      overflow: 'linebreak',
+      cellPadding: 2
+    },
+    margin: { left: 15, right: 15 }
+  });
+
+  // 4. PIE DE PÁGINA Y FIRMAS
+  const finalY = (doc as any).lastAutoTable.finalY + 25;
+
+  // Línea para firma del responsable
+  doc.setDrawColor(180);
+  doc.line(15, finalY, 75, finalY);
+  doc.setFontSize(9);
+  doc.setTextColor(50);
+  doc.text(`Generado por: ${this.alias }`, 15, finalY + 5);
+  doc.text('Jefe de Servicio / Administrador', 15, finalY + 10);
+
+  // Fecha y hora de impresión (esquina inferior derecha)
+  doc.setFontSize(8);
+  doc.setTextColor(150);
+  const fechaGeneracion = `Impreso el: ${new Date().toLocaleString()}`;
+  doc.text(fechaGeneracion, pageWidth - 15, finalY + 15, { align: 'right' });
+
+  // 5. DESCARGA DEL ARCHIVO
+  doc.save(`Reporte_Turnos_${nombreServicio.replace(/\s+/g, '_')}.pdf`);
+}
+
+
+
   onRotarMensual() {
   const servicioId = this.filters.servicio_id;
   const mesActualId = this.filters.mes_id;
@@ -497,4 +593,6 @@ if (this.listaTurnos.length === 0) {
 
 
   cerrarModal() { this.mostrarModal = false; }
+
+ 
 }
