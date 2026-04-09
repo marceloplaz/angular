@@ -24,22 +24,23 @@ export class LoginComponent {
 onLogin(event: Event) {
   event.preventDefault();
 
-  // 1. Usamos .login() (el nombre real en tu AuthService)
-  this.authService.login(this.loginData).subscribe({
-    next: (res: any) => {
-      // 2. Si tu AuthService ya hace el localStorage.setItem en el 'tap',
-      // esta línea aquí es opcional, pero asegúrate de usar el nombre correcto:
-      if(res.access_token) {
-        localStorage.setItem('token', res.access_token); 
-      }
+ this.authService.login(this.loginData).subscribe({
+  next: (res: any) => {
+    if(res.access_token) {
+      localStorage.setItem('token', res.access_token); 
       
-      console.log('Login exitoso en bd_proyecto_backend');
-      this.router.navigate(['/dashboard']);
-    },
-    error: (err) => {
-      console.error('Error 401 en el login:', err);
-      alert('Credenciales incorrectas o error de conexión');
+      // Ajustamos para que lea 'nombre_usuario' del Resource de Laravel
+      const nombreReal = res.user?.nombre_usuario || 'Usuario';
+      localStorage.setItem('usuario_nombre', nombreReal);
+      
+      console.log('Nombre guardado correctamente:', nombreReal);
     }
-  });
+    this.router.navigate(['/dashboard']);
+  },
+  error: (err) => {
+    alert('Credenciales incorrectas');
+  }
+});
+
 }
 }

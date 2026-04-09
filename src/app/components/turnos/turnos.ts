@@ -83,11 +83,12 @@ get personalParaReemplazo() {
   
   ngOnInit() {
     
-    const usuarioLogueado = localStorage.getItem('usuario_nombre');
-    
-    if (usuarioLogueado) {
-      this.alias = usuarioLogueado;
-    }
+  const nombreGuardado = localStorage.getItem('usuario_nombre');
+  
+  if (nombreGuardado) {
+    this.alias = nombreGuardado; // Ahora this.alias tendrá el nombre real
+  }
+
     this.cargarCategorias();
     this.cargarTiposDeTurnos();
     this.cargarConfiguracionInicial();
