@@ -4,6 +4,11 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { RouterLink, RouterModule } from '@angular/router';
 import { ServicioService } from '../../services/servicios'; 
 import { Servicio } from '../../interfaces/servicio';
+import { finalize } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
+import { bootstrapApplication } from '@angular/platform-browser';
+
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-servicios',
@@ -13,7 +18,8 @@ import { Servicio } from '../../interfaces/servicio';
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
-    RouterModule
+    RouterModule, 
+    
   ],
   templateUrl: './servicios.html',
   styleUrl: './servicios.scss'
@@ -25,10 +31,13 @@ export class ServiciosComponent implements OnInit {
   form: FormGroup;
   id: number | undefined;
   operacion: string = 'Registrar';
+  servicioSeleccionado: any = null;
 
   constructor(
     private _servicioService: ServicioService,
+    private toastr: ToastrService,
     private fb: FormBuilder
+
   ) {
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.maxLength(255)]],
@@ -85,27 +94,30 @@ export class ServiciosComponent implements OnInit {
   }
 
   guardarServicio() {
-    if (this.form.invalid) return;
+  if (this.form.invalid) return;
 
-    const servicio: any = {
-      nombre: this.form.value.nombre,
-      descripcion: this.form.value.descripcion,
-      cantidad_pacientes: this.form.value.cantidad_pacientes
-    };
+  const servicio = this.form.value;
+  this.loading = true;
 
-    this.loading = true;
-    if (this.id !== undefined) {
-      this._servicioService.updateServicio(this.id, servicio).subscribe({
-        next: () => this.finalizarOperacion(),
-        error: () => this.loading = false
-      });
-    } else {
-      this._servicioService.createServicio(servicio).subscribe({
-        next: () => this.finalizarOperacion(),
-        error: () => this.loading = false
-      });
+  const request = (this.id !== undefined) 
+    ? this._servicioService.updateServicio(this.id, servicio)
+    : this._servicioService.createServicio(servicio);
+
+  request.pipe(
+    finalize(() => this.loading = false) // Esto apaga el spinner SIEMPRE
+  ).subscribe({
+    next: () => {
+      this.toastr.success(`Servicio ${this.operacion === 'Editar' ? 'actualizado' : 'creado'}`, 'Éxito');
+      this.finalizarOperacion();
+    },
+    error: (e) => {
+      console.error(e);
+      this.toastr.error('Ocurrió un error en el servidor', 'Error');
     }
-  }
+  });
+}
+
+
 
   finalizarOperacion() {
     this.loading = false;
@@ -115,4 +127,47 @@ export class ServiciosComponent implements OnInit {
     this.form.reset({ cantidad_pacientes: 0 });
     this.obtenerServicios();
   }
+verDetalles(servicio: any) {
+  this.loading = true;
+  this._servicioService.getServicio(servicio.id).subscribe({
+    next: (res) => {
+      this.servicioSeleccionado = res.data;
+      this.loading = false;
+
+      const modalElement = document.getElementById('detalleServicioModal');
+      if (modalElement) {
+        // 1. Intentamos obtener una instancia existente
+        let modalInstance = bootstrap.Modal.getInstance(modalElement);
+        
+        // 2. Si no existe, la creamos UNA sola vez
+        if (!modalInstance) {
+          modalInstance = new bootstrap.Modal(modalElement);
+        }
+        
+        // 3. Mostramos el modal
+        modalInstance.show();
+      }
+    },
+    error: (e) => {
+      this.loading = false;
+      console.error(e);
+    }
+  });
 }
+
+abrirAsignacion() {
+  const modalElement = document.getElementById('detalleServicioModal');
+  if (modalElement) {
+     const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+      modal.hide();
+    }
+  }
+  
+  this.operacion = 'Asignar';
+  // Aquí puedes poner la lógica para abrir el siguiente modal de búsqueda
+  console.log("Cerrando detalle y abriendo asignación para:", this.servicioSeleccionado?.nombre);
+}
+
+}
+

@@ -1,0 +1,37 @@
+/* Configuración Base de Botones Cuadrados */
+.btn-action-view, 
+.btn-action-edit, 
+.btn-action-staff, 
+.btn-action-delete {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* Colores y Bordes */
+.btn-action-view   { border: 1px solid #17a2b8; color: #17a2b8; }
+.btn-action-edit   { border: 1px solid #ffc107; color: #ffc107; }
+.btn-action-staff  { border: 1px solid #0d6efd; color: #0d6efd; }
+.btn-action-delete { border: 1px solid #dc3545; color: #dc3545; }
+
+/* Efectos Hover */
+.btn-action-view:hover   { background: #17a2b8; color: white; transform: translateY(-1px); }
+.btn-action-edit:hover   { background: #ffc107; color: white; transform: translateY(-1px); }
+.btn-action-staff:hover  { background: #0d6efd; color: white; transform: translateY(-1px); }
+.btn-action-delete:hover { background: #dc3545; color: white; transform: translateY(-1px); }
+
+/* Ajuste de los iconos internos */
+.btn-action-view i, 
+.btn-action-edit i, 
+.btn-action-staff i, 
+.btn-action-delete i {
+    font-size: 1.1rem;
+    line-height: 0; /* Centrado perfecto */
+}

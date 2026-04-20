@@ -46,79 +46,237 @@
             <li> <a class="dropdown-item rounded py-2" (click)="capturarPantalla()" style="cursor: pointer;">
             <i class="pi pi-file-pdf me-2 text-danger"></i> <span class="small fw-bold">Exportar Reporte PDF</span>  </a>
             </li>
+            <li> 
+              <a class="dropdown-item rounded py-2" (click)="toggleVistaMensual()" style="cursor: pointer;">
+                <i class="pi pi-eye me-2 text-info"></i> 
+                <span class="small fw-bold">{{ mostrarVistaMensual ? 'Ver Vista Semanal' : 'Ver Resumen Mensual' }}</span>
+                </a>
+            </li>
+
+  <li> 
+    <a class="dropdown-item rounded py-2" (click)="exportarPDFMensual()" style="cursor: pointer;">
+      <i class="pi pi-file-pdf me-2 text-danger"></i> 
+      <span class="small fw-bold">Exportar PDF Mensual</span>
+    </a>
+  </li>
+            
           </ul>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="reporte-turnos" class="card shadow-sm border-0 overflow-hidden bg-white" style="border-radius: 12px;">
-    <div class="table-responsive" cdkDropListGroup>
-      <table class="table mb-0 text-center align-middle">
-        <thead class="bg-verde-agua text-white">
-          <tr>
-            <th class="text-start ps-3 col-personal">PERSONAL</th>
-            <th *ngFor="let dia of diasSemana">{{ dia | uppercase }}</th>
-            <th class="col-total">TOTAL</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white">
-          <tr *ngFor="let p of personalAgrupado" class="row-hover border-bottom">
-            <td class="text-start p-2 border-end">
-              <div class="fw-bold small-name">{{ p.usuario_nombre | uppercase }}</div>
-              <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
-            </td>
-            <td *ngFor="let dia of diasSemana" class="cell-drop p-1" cdkDropList [cdkDropListData]="{personal: p, dia: dia}">
-              <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else botonNuevo">
-                <div class="badge-turno shadow-sm" cdkDrag [cdkDragData]="turno" 
-                     [style.backgroundColor]="turno.color || '#1abc9c'" (click)="abrirOpcionesTurno(turno, p)">
-                  <div class="turno-title">{{ turno.nombre_turno }}</div>
-                  <div class="turno-time-box"><span>{{ turno.horario }}</span></div>
-                </div>
-              </ng-container>
-              <ng-template #botonNuevo>
-                <button class="btn-add-soft" (click)="abrirModalAsignar(p, dia)">
-                  <i class="pi pi-plus"></i>
-                </button>
-              </ng-template>
-            </td>
-            <td class="col-total border-start">
-              <div class="total-val">{{ calcularTotalHoras(p) }}<span>h</span></div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+<div id="reporte-turnos" class="card shadow-sm border-0 overflow-hidden bg-white" style="border-radius: 12px;">
+  
+  <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+    <div>
+      <span class="badge bg-primary me-2">REPORTE MENSUAL</span>
+      <span class="small fw-bold text-secondary">
+        PERIODO: {{ rangoFechasMes.inicio | date:'dd/MM/yyyy' }} - {{ rangoFechasMes.fin | date:'dd/MM/yyyy' }}
+      </span>
+    </div>
+    <div class="text-muted small">
+      Total Personal: <strong>{{ personalAgrupado.length }}</strong>
     </div>
   </div>
 
+  <div class="table-responsive" cdkDropListGroup>
+    <table class="table mb-0 text-center align-middle">
+      <thead class="bg-verde-agua text-white">
+        <tr>
+          <th class="text-start ps-3 col-personal">PERSONAL</th>
+          <th *ngFor="let dia of diasSemana">{{ dia | uppercase }}</th>
+          <th class="col-total">DÍAS</th>
+          <th class="col-total">TOTAL HORAS</th>
+        </tr>
+      </thead>
+      
+      <tbody class="bg-white">
+        <tr *ngFor="let p of personalAgrupado" class="row-hover border-bottom">
+          
+          <td class="text-start p-2 border-end">
+            <div class="fw-bold small-name">{{ p.usuario_nombre | uppercase }}</div>
+            <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
+          </td>
+
+          <td *ngFor="let dia of diasSemana" class="cell-drop p-1" cdkDropList [cdkDropListData]="{personal: p, dia: dia}">
+            <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else botonNuevo">
+              <div class="badge-turno shadow-sm" cdkDrag [cdkDragData]="turno" 
+                   [style.backgroundColor]="turno.color || '#1abc9c'" (click)="abrirOpcionesTurno(turno, p)">
+                <div class="turno-title">{{ turno.nombre_turno }}</div>
+                <div class="turno-time-box"><span>{{ turno.horario }}</span></div>
+                <span class="badge">Área: {{ turno.area_nombre }}</span>
+              </div>
+            </ng-container>
+            <ng-template #botonNuevo>
+              <button class="btn-add-soft" (click)="abrirModalAsignar(p, dia)">
+                <i class="pi pi-plus"></i>
+              </button>
+            </ng-template>
+          </td>
+
+          <td class="col-total border-start bg-light">
+            <div class="fw-bold text-dark">{{ calcularDiasTrabajados(p) }}</div>
+          </td>
+
+          <td class="col-total border-start">
+            <div class="total-val">{{ calcularTotalHoras(p) }}<span>h</span></div>
+          </td>
+
+        </tr> </tbody>
+    </table>
+  </div>
+</div>
+
+  
   <div *ngIf="historialCambios.length > 0" class="contenedor-auditoria mt-4">
     </div>
 
   <div class="modal-overlay animate__animated animate__fadeIn" *ngIf="mostrarModal">
-      <div class="modal-content card shadow-lg border-0" style="width: 400px; border-radius: 15px;">
-          <div class="modal-header bg-verde-agua text-white d-flex justify-content-between align-items-center p-3">
-              <h6 class="mb-0 fw-bold small"><i class="pi pi-plus-circle me-2"></i> ASIGNAR TURNO</h6>
-              <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
-          </div>
-          <div class="card-body p-4 text-center">
-              <div class="p-2 bg-light rounded mb-4">
-                  <div class="fw-bold text-uppercase small text-teal">{{ personalSeleccionado?.usuario_nombre }}</div>
-                  <div class="extra-small text-muted">{{ obtenerFechaReal(diaSeleccionado) | date:'fullDate' }}</div>
-              </div>
-              <div class="mb-3 text-start">
-                  <label class="extra-small fw-bold text-secondary mb-1">SELECCIONAR HORARIO</label>
-                  <select class="form-select form-select-sm" [(ngModel)]="turnoIdSeleccionado">
-                      <option [ngValue]="null" disabled>Elegir turno...</option>
-                      <option *ngFor="let t of listaTurnos" [value]="t.id">{{ t.nombre_turno }} ({{ t.hora_inicio }} - {{ t.hora_fin }})</option>
-                  </select>
-              </div>
-              <div class="d-grid">
-                  <button class="btn btn-teal-actions btn-sm fw-bold" [disabled]="!turnoIdSeleccionado" (click)="guardarAsignacion()">
-                      <i class="pi pi-check me-2"></i> CONFIRMAR ASIGNACIÓN
-                  </button>
-              </div>
-          </div>
-      </div>
-  </div>
+  <div class="modal-content card shadow-lg border-0" style="width: 400px; border-radius: 15px;">
+    <div class="modal-header bg-verde-agua text-white d-flex justify-content-between align-items-center p-3">
+      <h6 class="mb-0 fw-bold small"><i class="pi pi-plus-circle me-2"></i> ASIGNAR TURNO</h6>
+      <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
+    </div>
 
+    <div class="card-body p-4 text-center">
+      <div class="p-2 bg-light rounded mb-4">
+        <div class="fw-bold text-uppercase small text-teal">{{ personalSeleccionado?.usuario_nombre }}</div>
+        <div class="extra-small text-muted">{{ obtenerFechaReal(diaSeleccionado) | date:'fullDate' }}</div>
+      </div>
+
+      <div class="mb-3 text-start">
+        <label class="extra-small fw-bold text-secondary mb-1">ÁREA</label>
+        <select class="form-select form-select-sm" [(ngModel)]="areaIdSeleccionado">
+          <option [ngValue]="null" disabled>Elegir área...</option>
+          <option *ngFor="let a of listaAreas" [value]="a.id">{{ a.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="mb-3 text-start">
+        <label class="extra-small fw-bold text-secondary mb-1">HORARIO</label>
+        <select class="form-select form-select-sm" [(ngModel)]="turnoIdSeleccionado">
+          <option [ngValue]="null" disabled>Elegir turno...</option>
+          <option *ngFor="let t of listaTurnos" [value]="t.id">{{ t.nombre_turno }} ({{ t.hora_inicio }} - {{ t.hora_fin }})</option>
+        </select>
+      </div>
+
+      <div class="mb-3 text-start">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="esMensual" [(ngModel)]="esMensual">
+          <label class="form-check-label extra-small fw-bold text-secondary" for="esMensual">
+            ¿Asignar a múltiples días del mes?
+          </label>
+        </div>
+      </div>
+
+      <div class="mb-3" *ngIf="esMensual">
+        <button class="btn btn-outline-teal btn-sm w-100" (click)="mostrarModalCalendario = true">
+          <i class="pi pi-calendar me-2"></i> 
+          {{ diasSeleccionados.length > 0 ? 'Días: ' + diasSeleccionados.length : 'Seleccionar días en calendario' }}
+        </button>
+      </div>
+
+      <div class="d-grid">
+        <button class="btn btn-teal-actions btn-sm fw-bold" 
+                [disabled]="!turnoIdSeleccionado || !areaIdSeleccionado" 
+                (click)="guardarAsignacion()">
+          <i class="pi pi-check me-2"></i> CONFIRMAR ASIGNACIÓN
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay animate__animated animate__fadeIn" *ngIf="mostrarModalCRUD">
+  <div class="modal-content card shadow-lg border-0" style="width: 420px; border-radius: 15px;">
+    
+    <div class="modal-header bg-dark text-white d-flex justify-content-between align-items-center p-3">
+      <h6 class="mb-0 fw-bold small"><i class="pi pi-cog me-2"></i> GESTIONAR ASIGNACIÓN</h6>
+      <button type="button" class="btn-close btn-close-white" (click)="mostrarModalCRUD = false"></button>
+    </div>
+    
+    <div class="card-body p-4">
+      <div class="p-3 bg-light rounded mb-4 text-center">
+        <div class="fw-bold text-uppercase small text-dark">
+          {{ turnoSeleccionado?.usuario_nombre }}
+        </div>
+        <div class="extra-small text-muted">
+          {{ turnoSeleccionado?.nombre_turno }} | {{ turnoSeleccionado?.horario }}
+        </div>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button class="btn btn-warning btn-sm fw-bold" (click)="abrirRegistroNovedad(turnoSeleccionado)">
+          <i class="pi pi-exclamation-triangle me-2"></i> REGISTRAR NOVEDAD
+        </button>
+
+        <button class="btn btn-danger btn-sm fw-bold" (click)="eliminarTurno()">
+          <i class="pi pi-trash me-2"></i> ELIMINAR ASIGNACIÓN
+        </button>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="mb-3">
+        <label class="extra-small fw-bold text-secondary mb-1">CAMBIAR TIPO DE TURNO</label>
+        <select class="form-select form-select-sm" [(ngModel)]="turnoSeleccionado.turno_id">
+          <option *ngFor="let t of listaTurnos" [value]="t.id">
+            {{ t.nombre_turno }} ({{ t.hora_inicio }} - {{ t.hora_fin }})
+          </option>
+        </select>
+      </div>
+      <div class="mb-3">
+  <label class="extra-small fw-bold text-secondary mb-1">CAMBIAR ÁREA</label>
+  <select class="form-select form-select-sm" [(ngModel)]="turnoSeleccionado.area_id">
+    <option *ngFor="let a of listaAreas" [value]="a.id">
+      {{ a.nombre }}
+    </option>
+  </select>
+</div>
+
+      <div class="d-grid">
+        <button class="btn btn-teal-actions btn-sm fw-bold" (click)="confirmarActualizacion()">
+          <i class="pi pi-save me-2"></i> GUARDAR CAMBIOS
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<app-novedad 
+  *ngIf="mostrarModalNovedad" 
+  [turnoOrigenId]="idTurnoParaNovedad"
+  [personalDisponible]="personalAgrupado"
+  (novedadGuardada)="onNovedadProcesada()"
+  (cerrarNovedades)="finalizarNovedad()">
+</app-novedad>
+
+
+<p-dialog 
+    header="Seleccionar días de turno" 
+    [(visible)]="mostrarModalCalendario" 
+    [modal]="true" 
+    [style]="{ width: '400px' }" 
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
+    [draggable]="false" 
+    [resizable]="false">
+    
+    <div class="flex justify-content-center">
+        <p-datepicker 
+            [(ngModel)]="diasSeleccionados" 
+            [inline]="true" 
+            selectionMode="multiple" 
+            [style]="{'width': '100%'}">
+        </p-datepicker>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button class="btn btn-primary w-100" (click)="mostrarModalCalendario = false">
+            Aceptar ({{diasSeleccionados.length}} días)
+        </button>
+    </ng-template>
+</p-dialog>
+  
   </div>

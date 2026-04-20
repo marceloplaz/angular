@@ -209,7 +209,27 @@
        }
     }
 
-
+.col-personal { width: 200px; min-width: 200px; sticky: left; }
+.badge-turno {
+  padding: 4px;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  &:hover { transform: scale(1.05); }
+}
+.extra-small { font-size: 0.65rem; }
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
 /* --- MODALES --- */
 
 /* Modifica tu clase actual en el SCSS */

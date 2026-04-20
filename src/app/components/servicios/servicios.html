@@ -73,25 +73,127 @@
               </td>
               <td class="text-end pe-4">
                 <div class="btn-group gap-1">
-                  <button class="btn btn-white btn-sm text-primary border shadow-sm" title="Ver Detalles">
-                    <i class="bi bi-eye"></i>
-                  </button>
-                  <button (click)="editarServicio(s)" class="btn btn-white btn-sm text-warning border shadow-sm" title="Modificar">
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
-                 <button 
-  class="btn btn-outline-success btn-sm rounded-pill px-3"
-  [routerLink]="['/dashboard/servicios', s.id, 'asignar']"
-  title="Gestionar personal de {{ s.nombre }}">
-  <i class="fas fa-user-plus me-1"></i>
-  Asignar Personal
-</button>
+                 
+             <button class="btn btn-action-view" (click)="verDetalles(s)" title="Ver">
+            <i class="bi bi-eye"></i>
+                verDetalles
+              </button>
+
+                  
+            <button class="btn btn-action-edit" 
+                  (click)="editarServicio(s)" 
+                  title="Modificar {{ s.nombre }} ">
+                  <i class="bi bi-pencil"></i>
+                  M
+            </button> 
+
+                
+                  <button 
+                        class="btn btn-outline-success btn-sm rounded-pill px-1"
+                         [routerLink]="['/dashboard/servicios', s.id, 'asignar']"
+                        title="Gestionar personal de {{ s.nombre }} ">
+                        <i class="fas fa-user-plus me-1"></i>
+                        Asignar Personal
+                </button>
                   
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="detalleServicioModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title d-flex align-items-center">
+          <i class="bi bi-info-circle-fill text-info me-2 fs-4"></i>
+          Detalles del Servicio
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body bg-light p-4">
+        <div class="row g-4">
+          
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">Información General</h6>
+              </div>
+              <div class="card-body">
+                <div class="mb-4">
+                  <label class="text-muted small d-block">Nombre:</label>
+                  <span class="text-primary fw-bold fs-5">{{ servicioSeleccionado?.nombre }}</span>
+                </div>
+                <div class="mb-4">
+                  <label class="text-muted small d-block">Capacidad:</label>
+                  <span class="badge bg-primary px-3 rounded-pill">{{ servicioSeleccionado?.cantidad_pacientes }} Pacientes</span>
+                </div>
+                <div class="mb-4">
+                  <label class="text-muted small d-block">Descripción:</label>
+                  <p class="text-secondary small">{{ servicioSeleccionado?.descripcion || 'Sin descripción' }}</p>
+                </div>
+                <button class="btn btn-secondary w-100 mt-auto py-2" data-bs-dismiss="modal">
+                  Volver a la lista
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-8">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-header bg-info text-white py-3">
+                <h6 class="mb-0 fw-bold">Personal Asignado a este Servicio</h6>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                      <tr>
+                        <th class="ps-3">Nombre</th>
+                        <th>Email</th>
+                        <th>Fecha Ingreso</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    
+<tbody>
+  <tr *ngFor="let user of servicioSeleccionado?.usuarios">
+    <td class="ps-3">
+      <div class="fw-bold">{{ user.usuario_nombre }}</div>
+      <small class="text-muted">{{ user.descripcion }}</small>
+    </td>
+    <td>{{ user.email || 'hospital@app.com' }}</td>
+    <td>{{ user.fecha_ingreso | date:'dd/MM/yyyy' }}</td>
+    <td>
+      <span class="badge rounded-pill" [ngClass]="user.estado == 1 ? 'bg-success' : 'bg-danger'">
+        {{ user.estado == 1 ? 'Activo' : 'Inactivo' }}
+      </span>
+    </td>
+  </tr>
+
+  <tr *ngIf="servicioSeleccionado && servicioSeleccionado.usuarios?.length === 0">
+    <td colspan="4" class="text-center py-5 text-muted">
+      <i class="bi bi-person-x d-block fs-2 mb-2"></i>
+      No hay personal asignado a este servicio todavía.
+    </td>
+  </tr>
+</tbody>
+
+
+                  </table>
+                </div>
+      
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>

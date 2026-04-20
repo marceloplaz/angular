@@ -24,7 +24,7 @@ export class ServicioService {
 
   // Eliminar servicio
   deleteServicio(id: number): Observable<any> {
-    return this.http.get(`${this.url}/servicios/${id}`); // Cambiar a .delete si tu API lo requiere
+    return this.http.delete(`${this.url}/servicios/${id}`);
   }
 
   // Crear servicio
@@ -34,6 +34,7 @@ export class ServicioService {
 
   // Actualizar servicio
   updateServicio(id: number, servicio: any): Observable<any> {
+    // Es vital enviar el ID y el objeto con los datos validados
     return this.http.put(`${this.url}/servicios/${id}`, servicio);
   }
 

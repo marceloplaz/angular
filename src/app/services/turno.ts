@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http'; // Eliminamos HttpHeaders para evitar duplicidad
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 
@@ -10,6 +10,15 @@ export class TurnoService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl; 
 
+  // --- CONFIGURACIÓN Y LISTAS ---
+
+
+  getAreas(servicioId: number): Observable<any> {
+  // Asegúrate de que tu endpoint coincida con la ruta de tu API
+  return this.http.get(`${this.apiUrl}/areas`, {
+    params: { servicio_id: servicioId.toString() }
+  });
+}
   getConfiguracionCalendario(): Observable<any> {
     return this.http.get(`${this.apiUrl}/calendario/configuracion`);
   }
@@ -32,15 +41,29 @@ export class TurnoService {
     });
   }
 
+  getTurnos(params: any): Observable<any> {
+    return this.http.get(`${this.apiUrl}/lista-turnos-disponibles`, { params });
+  }
+
+  // --- ASIGNACIÓN Y EDICIÓN ---
+
   asignarTurno(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/turnos-asignados`, data);
   }
-getTurnos(params: any): Observable<any> {
-  // Cambia la dirección para que use la nueva ruta de Laravel
-  return this.http.get(`${this.apiUrl}/lista-turnos-disponibles`, { params });
-}
 
-  // --- 🆕 NUEVAS ACCIONES MASIVAS ---
+  actualizarPosicion(data: { turno_id: number, nuevo_usuario_id: number, nueva_fecha: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/turnos-asignados/actualizar`, data);
+  }
+
+  actualizarTurnoAsignado(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/turnos-asignados/${id}`, data);
+  }
+
+  eliminarTurnoAsignado(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/turnos-asignados/${id}`);
+  }
+
+  // --- ACCIONES MASIVAS ---
 
   /**
    * Replica los turnos de la semana actual a todas las semanas del mes
@@ -56,14 +79,23 @@ getTurnos(params: any): Observable<any> {
   /**
    * Rota al personal del mes actual al mes siguiente
    */
- rotarPersonalMensual(servicioId: number, mesId: number, mesDestinoId: number): Observable<any> {
-  return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
-    servicio_id: servicioId,
-    mes_id: mesId,          // Coincide con el backend
-    mes_destino: mesDestinoId // Coincide con el backend
-  });
-}
-
+  rotarPersonalMensual(servicioId: number, mesId: number, mesDestinoId: number): Observable<any> {
+    // Ya no inyectamos headers aquí porque el authInterceptor lo hace automáticamente
+    return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
+      servicio_id: servicioId,
+      mes_id: mesId,
+      mes_destino: mesDestinoId
+    });
+  }
+  
+  getResumenMensual(servicioId: number, mesId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/turnos/resumen-mensual`, {
+      params: {
+        servicio_id: servicioId.toString(),
+        mes_id: mesId.toString()
+      }
+    });
+  }
   /**
    * Elimina todos los turnos programados del mes para un servicio
    */
@@ -73,18 +105,4 @@ getTurnos(params: any): Observable<any> {
       mes_id: mesId
     });
   }
- // En tu TurnoService
-actualizarPosicion(data: { turno_id: number, nuevo_usuario_id: number, nueva_fecha: string }): Observable<any> {
-    // CORRECCIÓN: Añadimos 'v1/turnos-asignados/' antes de 'actualizar'
-    return this.http.post(`${this.apiUrl}/turnos-asignados/actualizar`, data);
-}
-actualizarTurnoAsignado(id: number, data: any): Observable<any> {
-  // Usamos una coma para evitar errores de slash manuales si es necesario
-  return this.http.put(`${this.apiUrl}/turnos-asignados/${id}`, data);
-}
-
-eliminarTurnoAsignado(id: number): Observable<any> {
-  return this.http.delete(`${this.apiUrl}/turnos-asignados/${id}`);
-}
-
 }

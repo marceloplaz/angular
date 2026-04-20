@@ -28,12 +28,21 @@ onLogin(event: Event) {
   next: (res: any) => {
     if(res.access_token) {
       localStorage.setItem('token', res.access_token); 
-      
+      localStorage.setItem('usuario_nombre', res.user?.nombre_usuario || 'Usuario');
       // Ajustamos para que lea 'nombre_usuario' del Resource de Laravel
-      const nombreReal = res.user?.nombre_usuario || 'Usuario';
-      localStorage.setItem('usuario_nombre', nombreReal);
       
-      console.log('Nombre guardado correctamente:', nombreReal);
+      const nombreReal = res.user?.nombre_usuario || 'Usuario';
+    localStorage.setItem('usuario_nombre', nombreReal);
+    
+    // 3. Extraer y guardar Rol (rol_nombre viene de tu UserResource)
+    const rolReal = res.user?.rol_nombre || 'Personal Autorizado';
+    localStorage.setItem('usuario_rol', rolReal);
+      
+      console.log('Datos recibidos de la API:', {
+      token: !!res.access_token,
+      nombre: nombreReal,
+      rol: rolReal
+    });
     }
     this.router.navigate(['/dashboard']);
   },
