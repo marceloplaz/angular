@@ -1,0 +1,104 @@
+<div class="p-4 animate-fade-in">
+    <p-card header="Configuración de Sistema" subheader="Vincule los turnos permitidos al servicio seleccionado">
+        
+        <div class="flex flex-column gap-4">
+            <div class="flex flex-column gap-2">
+                <label class="font-bold text-sm text-600 uppercase">Servicio a Configurar</label>
+                <div class="flex flex-wrap gap-3">
+                    <p-select 
+                        [options]="servicios()" 
+                        [(ngModel)]="servicioIdSeleccionado" 
+                        optionLabel="nombre" 
+                        optionValue="id"
+                        placeholder="Seleccione un servicio" 
+                        class="w-full md:w-30rem"
+                        (onChange)="cargarConfiguracionActual()">
+                    </p-select>
+                    
+                    <p-button 
+                        label="Guardar Configuración" 
+                        icon="pi pi-save" 
+                        severity="success"
+                        [loading]="cargando()" 
+                        (onClick)="guardar()"
+                        [disabled]="!servicioIdSeleccionado">
+                    </p-button>
+                </div>
+            </div>
+
+            <p-divider></p-divider>
+
+            <p-table 
+                #dt 
+                [value]="turnosDisponibles()" 
+                [rows]="5" 
+                [paginator]="true" 
+                [globalFilterFields]="['nombre_turno', 'duracion_horas']"
+                responsiveLayout="scroll"
+                [rowHover]="true" 
+                dataKey="id"
+                styleClass="p-datatable-sm p-datatable-gridlines shadow-1 border-round overflow-hidden">
+
+                <ng-template pTemplate="caption">
+                    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span class="text-xl font-bold text-800">Catálogo de Turnos</span>
+                        <p-iconfield iconPosition="left" class="ml-auto w-full md:w-auto">
+                            <p-inputicon styleClass="pi pi-search"></p-inputicon>
+                            <input 
+                                pInputText 
+                                type="text" 
+                                (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
+                                placeholder="Buscar por nombre o horas..." 
+                                class="w-full p-inputtext-sm" />
+                        </p-iconfield>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 4rem" class="text-center">Habilitar</th>
+                        <th pSortableColumn="nombre_turno">Nombre <p-sortIcon field="nombre_turno"></p-sortIcon></th>
+                        <th>Horario</th>
+                        <th pSortableColumn="duracion_horas" class="text-center">Duración <p-sortIcon field="duracion_horas"></p-sortIcon></th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-turno>
+                    <tr [ngClass]="{'bg-selected-row': turnosSeleccionadosIds().includes(turno.id)}">
+                        <td class="text-center">
+                            <p-checkbox 
+                                [value]="turno.id" 
+                                [(ngModel)]="turnosSeleccionadosIds"
+                                [inputId]="'t' + turno.id">
+                            </p-checkbox>
+                        </td>
+                        <td>
+                            <label [for]="'t' + turno.id" class="cursor-pointer font-bold uppercase text-sm block">
+                                {{ turno.nombre_turno }}
+                            </label>
+                        </td>
+                        <td>
+                            <div class="flex align-items-center gap-2 text-600">
+                                <i class="pi pi-clock text-primary"></i>
+                                <span>{{ turno.hora_inicio }} — {{ turno.hora_fin }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span *ngIf="turno.duracion_horas" class="badge-horas px-2 py-1 border-round font-bold">
+                                {{ turno.duracion_horas }}h
+                            </span>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="4" class="text-center p-4 text-500">
+                            No se encontraron turnos con ese criterio de búsqueda.
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </p-card>
+</div>

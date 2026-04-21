@@ -126,3 +126,24 @@
     background-color: #f0f6f3;
     color: #1a4f32;
 }
+.menu-item {
+  color: #555;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+
+  i { font-size: 1.1rem; }
+
+  &:hover {
+    background-color: #f8f9fa;
+    color: #1abc9c;
+  }
+
+  &.active {
+    background-color: #1abc9c; // El verde de tu app
+    color: white !important;
+    border-radius: 8px;
+    margin: 0 10px;
+    
+    i { color: white; }
+  }
+}

@@ -18,6 +18,8 @@ import { CategoriasComponent } from './components/categorias/categorias';
 import { IncidenciasComponent } from './components/incidencias/incidencias';
 import { VacacionesComponent } from './components/vacaciones/vacaciones';
 import { NovedadComponent } from './components/novedad/novedad';
+import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { 
@@ -46,7 +48,10 @@ export const routes: Routes = [
       { path: 'incidencias', component: IncidenciasComponent },
       { path: 'vacaciones', component: VacacionesComponent },
       { path: 'novedades', component: NovedadComponent },
-      
+      { 
+        path: 'configuracion-sistema', 
+        component: ConfiguracionSistemaComponent 
+      },
       // REDIRECCIÓN POR DEFECTO DENTRO DEL DASHBOARD
       { path: '', redirectTo: 'personal', pathMatch: 'full' }
     ]

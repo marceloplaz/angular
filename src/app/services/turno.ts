@@ -105,4 +105,17 @@ export class TurnoService {
       mes_id: mesId
     });
   }
+
+  //configuracion de sistema
+  getTurnosPorServicio(servicioId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/servicios/${servicioId}/turnos-habilitados`);
+  }
+
+  /**
+   * Sincroniza (víncula/desvincula) los turnos permitidos para un servicio
+   */
+  vincularTurnosAServicio(data: { servicio_id: number, turnos_ids: number[] }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/servicios/vincular-turnos`, data);
+  }
+
 }

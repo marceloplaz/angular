@@ -1,0 +1,30 @@
+:host ::ng-deep {
+    // Estilo del Paginador
+    .p-paginator {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        padding: 0.5rem;
+    }
+
+    // Color del Checkbox seleccionado
+    .p-checkbox .p-checkbox-box.p-highlight {
+        background: #1abc9c !important;
+        border-color: #1abc9c !important;
+    }
+}
+
+// Resaltado de fila seleccionada
+.bg-selected-row {
+    background-color: #f0faf9 !important;
+}
+
+.badge-horas {
+    background-color: #e0f2f1;
+    color: #00796b;
+    border: 1px solid #b2dfdb;
+    font-size: 0.75rem;
+}
+
+.text-primary {
+    color: #1abc9c !important;
+}
