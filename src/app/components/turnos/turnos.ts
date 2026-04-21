@@ -11,6 +11,7 @@ import autoTable from 'jspdf-autotable';
 import { formatDate } from '@angular/common';
 import { DialogModule } from 'primeng/dialog'; 
 import { ToastrService } from 'ngx-toastr'; 
+import Swal from 'sweetalert2';
 
 export interface ResumenMensual {
   usuario_nombre: string;
@@ -29,8 +30,7 @@ export interface ResumenMensual {
     CdkDropListGroup, 
     CdkDropList, 
     CdkDrag, 
-    CdkDragPlaceholder,
-    CdkDragPlaceholder, 
+    
      NovedadComponent,    
     DialogModule,
     
@@ -94,7 +94,18 @@ diasSeleccionados: string[] = [];        // Aquí guardarás las fechas seleccio
     
 
     // Aquí es donde debe vivir la función:
-  
+get rangoFechasMes(): { inicio: string, fin: string } {
+  // Verificamos que existan semanas para evitar que la app explote
+  if (!this.semanasDisponibles || this.semanasDisponibles.length === 0) {
+    return { inicio: '', fin: '' };
+  }
+
+  return {
+    inicio: this.semanasDisponibles[0].fecha_inicio,
+    fin: this.semanasDisponibles[this.semanasDisponibles.length - 1].fecha_fin
+  };
+}  
+
 
 // En turnos.ts
 get personalParaReemplazo() {
@@ -133,6 +144,7 @@ ngOnInit() {
   
 
 
+// En tu clase TurnosComponent:
 
 
 cargarAreas() {
@@ -149,7 +161,23 @@ cargarAreas() {
   });
 }
 
-  // En turnos.ts
+limpiarSemana() {
+    Swal.fire({
+      title: '¿Limpiar semana?',
+      text: "Se eliminarán las asignaciones de la vista actual.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#1abc9c',
+      confirmButtonText: 'Sí, limpiar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Lógica para vaciar la semana
+        console.log('Semana limpiada');
+      }
+    });
+  }
+// En turnos.ts
 
   abrirRegistroNovedad(turno: any) {
   console.log('Intentando abrir novedad para:', turno);
@@ -190,6 +218,7 @@ onNovedadProcesada() {
   }
 
 
+  
   cargarCategorias() {
     this.turnoService.getCategorias().subscribe({
       next: (res: any) => {
@@ -199,6 +228,7 @@ onNovedadProcesada() {
       error: (err: any) => console.error("Error categorías", err)
     });
   }
+
 cargarTiposDeTurnos() {
   this.turnoService.getTurnos({}).subscribe({ 
     next: (res: any) => {
@@ -332,26 +362,34 @@ confirmarMovimiento() {
   }
 
 
-
- onReplicarMes() {
-  if (confirm(`¿Estás seguro de replicar esta semana a todo el mes?`)) {
-    this.cargando = true;
-    this.turnoService.replicarSemanaEnMes(
-      this.filters.servicio_id, 
-      this.filters.mes_id, 
-      this.filters.semana_id
-    ).subscribe({
-      next: () => {
-        alert("La semana se ha replicado en todo el mes exitosamente.");
-        this.cargarTurnos();
-        this.cargando = false;
-      },
-      error: (err) => {
-        this.cargando = false;
-        alert("Error al replicar: " + (err.error?.message || 'Intente nuevamente'));
-      }
-    });
-  }
+onReplicarMes() {
+  Swal.fire({
+    title: '¿Replicar esta semana?',
+    text: "La programación de esta semana se copiará a todo el mes actual.",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#1abc9c',
+    confirmButtonText: 'Sí, copiar a todo el mes'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.cargando = true;
+      this.turnoService.replicarSemanaEnMes(
+        this.filters.servicio_id, 
+        this.filters.mes_id, 
+        this.filters.semana_id
+      ).subscribe({
+        next: () => {
+          this.toastr.success("La semana se ha replicado exitosamente.");
+          this.cargarTurnos();
+          this.cargando = false;
+        },
+        error: (err) => {
+          this.cargando = false;
+          this.toastr.error("Error al replicar: " + (err.error?.message || 'Intente nuevamente'));
+        }
+      });
+    }
+  });
 }
 
 async capturarPantalla() {
@@ -499,12 +537,23 @@ doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10); // DEBE SER EL ROL
   }
 
   // --- MÉTODOS AUXILIARES ---
+//obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
+  //  if (!usuario?.turnos) return null;
+    //const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
+    //return usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
+  //}
 
   obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
-    if (!usuario.turnos) return null;
+    if (!usuario || !usuario.turnos) return null;
+
     const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
-    return usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
-  }
+    
+    // Buscamos la asignación que coincida con la fecha
+    const asignacion = usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
+
+    // Retornamos el objeto completo (debe traer nombre_area, hora_inicio, etc.)
+    return asignacion ? asignacion : null;
+}
 
   obtenerFechaReal(nombreDia: string): string {
     const semanaActual = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
@@ -534,17 +583,18 @@ generarFechasDeLaSemana(fechaInicio: string) {
     }
 }
 
-abrirOpcionesTurno(turno: any, personal: any) {
-  this.turnoSeleccionado = { 
-    ...turno, 
-    usuario_nombre: personal.usuario_nombre || personal.nombre, 
-    id_asignacion: turno.id_asignacion || turno.id, 
-    turno_id: turno.turno_id || turno.id_turno 
-  };
+cerrarTodosLosModales() {
+  this.mostrarModal = false;
+  this.mostrarModalCRUD = false;
+  this.mostrarModalCalendario = false;
   
-  this.mostrarModalCRUD = true;
-  this.cdRef.detectChanges();
+  // Limpiamos datos para que el siguiente clic no tenga "residuos"
+  this.turnoSeleccionado = null;
+  this.fechasSeleccionadas = [];
+  this.esMensual = false;
 }
+
+
 
 // 2. Método para Actualizar
 confirmarActualizacion() {
@@ -640,11 +690,30 @@ eliminarTurno() {
   this.mostrarModal = true;
 }
 
-aceptarDias() {
-    this.mostrarModalCalendario = false; // CERRAMOS el calendario para que no se vea de fondo
-    this.esMensual = true;
-    this.mostrarModal = true; // Abrimos el modal verde
+
+abrirCalendario() {
+    this.mostrarModalCalendario = true;
+    // No cerramos 'mostrarModal' para que se vea de fondo, 
+    // pero el 'appendTo="body"' del HTML hará que el calendario flote encima.
 }
+
+// Asegúrate de inicializar la variable al inicio de tu clase
+
+
+// Función para procesar los días elegidos
+aceptarDias() {
+    if (this.fechasSeleccionadas && this.fechasSeleccionadas.length > 0) {
+        // Cerramos el calendario (esto lo quita de la vista superior)
+        this.mostrarModalCalendario = false;
+        
+        // Activamos la bandera para que el modal verde muestre el conteo de días
+        this.esMensual = true;
+        
+        // Mantenemos o reabrimos el modal de asignación
+        this.mostrarModal = true;
+    }
+}
+
 
 abrirOpcionesTurno(turno: any, personal: any) {
     this.cerrarTodosLosModales();
@@ -680,56 +749,53 @@ calcularDiasTrabajados(usuario: any): number {
 // 1. Definir una estructura para el resumen
 
 guardarAsignacion() {
-    if (!this.turnoIdSeleccionado || !this.areaIdSeleccionado) {
-        this.toastr.warning('Por favor seleccione turno y área');
+    // AHORA: Solo el turno es estrictamente obligatorio
+    if (!this.turnoIdSeleccionado) {
+        this.toastr.warning('Por favor seleccione al menos un turno');
         return;
     }
 
     let fechasAEnviar: string[] = [];
 
+    // Lógica de fechas (Mensual o Individual)
     if (this.esMensual && this.fechasSeleccionadas) {
         fechasAEnviar = this.fechasSeleccionadas.map(date => 
             formatDate(date, 'yyyy-MM-dd', 'en-US')
         );
     } else {
-        // Validamos si diaSeleccionado es Date o string
         const fechaBase = this.obtenerFechaReal(this.diaSeleccionado);
         fechasAEnviar = [formatDate(fechaBase, 'yyyy-MM-dd', 'en-US')];
     }
 
+    // Payload para Laravel
     const payload = {
         usuario_id: this.personalSeleccionado.usuario_id,
         turno_id: this.turnoIdSeleccionado,
-        area_id: this.areaIdSeleccionado,
+        // Si no hay área seleccionada, enviamos null para que sea "General"
+        area_id: this.areaIdSeleccionado || null, 
         fechas_multiples: fechasAEnviar,
-        // Eliminamos semana_id y mes_id del payload si queremos que el 
-        // backend los calcule dinámicamente según cada fecha (más seguro).
         estado: 'programado',
         observacion: '' 
     };
 
-   this.turnoService.asignarTurno(payload).subscribe({
-    next: (res: any) => {
-        // Corregido: Agregamos la coma después del mensaje y cerramos bien el paréntesis
-        this.toastr.success("Turnos asignados correctamente", "Éxito", {
-            timeOut: 2000,
-            progressBar: true 
-        });
-
-        this.cerrarModal();
-        this.cargarTurnos(); 
-    },
-    error: (err: any) => {
-        console.error("Error al guardar:", err);
-        // Corregido: Las opciones deben ir DENTRO de los paréntesis del error()
-        this.toastr.error(err.error?.message || "Error al procesar la asignación", "Error", {
-            timeOut: 6000,
-            extendedTimeOut: 2000,
-            progressBar: true,
-            enableHtml: true
-        });
-    }
-});
+    this.turnoService.asignarTurno(payload).subscribe({
+        next: (res: any) => {
+            this.toastr.success("Turnos asignados correctamente", "Éxito", {
+                timeOut: 2000,
+                progressBar: true 
+            });
+            this.cerrarModal();
+            this.cargarTurnos(); // Importante para refrescar la tabla
+        },
+        error: (err: any) => {
+            console.error("Error al guardar:", err);
+            this.toastr.error(err.error?.message || "Error al procesar la asignación", "Error", {
+                timeOut: 6000,
+                progressBar: true,
+                enableHtml: true
+            });
+        }
+    });
 }
 
 

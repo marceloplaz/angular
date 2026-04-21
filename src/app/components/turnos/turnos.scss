@@ -1,335 +1,72 @@
-/* =========================================
-   REDISEÑO PROFESIONAL - SISTEMA DE TURNOS
-========================================= */
-
 :host {
     --verde-agua: #1abc9c;
     --verde-hover: #16a085;
-    --gris-suave: #f8fafc;
     --borde-color: #e2e8f0;
-    --dark-panel: #1e293b;
-    --amarillo-swap: #fbbf24; // Color para intercambios
 }
 
-/* --- ESTRUCTURA GENERAL Y TABLA --- */
-
-.table {
-    border-collapse: separate;
-    border-spacing: 0;
-    width: 100%;
-    
-    thead th {
-        background-color: #ffffff !important;
-        color: #334155;
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 12px 8px;
-        border-bottom: 2px solid var(--verde-agua) !important;
-        text-align: center;
-    }
+/* Columna de nombre médico fija */
+.col-personal {
+    width: 220px;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 5;
+    border-right: 2px solid var(--borde-color);
 }
 
-.row-hover:hover {
-    background-color: #f0fdfa !important;
-}
-
-/* Celdas de caída (Drop Zones) */
-.cell-drop {
-    min-height: 60px;
-    vertical-align: middle;
-    transition: background-color 0.2s ease;
-    border: 1px solid var(--borde-color);
-
-    &.cdk-drop-list-receiving {
-        background-color: rgba(26, 188, 156, 0.1) !important;
-        border: 1px dashed var(--verde-agua);
-    }
-}
-
-/* --- COMPONENTE TURNO (BADGE) --- */
-
+/* Estilo de los turnos (Badge) */
 .badge-turno {
     border-radius: 6px;
     padding: 6px;
     color: white;
-    cursor: grab;
-    transition: all 0.2s ease;
-    border: 1px solid rgba(0,0,0,0.1);
-    display: block;
-    width: 100%;
-    position: relative;
-    user-select: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+    &:hover { transform: scale(1.03); filter: brightness(1.1); }
+}
+
+.turno-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+.turno-time-box { background: rgba(255, 255, 255, 0.2); font-size: 0.6rem; border-radius: 3px; margin-top: 3px; }
+
+/* Botón "+" discreto */
+.btn-add-soft {
+    border: 2px dashed #cbd5e0;
+    background: transparent;
+    color: #cbd5e0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    &:hover { border-color: var(--verde-agua); color: var(--verde-agua); background: #f0fdfa; }
+}
+
+/* OVERRIDES DE PRIMENG */
+::v-deep {
+    .custom-modal-verde .p-dialog-header {
+        background-color: var(--verde-agua) !important;
+        color: white !important;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        .p-dialog-header-icon { color: white !important; }
+    }
     
-    &:active { cursor: grabbing; }
-    
-    &:hover {
-        filter: brightness(1.1);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        transform: translateY(-1px);
+    .custom-modal-verde .p-dialog-content {
+        padding: 0 !important;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
     }
 
-    /* ESTADO: INTERCAMBIADO (Resaltado visual) */
-    &.es-intercambio {
-        border: 2px dashed var(--amarillo-swap) !important;
-        animation: pulse-yellow 2s ease-out;
-
-        &::after {
-            content: '\21C4'; // Icono ⇄
-            position: absolute;
-            top: -8px;
-            right: -5px;
-            background: var(--amarillo-swap);
-            color: #1e293b;
-            font-size: 10px;
-            font-weight: bold;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
+    .p-datepicker table td > span.p-highlight {
+        background-color: var(--verde-agua) !important;
+        color: white !important;
     }
 }
 
-.turno-title {
-    font-size: 0.65rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    display: block;
-    line-height: 1.1;
-}
-
-.turno-time-box {
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 3px;
-    font-size: 0.6rem;
-    margin-top: 3px;
-    padding: 2px;
-    font-weight: 600;
-    text-align: center;
-}
-
-/* --- BOTONES Y ACCIONES --- */
-
+/* Botones personalizados */
 .btn-teal-actions {
     background-color: var(--verde-agua);
     color: white;
     border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: all 0.2s;
-    
-    &:hover {
-        background-color: var(--verde-hover);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    &:hover { background-color: var(--verde-hover); color: white; }
+    &:disabled { background-color: #a5d6a7; opacity: 0.7; }
 }
 
-/* --- BOTONES DE AGREGAR (CÍRCULOS DISCRETOS) --- */
-.btn-add-soft {
-    border: 2px dashed #cbd5e0; // Borde punteado para que parezca un espacio vacío
-    background: transparent;
-    color: #cbd5e0;
-    width: 32px;               // Tamaño fijo para que no se deforme
-    height: 32px;
-    border-radius: 50%;        // Forma circular
-    display: flex;             // Centrado del icono +
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;            // Centrado en la celda
-    transition: all 0.2s ease;
-    cursor: pointer;
-    
-    i {
-        font-size: 0.9rem;
-    }
-    
-    &:hover {
-        color: var(--verde-agua) !important;
-        border: 2px solid var(--verde-agua);
-        background-color: rgba(26, 188, 156, 0.05);
-        transform: scale(1.1);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-}
-
-/* --- AUDITORÍA (MODO DARK) --- */
-
-.contenedor-auditoria {
-    margin-top: 30px;
-    background: var(--dark-panel);
-    border-radius: 12px;
-    padding: 20px;
-    color: #f1f5f9;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-
-    .titulo-auditoria {
-        font-size: 0.75rem;
-        letter-spacing: 1px;
-        color: #94a3b8;
-        border-bottom: 1px solid #334155;
-        padding-bottom: 12px;
-        margin-bottom: 15px;
-        text-transform: uppercase;
-    }
-
-    .fila-movimiento {
-        background: #334155;
-        padding: 10px 15px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        font-size: 0.85rem;
-        display: flex;
-        align-items: center;
-        border-left: 4px solid transparent;
-
-        &.primero {
-            background: #064e3b; 
-            border-left: 4px solid #34d399;
-            animation: pulse-green 2s infinite;
-        }
-
-        .hora-log { 
-            color: #64748b; 
-            font-family: 'Courier New', monospace; 
-            font-weight: bold; 
-            margin-right: 10px;
-        }
-       .badge-persona {
-    color: #fbbf24; // El amarillo que combina con tu modal de confirmación
-    font-weight: 700;
-    text-transform: capitalize;
-} 
-       }
-    }
-
-.col-personal { width: 200px; min-width: 200px; sticky: left; }
-.badge-turno {
-  padding: 4px;
-  border-radius: 6px;
-  color: white;
-  font-size: 0.7rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-  &:hover { transform: scale(1.05); }
-}
-.extra-small { font-size: 0.65rem; }
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
-/* --- MODALES --- */
-
-/* Modifica tu clase actual en el SCSS */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999; /* El estándar */
-    backdrop-filter: blur(2px);
-
-    /* Añade esta sub-clase para cuando necesites un modal sobre otro */
-    &.superior {
-        z-index: 10001 !important; 
-        background: rgba(0,0,0,0.75); // Un poco más oscuro para resaltar
-    }
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 450px;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: none;
-
-    .modal-header {
-        background: var(--verde-agua);
-        color: white;
-        padding: 15px 20px;
-        font-weight: 700;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .modal-body {
-        padding: 25px;
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        
-        strong { color: var(--dark-panel); font-weight: 800; }
-        
-        .destaque-swap {
-            background: #fffbeb;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #fde68a;
-            margin-top: 15px;
-        }
-    }
-
-    .modal-footer {
-        padding: 15px 20px;
-        background: var(--gris-suave);
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-    }
-}
-
-/* --- ANIMACIONES Y CDK --- */
-
-.cdk-drag-preview {
-    box-sizing: border-box;
-    border-radius: 6px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    opacity: 0.8;
-}
-
-.cdk-drag-placeholder {
-    opacity: 0.2;
-    background: #cbd5e1;
-    border: 2px dashed #94a3b8;
-    border-radius: 6px;
-}
-
-@keyframes pulse-green {
-    0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
-}
-
-@keyframes pulse-yellow {
-    0% { background-color: rgba(251, 191, 36, 0.4); }
-    100% { background-color: transparent; }
-}
-
-/* Columna de Totales */
-.col-total {
-    background-color: #f1f5f9;
-    text-align: center;
-    .total-val {
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--verde-agua);
-        span { font-size: 0.7rem; margin-left: 2px; color: #64748b; }
-    }
-}
+.text-teal { color: var(--verde-agua); }
+.extra-small { font-size: 0.7rem; }
