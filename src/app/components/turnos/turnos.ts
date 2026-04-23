@@ -129,7 +129,8 @@ ngOnInit() {
   if (nombreGuardado) { this.alias = nombreGuardado; }
   if (rolGuardado) { this.rolUsuario = rolGuardado; }
   
-  this.cargarCategorias();
+  //this.cargarCategorias();
+  this.cargarListasJerarquicas();
   this.cargarTiposDeTurnos();
   this.cargarConfiguracionInicial();
 
@@ -146,6 +147,32 @@ ngOnInit() {
 
 // En tu clase TurnosComponent:
 
+
+cargarListasJerarquicas() {
+  this.loading = true;
+  this.turnoService.getFiltrosJerarquia().subscribe({
+    next: (res) => {
+      // 1. Cargamos los servicios que el usuario TIENE PERMITIDO ver
+      this.servicios = res.servicios;
+      
+      // 2. Cargamos las categorías que el usuario PUEDE GESTIONAR
+      this.categorias = res.categorias;
+
+      // 3. Si hay servicios disponibles, seleccionamos el primero por defecto
+      if (this.servicios.length > 0 && !this.filters.servicio_id) {
+        this.filters.servicio_id = this.servicios[0].id;
+        this.cargarTiposDeTurnos(); // Refrescamos turnos para ese servicio
+      }
+
+      this.loading = false;
+      this.cdRef.detectChanges();
+    },
+    error: (err) => {
+      console.error("Error cargando jerarquía:", err);
+      this.loading = false;
+    }
+  });
+}
 
 cargarAreas() {
   // Verificamos de nuevo por seguridad
@@ -248,27 +275,26 @@ cargarTiposDeTurnos() {
   });
 }
 
-  cargarConfiguracionInicial() {
-    this.turnoService.getServicios().subscribe((res: any) => {
-      this.servicios = res.data;
-      if (this.servicios.length > 0) this.filters.servicio_id = this.servicios[0].id;
+ cargarConfiguracionInicial() {
+  // Ya no llamamos a getServicios() aquí porque lo hace cargarListasJerarquicas()
+  this.turnoService.getConfiguracionCalendario().subscribe((resCal: any) => {
+    const data = resCal.data || resCal;
+    const gestionActual = data.gestiones?.find((g: any) => g.año == this.filters.gestion);
+    
+    if (gestionActual) {
+      this.mesesDisponibles = gestionActual.meses;
+      const mesActual = this.mesesDisponibles.find((m: any) => m.numero_mes == data.mes_actual) || this.mesesDisponibles[0];
       
-      this.turnoService.getConfiguracionCalendario().subscribe((resCal: any) => {
-        const data = resCal.data || resCal;
-        const gestionActual = data.gestiones?.find((g: any) => g.año == this.filters.gestion);
-        if (gestionActual) {
-          this.mesesDisponibles = gestionActual.meses;
-          const mesActual = this.mesesDisponibles.find((m: any) => m.numero_mes == data.mes_actual) || this.mesesDisponibles[0];
-          if (mesActual) {
-            this.filters.mes_id = mesActual.id;
-            this.semanasDisponibles = mesActual.semanas;
-            this.filters.semana_id = this.semanasDisponibles[0]?.id;
-          }
-        }
-        this.cargarTurnos();
-      });
-    });
-  }
+      if (mesActual) {
+        this.filters.mes_id = mesActual.id;
+        this.semanasDisponibles = mesActual.semanas;
+        this.filters.semana_id = this.semanasDisponibles[0]?.id;
+      }
+    }
+    this.cargarTurnos();
+  });
+}
+  
 
   cargarTurnos() {
     if (!this.filters.servicio_id || !this.filters.semana_id) return;

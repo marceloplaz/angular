@@ -18,7 +18,11 @@ export class TurnoService {
   return this.http.get(`${this.apiUrl}/areas`, {
     params: { servicio_id: servicioId.toString() }
   });
-}
+   }
+
+   getFiltrosJerarquia(): Observable<{ categorias: any[], servicios: any[] }> {
+    return this.http.get<{ categorias: any[], servicios: any[] }>(`${this.apiUrl}/filtros-jerarquia`);
+  }
   getConfiguracionCalendario(): Observable<any> {
     return this.http.get(`${this.apiUrl}/calendario/configuracion`);
   }
