@@ -118,4 +118,17 @@ export class TurnoService {
     return this.http.post(`${this.apiUrl}/servicios/vincular-turnos`, data);
   }
 
+  crearTurno(data: { nombre_turno: string, hora_inicio: string, hora_fin: string, duracion_horas: number }): Observable<any> {
+  // CAMBIO CLAVE: Cambiar 'lista-turnos-disponibles' por 'turnos'
+  return this.http.post(`${this.apiUrl}/turnos`, data);
+}
+
+/**
+ * Elimina un tipo de turno del catálogo
+ * Corresponde a: DELETE v1/turnos/{id} (Admin)
+ */
+eliminarTipoTurno(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/turnos/${id}`);
+}
+
 }

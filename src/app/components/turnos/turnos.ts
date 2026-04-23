@@ -228,20 +228,22 @@ onNovedadProcesada() {
       error: (err: any) => console.error("Error categorías", err)
     });
   }
-
 cargarTiposDeTurnos() {
-  this.turnoService.getTurnos({}).subscribe({ 
+  // Verificamos que tengamos un servicio seleccionado
+  const servicioId = this.filters.servicio_id;
+  if (!servicioId) return;
+
+  // Usamos el método que ya creaste en tu servicio para obtener turnos por servicio
+  this.turnoService.getTurnosPorServicio(servicioId).subscribe({ 
     next: (res: any) => {
-      // Laravel suele envolver los datos en una propiedad 'data'
+      // Seteamos la lista con los turnos filtrados que vienen de la configuración
       this.listaTurnos = res.data || res;
       
-      // Si este log muestra los 24 registros, el modal ya no estará vacío
-      console.log("Turnos cargados correctamente:", this.listaTurnos);
-      
+      console.log("Turnos filtrados por servicio cargados:", this.listaTurnos);
       this.cdRef.detectChanges();
     },
     error: (err) => {
-      console.error("Error al cargar turnos. Verifica que la ruta en api.php sea correcta", err);
+      console.error("Error al cargar turnos del servicio", err);
     }
   });
 }
@@ -640,7 +642,9 @@ eliminarTurno() {
     }, 0);
   }
 
-  onFilterChange() { this.cargarTurnos(); }
+  onFilterChange() { 
+    this.cargarTiposDeTurnos();
+    this.cargarTurnos(); }
 
  onCambioMes(mesId: any) {
   // Aseguramos que el filtro tenga el ID correcto
@@ -666,27 +670,35 @@ eliminarTurno() {
   this.turnoIdSeleccionado = null;
   this.areaIdSeleccionado = null;
   this.esMensual = false;
-  this.fechasSeleccionadas = []; // Limpia selecciones previas de PrimeNG
-
-  // ¡CRUCIAL!: Asegúrate de que el modal de gestión esté APAGADO
+  this.fechasSeleccionadas = []; 
   this.mostrarModalCRUD = false; 
 
-  // 2. Carga de datos necesarios (Áreas y Turnos)
-  if (this.filters.servicio_id) {
-    this.turnoService.getAreas(this.filters.servicio_id).subscribe({
+  // 2. Carga de datos necesarios (Áreas y Turnos Filtrados)
+  const servicioId = this.filters.servicio_id;
+
+  if (servicioId) {
+    // Carga de Áreas para el servicio
+    this.turnoService.getAreas(servicioId).subscribe({
       next: (res: any) => {
         this.listaAreas = res.data || res;
         this.cdRef.detectChanges();
       },
       error: (err) => console.error("Error al cargar áreas:", err)
     });
+
+    // CARGA DE TURNOS VINCULADOS (Eliminamos el if de length === 0)
+    // Esto garantiza que si cambias de servicio, los turnos se refresquen siempre
+    this.turnoService.getTurnosPorServicio(servicioId).subscribe({
+      next: (res: any) => {
+        this.listaTurnos = res.data || res;
+        console.log("Turnos específicos cargados para el modal:", this.listaTurnos);
+        this.cdRef.detectChanges();
+      },
+      error: (err) => console.error("Error al cargar turnos vinculados:", err)
+    });
   }
 
-  if (this.listaTurnos.length === 0) {
-    this.cargarTiposDeTurnos();
-  }
-
-  // 3. Abrir solo el modal de asignación (Verde)
+  // 3. Abrir el modal de asignación
   this.mostrarModal = true;
 }
 
