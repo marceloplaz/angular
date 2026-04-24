@@ -571,6 +571,7 @@ doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10); // DEBE SER EL ROL
     //return usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
   //}
 
+  
   obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
     if (!usuario || !usuario.turnos) return null;
 

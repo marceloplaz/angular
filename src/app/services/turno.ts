@@ -121,6 +121,12 @@ export class TurnoService {
   vincularTurnosAServicio(data: { servicio_id: number, turnos_ids: number[] }): Observable<any> {
     return this.http.post(`${this.apiUrl}/servicios/vincular-turnos`, data);
   }
+  
+  buscarProfesionales(termino: string): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/buscar-profesionales`, {
+    params: { buscar: termino }
+  });
+}
 
   crearTurno(data: { nombre_turno: string, hora_inicio: string, hora_fin: string, duracion_horas: number }): Observable<any> {
   // CAMBIO CLAVE: Cambiar 'lista-turnos-disponibles' por 'turnos'

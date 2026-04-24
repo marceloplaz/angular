@@ -26,7 +26,10 @@ export class ServicioService {
   deleteServicio(id: number): Observable<any> {
     return this.http.delete(`${this.url}/servicios/${id}`);
   }
-
+vincularUsuario(data: any): Observable<any> {
+  // Asegúrate de que la URL coincida con tu API (v1/usuario-servicio o similar)
+  return this.http.post(`${this.url}/usuario-servicio`, data);
+}
   // Crear servicio
   createServicio(servicio: any): Observable<any> {
     return this.http.post(`${this.url}/servicios`, servicio);
@@ -41,12 +44,12 @@ export class ServicioService {
   // --- GESTIÓN DE PERSONAL ---
 
   buscarProfesionales(termino: string): Observable<any> {
-    return this.http.get(`${this.url}/buscar-profesionales?buscar=${termino}`);
-  }
+  return this.http.get(`${this.url}/buscar-profesionales?buscar=${termino}`);
+}
 
   vincularProfesional(datos: any): Observable<any> {
-    return this.http.post(`${this.url}/usuario-servicio`, datos);
-  }
+  return this.http.post(`${this.url}/usuario-servicio`, datos);
+}
 
   desvincularProfesional(id: number): Observable<any> {
     return this.http.delete(`${this.url}/usuario-servicio/${id}`);

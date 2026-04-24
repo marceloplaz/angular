@@ -6,6 +6,7 @@ import { ServicioService } from '../../services/servicios';
 import { Servicio } from '../../interfaces/servicio';
 import { finalize } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
+
 import { bootstrapApplication } from '@angular/platform-browser';
 
 declare var bootstrap: any;
@@ -25,6 +26,7 @@ declare var bootstrap: any;
   styleUrl: './servicios.scss'
 })
 export class ServiciosComponent implements OnInit {
+  
   mostrarFormulario: boolean = false;
   listServicios: Servicio[] = [];
   loading: boolean = false;
@@ -32,6 +34,12 @@ export class ServiciosComponent implements OnInit {
   id: number | undefined;
   operacion: string = 'Registrar';
   servicioSeleccionado: any = null;
+  terminoBusqueda: string = '';
+  resultadosBusqueda: any[] = [];
+  buscandoProfesional: boolean = false;
+  cargoSeleccionado: string = 'personal_planta';
+  usuarioParaVincular: any = null;
+  estadoSeleccionado: number = 1;
 
   constructor(
     private _servicioService: ServicioService,
@@ -63,6 +71,80 @@ export class ServiciosComponent implements OnInit {
       }
     });
   }
+
+  seleccionarUsuario(user: any) {
+  this.usuarioParaVincular = user;
+  this.terminoBusqueda = user.persona?.nombre_completo || user.name;
+  this.resultadosBusqueda = []; // Cerramos la lista al seleccionar
+}
+
+  ejecutarBusqueda() {
+    if (this.terminoBusqueda.length < 3) {
+      this.resultadosBusqueda = [];
+      return;
+    }
+
+    this._servicioService.buscarProfesionales(this.terminoBusqueda).subscribe({
+      next: (res: any) => {
+        this.resultadosBusqueda = res;
+      },
+      error: (e) => console.error('Error en búsqueda:', e)
+    });
+  }
+
+  confirmarVinculacionManual() {
+  if (!this.usuarioParaVincular) {
+    this.toastr.warning('Seleccione un profesional de la lista');
+    return;
+  }
+  this.confirmarVinculacion(this.usuarioParaVincular);
+}
+
+
+// Añadimos el "?" para que sea opcional y manejamos ambos casos
+confirmarVinculacion(usuario?: any) {
+  // 1. Si pasamos un usuario (clic en el + verde), usamos ese.
+  // 2. Si no pasamos nada (clic en botón azul), usamos el que guardamos al seleccionar.
+  const user = usuario || this.usuarioParaVincular;
+
+  if (!user) {
+    this.toastr.warning('Por favor, seleccione un profesional de la lista', 'Atención');
+    return;
+  }
+
+  if (!this.servicioSeleccionado) return;
+
+  const datos = {
+    usuario_id: user.id,
+    servicio_id: this.servicioSeleccionado.id,
+    cargo: this.cargoSeleccionado
+  };
+
+  this.loading = true;
+  this._servicioService.vincularProfesional(datos).subscribe({
+    next: () => {
+      this.toastr.success('Personal vinculado correctamente', 'Éxito');
+      this.limpiarBuscador(); // Función para limpiar campos
+      this.verDetalles(this.servicioSeleccionado); // Recarga la tabla de la derecha
+    },
+    error: (err) => {
+      this.loading = false;
+      this.toastr.error('Error al vincular: el usuario ya existe en este servicio', 'Error');
+    }
+  });
+  
+}
+
+
+
+// Función auxiliar para limpiar después del éxito
+limpiarBuscador() {
+  this.terminoBusqueda = '';
+  this.resultadosBusqueda = [];
+  this.usuarioParaVincular = null;
+  this.loading = false;
+}
+
 
   toggleFormulario() {
     this.mostrarFormulario = !this.mostrarFormulario;
@@ -155,6 +237,7 @@ verDetalles(servicio: any) {
   });
 }
 
+
 abrirAsignacion() {
   const modalElement = document.getElementById('detalleServicioModal');
   if (modalElement) {
@@ -168,6 +251,42 @@ abrirAsignacion() {
   // Aquí puedes poner la lógica para abrir el siguiente modal de búsqueda
   console.log("Cerrando detalle y abriendo asignación para:", this.servicioSeleccionado?.nombre);
 }
+vincularDirecto(usuario: any) {
+    if (!this.servicioSeleccionado) {
+      console.error("No hay un servicio seleccionado para vincular");
+      return;
+    }
 
+    // Generamos la fecha actual en formato YYYY-MM-DD exigido por el backend
+    const fechaHoy = new Date().toISOString().split('T')[0];
+
+    const payload = {
+      usuario_id: usuario.id,
+      servicio_id: this.servicioSeleccionado.id,
+      descripcion: this.cargoSeleccionado,
+      estado: this.estadoSeleccionado,
+      fecha_ingreso: fechaHoy // <--- Esto elimina el error de validación
+    };
+
+    // Llamada al servicio (ajusta el nombre según tu _servicioService)
+    this._servicioService.vincularUsuario(payload).subscribe({
+      next: (res: any) => {
+        // 1. Limpiar el buscador
+        this.terminoBusqueda = '';
+        this.resultadosBusqueda = [];
+        
+        // 2. Refrescar los datos del servicio para ver al nuevo integrante en la tabla
+        this.verDetalles(this.servicioSeleccionado);
+        
+        // 3. Notificación de éxito
+        this.toastr.success('Personal vinculado con éxito');
+      },
+      error: (err: any) => {
+        console.error("Error al vincular:", err);
+        this.toastr.error('Error: ' + (err.error.message || 'No se pudo vincular'));
+      }
+    });
+  }
 }
+
 

@@ -35,3 +35,30 @@
     font-size: 1.1rem;
     line-height: 0; /* Centrado perfecto */
 }
+/* Botón de añadir en la lista de resultados */
+.btn-action-add-result {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border-radius: 4px;
+    border: 1px solid #28a745;
+    color: #28a745;
+    transition: all 0.2s ease-in-out;
+    padding: 0;
+    cursor: pointer;
+}
+
+.btn-action-add-result:hover {
+    background: #28a745;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Forzar que el buscador no corte la lista */
+.contenedor-buscador {
+    position: relative;
+    overflow: visible !important; /* CRÍTICO: Para que la lista no se corte */
+}
