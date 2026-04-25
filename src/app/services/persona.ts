@@ -42,6 +42,7 @@ getPersonas(): Observable<any> {
   return this.http.get<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
 }
 
+
   /**
    * Registra un nuevo usuario con su respectiva persona y rol.
    * Acepta el objeto anidado del Send Request
@@ -58,4 +59,9 @@ getPersonas(): Observable<any> {
   deletePersona(id: number): Observable<any> {
     return this.http.delete<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
   }
+getCatalogosFormulario(): Observable<any> {
+  const urlLimpia = this.API_URL.replace('/usuarios', '') + '/persona-catalogos';
+  return this.http.get(urlLimpia, { headers: this.getHeaders() });
+}
+
 }

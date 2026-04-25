@@ -15,31 +15,35 @@ import Swal from 'sweetalert2';
 export class CategoriasComponent implements OnInit {
   private http = inject(HttpClient);
   private categoriasService = inject(CategoriasService);
-  private apiUrlUsuarios = `${environment.apiUrl}/usuarios`; // Ruta de tus usuarios
+  private apiUrlUsuarios = `${environment.apiUrl}/usuarios`;
 
-  // Arrays de datos
   categorias: any[] = [];
-  usuarios: any[] = []; // Aquí guardaremos a todo el personal
+  usuarios: any[] = [];
+  loading: boolean = false; // Para feedback visual
 
-  nuevaCat = { 
-    nombre: '', 
-    nivel: 1, 
-    descripcion: '' 
-  };
+  nuevaCat = { nombre: '', nivel: 1, descripcion: '' };
 
   ngOnInit(): void { 
-    this.obtenerCategorias();
-    this.obtenerPersonal(); // Traemos a los usuarios al iniciar
+    this.cargarDatosIniciales();
   }
 
-  // --- MÉTODOS DE DATOS ---
+  cargarDatosIniciales(): void {
+    this.loading = true;
+    // Ejecutamos ambas peticiones
+    this.obtenerCategorias();
+    this.obtenerPersonal();
+  }
 
   obtenerCategorias(): void {
     this.categoriasService.listar().subscribe({
       next: (res: any) => {
         this.categorias = Array.isArray(res) ? res : (res.data || []);
+        this.loading = false;
       },
-      error: (err: any) => console.error('Error al cargar categorías:', err)
+      error: (err) => {
+        console.error('Error:', err);
+        this.loading = false;
+      }
     });
   }
 
@@ -47,25 +51,50 @@ export class CategoriasComponent implements OnInit {
     this.http.get<any>(this.apiUrlUsuarios).subscribe({
       next: (res: any) => {
         this.usuarios = res.data || res;
-      },
-      error: (err: any) => console.error('Error al cargar personal:', err)
+        console.log('Lista de usuarios recibida:', this.usuarios);
+      }
     });
   }
+obtenerUsuariosPorCat(categoriaId: number) {
+  const idObjetivo = Number(categoriaId);
 
-  // --- FILTROS LÓGICOS (Getters) ---
-  // Estos filtros separan a los usuarios según el categoria_id de tu BD
+  return this.usuarios.filter(u => {
+    // 1. Verificamos si el ID está directamente en el usuario (como está Dante en la BD)
+    const enUsuario = u.categoria_id ? Number(u.categoria_id) : null;
+    
+    // 2. Verificamos si por error se guardó dentro del objeto persona
+    const enPersona = u.persona?.categoria_id ? Number(u.persona.categoria_id) : null;
 
-  get medicos() {
-    return this.usuarios.filter(u => u.categoria_id == 1);
+    return enUsuario === idObjetivo || enPersona === idObjetivo;
+  });
+}
+
+  /**
+   * Devuelve el color principal según el ID de categoría
+   */
+  getColor(id: number): string {
+    const colors: any = {
+      1: '#0d6efd', // Azul (Médicos)
+      2: '#198754', // Verde (Enfermeras)
+      3: '#f1a100', // Amarillo/Naranja (Manual)
+    };
+    // Si es una categoría nueva (ID > 3), asigna un color púrpura o gris
+    return colors[id] || '#6f42c1'; 
   }
 
-  get enfermeras() {
-    return this.usuarios.filter(u => u.categoria_id == 2);
+  /**
+   * Devuelve un color suave para el fondo del icono
+   */
+  getColorLight(id: number): string {
+    const colors: any = {
+      1: '#cfe2ff',
+      2: '#d1e7dd',
+      3: '#fff3cd',
+    };
+    return colors[id] || '#e2d9f3';
   }
+  
 
-  get personalManual() {
-    return this.usuarios.filter(u => u.categoria_id == 3);
-  }
 
   // --- MÉTODOS DE ACCIÓN ---
 

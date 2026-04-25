@@ -16,32 +16,14 @@ export class NuevoPersonalComponent implements OnInit {
   private personaService = inject(PersonaService);
   private router = inject(Router);
 
-listaCategorias = [
-    { id: 1, nombre: 'Categoría 1' },
-    { id: 2, nombre: 'Categoría 2' },
-    { id: 3, nombre: 'Categoría 3' }
-  ];
-  
-  listaRoles: any[] = [
-    { id: 1, name: 'super_admin' },
-    { id: 2, name: 'admin' },
-    { id: 3, name: 'jefe_servicio' },
-    { id: 4, name: 'jefa_enfermeras' },
-    { id: 5, name: 'jefa_servicios_generales' },
-    { id: 6, name: 'responsable_tecnico' },
-    { id: 7, name: 'medico' },
-    { id: 8, name: 'enfermera' },
-    { id: 9, name: 'manual' },
-    { id: 10, name: 'admin_jefe_medico' },
-    { id: 11, name: 'admin_jefa_enfermeras' },
-    { id: 12, name: 'admin_jefa_servicios_generales' },
-    { id: 13, name: 'jefe_medico_servicio' },
-    { id: 14, name: 'jefa_enfermeras_servicio' }
-  ];
+  // Estas listas ahora se llenarán dinámicamente desde el Backend
+  listaCategorias: any[] = [];
+  listaRoles: any[] = [];
+  listaTiposSalario: any[] = [];
+  listaTiposTrabajador: any[] = [];
 
   rolSeleccionadoNombre: string = 'enfermera'; 
 
-  // Es CRITICO que 'telefono' y otros campos estén inicializados
   nuevoUsuario = {
     name: '',
     email: '',
@@ -57,21 +39,43 @@ listaCategorias = [
       telefono: '',
       direccion: '',
       nacionalidad: 'Boliviana',
-      tipo_trabajador: 'Medico', // Valor por defecto (Texto)
+      tipo_trabajador: 'medico', 
       tipo_salario: 'TGN',
       numero_tipo_salario: ''
     }
-    }
+  }
 
- 
+  ngOnInit(): void {
+    this.cargarCatalogos();
+  }
 
-  ngOnInit(): void {}
+  /**
+   * Carga todos los datos necesarios para los selectores desde el Backend
+   */
+  cargarCatalogos(): void {
+    this.personaService.getCatalogosFormulario().subscribe({
+      next: (res: any) => {
+        // Mapeamos la respuesta del servidor a tus variables locales
+        this.listaCategorias = res.categorias;
+        this.listaRoles = res.roles;
+        this.listaTiposSalario = res.tipos_salario;
+        this.listaTiposTrabajador = res.tipos_trabajador;
+      },
+      error: (err) => {
+        console.error('Error al cargar catálogos:', err);
+      }
+    });
+  }
 
   guardar() {
+    // Buscamos el ID del rol basado en el nombre seleccionado en el combo
     const rolEncontrado = this.listaRoles.find(r => r.name === this.rolSeleccionadoNombre);
+    
+    // Si no lo encuentra, por defecto asignamos ID 8 (que suele ser enfermera en tu lista)
     this.nuevoUsuario.roles = [rolEncontrado ? rolEncontrado.id : 8]; 
     this.nuevoUsuario.password_confirmation = this.nuevoUsuario.password;
 
+    // Preparamos el payload con las conversiones numéricas que exige Laravel
     const payload = {
       ...this.nuevoUsuario,
       categoria_id: Number(this.nuevoUsuario.categoria_id),
@@ -83,17 +87,25 @@ listaCategorias = [
 
     this.personaService.crearPersona(payload).subscribe({
       next: (res) => {
-        Swal.fire('¡Éxito!', 'Personal registrado', 'success');
+        Swal.fire('¡Éxito!', 'Personal registrado correctamente', 'success');
         this.router.navigate(['/dashboard/personal']);
       },
-    
       error: (err) => {
-  if (err.status === 422) {
-    Swal.fire('Error', 'El C.I. o el Correo ya se encuentran registrados', 'warning');
-  } else {
-    Swal.fire('Error', 'Ocurrió un problema en el servidor', 'error');
-  }
-}
+        if (err.status === 422) {
+          // Capturamos errores de validación (C.I. duplicado, email duplicado, etc.)
+          const validationErrors = err.error.errors;
+          let mensaje = 'El C.I. o el Correo ya se encuentran registrados';
+          
+          if(validationErrors) {
+             // Si quieres ver el error específico en consola para depurar
+             console.log("Errores de validación:", validationErrors);
+          }
+
+          Swal.fire('Atención', mensaje, 'warning');
+        } else {
+          Swal.fire('Error', 'Ocurrió un problema en el servidor al guardar', 'error');
+        }
+      }
     });
   }
 }

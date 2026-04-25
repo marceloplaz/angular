@@ -4,7 +4,9 @@
     <div class="col-md-3">
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-3">
-          <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-plus-circle me-2"></i>Nueva Categoría</h6>
+          <h6 class="mb-0 fw-bold text-primary">
+            <i class="fas fa-plus-circle me-2"></i>Nueva Categoría
+          </h6>
         </div>
         <div class="card-body">
           <div class="mb-3">
@@ -13,7 +15,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label small fw-bold text-muted">Nivel Jerárquico</label>
-            <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevaCat.nivel" min="1" max="3">
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevaCat.nivel" min="1" max="10">
           </div>
           <div class="mb-3">
             <label class="form-label small fw-bold text-muted">Descripción (Opcional)</label>
@@ -29,71 +31,47 @@
     <div class="col-md-9">
       <div class="row">
         
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-              <h6 class="mb-0 small fw-bold"><i class="fas fa-user-md me-2"></i>MÉDICOS (Cat. 1)</h6>
-              <span class="badge bg-white text-primary rounded-pill">{{ medicos.length }}</span>
+        <div class="col-md-4 mb-4" *ngFor="let cat of categorias">
+          <div class="card border-0 shadow-sm h-100">
+            
+            <div class="card-header text-white d-flex justify-content-between align-items-center py-3"
+                 [ngStyle]="{'background-color': getColor(cat.id)}">
+              <h6 class="mb-0 small fw-bold text-uppercase">
+                <i class="fas fa-layer-group me-2"></i>{{ cat.nombre }}
+              </h6>
+              <span class="badge bg-white text-dark rounded-pill">
+                {{ obtenerUsuariosPorCat(cat.id).length }}
+              </span>
             </div>
-            <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
-              <div *ngFor="let u of medicos" class="list-group-item list-group-item-action border-0 border-bottom">
-                <div class="d-flex align-items-center">
-                  <div class="avatar-circle bg-primary-subtle me-3 text-center">
-                    <i class="fas fa-user text-primary small"></i>
-                  </div>
-                  <div>
-                    <div class="fw-bold text-dark small">{{ u.name }}</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">{{ u.email }}</div>
-                  </div>
-                </div>
-              </div>
-              <div *ngIf="medicos.length === 0" class="p-4 text-center text-muted small">No hay médicos registrados.</div>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
-              <h6 class="mb-0 small fw-bold"><i class="fas fa-user-nurse me-2"></i>ENFERMERAS (Cat. 2)</h6>
-              <span class="badge bg-white text-success rounded-pill">{{ enfermeras.length }}</span>
-            </div>
             <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
-              <div *ngFor="let u of enfermeras" class="list-group-item list-group-item-action border-0 border-bottom">
+              
+              <div *ngFor="let u of obtenerUsuariosPorCat(cat.id)" class="list-group-item list-group-item-action border-0 border-bottom">
                 <div class="d-flex align-items-center">
-                  <div class="avatar-circle bg-success-subtle me-3 text-center">
-                    <i class="fas fa-user text-success small"></i>
+                  <div class="avatar-circle me-3 text-center" [ngStyle]="{'background-color': getColorLight(cat.id)}">
+                    <i class="fas fa-user small" [ngStyle]="{'color': getColor(cat.id)}"></i>
                   </div>
+                  
                   <div>
-                    <div class="fw-bold text-dark small">{{ u.name }}</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">{{ u.email }}</div>
+                    <div class="fw-bold text-dark small text-capitalize">{{ u.name }}</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">
+                      <i class="fas fa-id-card me-1"></i>CI: {{ u.persona?.carnet_identidad || 'N/A' }} 
+                      <span class="mx-1">|</span>
+                      <i class="fas fa-phone me-1"></i>{{ u.persona?.telefono || 'Sin telf.' }}
+                    </div>
                   </div>
                 </div>
               </div>
-              <div *ngIf="enfermeras.length === 0" class="p-4 text-center text-muted small">No hay enfermeras registradas.</div>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center py-3">
-              <h6 class="mb-0 small fw-bold"><i class="fas fa-broom me-2"></i>MANUAL (Cat. 3)</h6>
-              <span class="badge bg-dark text-white rounded-pill">{{ personalManual.length }}</span>
-            </div>
-            <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
-              <div *ngFor="let u of personalManual" class="list-group-item list-group-item-action border-0 border-bottom">
-                <div class="d-flex align-items-center">
-                  <div class="avatar-circle bg-warning-subtle me-3 text-center">
-                    <i class="fas fa-user text-warning small"></i>
-                  </div>
-                  <div>
-                    <div class="fw-bold text-dark small">{{ u.name }}</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">{{ u.email }}</div>
-                  </div>
-                </div>
+              <div *ngIf="obtenerUsuariosPorCat(cat.id).length === 0" class="p-4 text-center text-muted small italic">
+                <i class="fas fa-info-circle me-1"></i> No hay personal asignado
               </div>
-              <div *ngIf="personalManual.length === 0" class="p-4 text-center text-muted small">No hay personal manual.</div>
+            </div>
+
+            <div class="card-footer bg-white border-0 text-end">
+              <button class="btn btn-link btn-sm text-danger p-0" (click)="eliminar(cat.id)" title="Eliminar Categoría">
+                <i class="fas fa-trash-alt"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -105,14 +83,35 @@
 </div>
 
 <style>
+  /* Estilos personalizados para los círculos de avatar */
   .avatar-circle {
     width: 32px;
     height: 32px;
     line-height: 32px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  .bg-primary-subtle { background-color: #cfe2ff; }
-  .bg-success-subtle { background-color: #d1e7dd; }
-  .bg-warning-subtle { background-color: #fff3cd; }
-  .list-group-item { border-color: #f0f0f0; }
+
+  /* Mejora del scrollbar para las listas largas */
+  .list-group::-webkit-scrollbar {
+    width: 5px;
+  }
+  .list-group::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  .list-group::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+  }
+  .list-group::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
+
+  /* Animación suave al pasar el mouse por los items */
+  .list-group-item-action:hover {
+    background-color: #f8f9fa !important;
+    transition: background-color 0.2s ease;
+  }
 </style>
