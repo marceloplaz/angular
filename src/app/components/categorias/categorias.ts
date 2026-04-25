@@ -20,6 +20,7 @@ export class CategoriasComponent implements OnInit {
   categorias: any[] = [];
   usuarios: any[] = [];
   loading: boolean = false; // Para feedback visual
+  searchTerm: string = '';
 
   nuevaCat = { nombre: '', nivel: 1, descripcion: '' };
 
@@ -56,35 +57,46 @@ export class CategoriasComponent implements OnInit {
     });
   }
 obtenerUsuariosPorCat(categoriaId: number) {
-  const idObjetivo = Number(categoriaId);
+  const idBusqueda = Number(categoriaId);
+  const busqueda = this.searchTerm.toLowerCase().trim();
 
   return this.usuarios.filter(u => {
-    // 1. Verificamos si el ID está directamente en el usuario (como está Dante en la BD)
-    const enUsuario = u.categoria_id ? Number(u.categoria_id) : null;
+    // Primero validamos que pertenezca a la categoría (como Dante con ID 4)
+    const perteneceACat = Number(u.categoria_id) === idBusqueda;
     
-    // 2. Verificamos si por error se guardó dentro del objeto persona
-    const enPersona = u.persona?.categoria_id ? Number(u.persona.categoria_id) : null;
+    // Si no hay búsqueda, mostramos todos los de la categoría
+    if (!busqueda) return perteneceACat;
 
-    return enUsuario === idObjetivo || enPersona === idObjetivo;
+    // Si hay búsqueda, verificamos nombre de usuario o nombre completo
+    const coincideNombre = 
+      u.name.toLowerCase().includes(busqueda) || 
+      (u.persona?.nombre_completo?.toLowerCase().includes(busqueda));
+
+    return perteneceACat && coincideNombre;
   });
 }
+descargarReporte(categoriaId?: number) {
+  // Construimos la URL uniendo la base de la API con la ruta de Laravel
+  let url = `${environment.apiUrl}/personal/exportar-pdf`;
+  
+  // Si recibimos un ID, lo añadimos como parámetro de consulta (?)
+  if (categoriaId) {
+    url += `?categoria_id=${categoriaId}`;
+  }
+  
+  // Abrimos la URL en una nueva pestaña para que Laravel genere el PDF
+  window.open(url, '_blank');
 
-  /**
-   * Devuelve el color principal según el ID de categoría
-   */
-  getColor(id: number): string {
+}
+getColor(id: number): string {
     const colors: any = {
-      1: '#0d6efd', // Azul (Médicos)
-      2: '#198754', // Verde (Enfermeras)
-      3: '#f1a100', // Amarillo/Naranja (Manual)
+      1: '#0d6efd', // Azul
+      2: '#198754', // Verde
+      3: '#f1a100', // Amarillo
     };
-    // Si es una categoría nueva (ID > 3), asigna un color púrpura o gris
     return colors[id] || '#6f42c1'; 
   }
 
-  /**
-   * Devuelve un color suave para el fondo del icono
-   */
   getColorLight(id: number): string {
     const colors: any = {
       1: '#cfe2ff',
@@ -93,6 +105,7 @@ obtenerUsuariosPorCat(categoriaId: number) {
     };
     return colors[id] || '#e2d9f3';
   }
+
   
 
 
