@@ -182,10 +182,14 @@
       </div>
       <hr class="my-4">
       <div class="mb-3">
+        
         <label class="extra-small fw-bold text-secondary">CAMBIAR TIPO DE TURNO</label>
-        <select class="form-select form-select-sm" [(ngModel)]="turnoSeleccionado.turno_id" *ngIf="turnoSeleccionado">
-          <option *ngFor="let t of listaTurnos" [value]="t.id">{{ t.nombre_turno }}</option>
-        </select>
+  <select class="form-select form-select-sm" [(ngModel)]="turnoSeleccionado.turno_id" *ngIf="turnoSeleccionado">
+    <option *ngFor="let t of listaTurnos" [value]="t.id">
+      {{ t.nombre_turno }} ({{ t.hora_inicio | slice:0:5 }} - {{ t.hora_fin | slice:0:5 }})
+    </option>
+  </select>
+
       </div>
       <button class="btn btn-teal-actions btn-sm w-100 fw-bold" (click)="confirmarActualizacion()">
         <i class="pi pi-save me-2"></i> GUARDAR CAMBIOS
