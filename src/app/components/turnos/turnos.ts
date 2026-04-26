@@ -507,7 +507,16 @@ doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10); // DEBE SER EL ROL
   doc.save(`Reporte_Turnos_${nombreServicio.replace(/\s+/g, '_')}.pdf`);
 }
 
+calcularTotalHoras(p: any): number {
+  if (!p.turnos || p.turnos.length === 0) return 0;
 
+  // Sumamos la propiedad duracion_horas de cada turno asignado
+  return p.turnos.reduce((acc: number, turno: any) => {
+    // Validamos que el campo sea un número para evitar errores de suma
+    const horas = Number(turno.duracion_horas) || 0;
+    return acc + horas;
+  }, 0);
+}
 
   onRotarMensual() {
   const servicioId = this.filters.servicio_id;
@@ -572,16 +581,27 @@ doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10); // DEBE SER EL ROL
   //}
 
   
-  obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
+ obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
     if (!usuario || !usuario.turnos) return null;
 
     const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
     
-    // Buscamos la asignación que coincida con la fecha
+    // Buscamos la asignación
     const asignacion = usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
 
-    // Retornamos el objeto completo (debe traer nombre_area, hora_inicio, etc.)
-    return asignacion ? asignacion : null;
+    if (asignacion) {
+        // Si el objeto asignación no tiene las horas directamente, 
+        // revisamos si vienen dentro de una propiedad 'turno' (típico de Eloquent)
+        return {
+            ...asignacion,
+            nombre_turno: asignacion.nombre_turno || asignacion.turno?.nombre_turno || 'S/N',
+            hora_inicio: asignacion.hora_inicio || asignacion.turno?.hora_inicio || '--:--',
+            hora_fin: asignacion.hora_fin || asignacion.turno?.hora_fin || '--:--',
+            area_nombre: asignacion.area_nombre || asignacion.area?.nombre || 'GENERAL'
+        };
+    }
+
+    return null;
 }
 
   obtenerFechaReal(nombreDia: string): string {
@@ -655,19 +675,6 @@ eliminarTurno() {
 }
 
 
-
-  calcularTotalHoras(usuario: any): number {
-    if (!usuario?.turnos) return 0;
-    return usuario.turnos.reduce((acc: number, t: any) => {
-      if (t.horario?.includes(' - ')) {
-        const [inicio, fin] = t.horario.split(' - ');
-        let diff = parseInt(fin) - parseInt(inicio);
-        if (diff <= 0) diff += 24;
-        return acc + diff;
-      }
-      return acc;
-    }, 0);
-  }
 
   onFilterChange() { 
     this.cargarTiposDeTurnos();

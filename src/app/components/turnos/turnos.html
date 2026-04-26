@@ -85,19 +85,35 @@
             
             <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
               <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else plantillaBoton">
-                <div class="badge-turno shadow-sm" 
-                     [style.backgroundColor]="turno.color || '#1abc9c'"
-                     (click)="abrirOpcionesTurno(turno, p)">
-                  <div class="turno-title text-truncate fw-bold">{{ turno.nombre_turno | uppercase }}</div>
-                  <div class="extra-small text-white-50 text-uppercase" style="font-size: 0.6rem;">
-                    {{ turno.area_nombre || 'GENERAL' }}
-                  </div>
+                
 
-              
-              <div *ngIf="!turno.hora_fin" style="font-size: 0.6rem; opacity: 0.9;" class="text-white">
-                 {{ turno.horario }}
-              </div>
-              </div>
+              <div class="badge-turno shadow-sm" 
+     [style.backgroundColor]="turno.color || '#1abc9c'"
+     (click)="abrirOpcionesTurno(turno, p)">
+  
+  <div class="turno-title text-truncate fw-bold">
+    {{ turno.nombre_turno | uppercase }}
+  </div>
+
+  <div class="extra-small text-white-50 text-uppercase" style="font-size: 0.55rem;">
+    {{ turno.area_nombre || 'GENERAL' }}
+  </div>
+
+  <div class="text-white fw-bold mt-1" style="font-size: 0.65rem;">
+    <i class="pi pi-clock me-1" style="font-size: 0.6rem;"></i>
+    <span>
+      <ng-container *ngIf="turno.horario && !turno.horario.includes('2026'); else usarHoras">
+      {{ turno.horario }}
+    </ng-container>
+    
+    <ng-template #usarHoras>
+      {{ turno.hora_inicio?.length > 10 ? (turno.hora_inicio | slice:11:16) : (turno.hora_inicio | slice:0:5) }}
+      {{ turno.hora_fin ? ' - ' : '' }}
+      {{ turno.hora_fin?.length > 10 ? (turno.hora_fin | slice:11:16) : (turno.hora_fin | slice:0:5) }}
+    </ng-template>
+    </span>
+  </div>
+</div>
 
               </ng-container>
               <ng-template #plantillaBoton>
