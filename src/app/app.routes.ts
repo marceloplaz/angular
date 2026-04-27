@@ -17,9 +17,9 @@ import { VacacionesComponent } from './components/vacaciones/vacaciones';
 import { NovedadComponent } from './components/novedad/novedad';
 import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
 
-// Definición de grupos de acceso para limpieza visual
-const ROLES_ADMIN_FULL = ['super_admin', 'admin', 'admin_jefe_medico', 'admin_jefa_enfermeras', 'jefa_servicios_generales'];
-const ROLES_JEFATURAS = [...ROLES_ADMIN_FULL, 'jefe_medico_servicio', 'jefa_enfermeras', 'jefe_servicio'];
+const ROLES_ADMIN_FULL = ['super_admin', 'admin', 'admin_jefe_medico', 'admin_jefa_enfermeras', 'admin_jefa_servicios_generales'];
+const ROLES_JEFATURAS = [...ROLES_ADMIN_FULL, 'jefe_medico_servicio', 'jefa_enfermeras_servicio', 'jefe_servicio'];
+
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -43,11 +43,11 @@ export const routes: Routes = [
 
       // SECCIÓN SERVICIOS
       {
-        path: 'servicios',
-        component: ServiciosComponent,
-        canActivate: [roleGuard],
-        data: { roles: [...ROLES_JEFATURAS] }
-      },
+  path: 'servicios',
+  component: ServiciosComponent,
+  canActivate: [roleGuard],
+  data: { roles: [...ROLES_JEFATURAS] } // Limpio, ya contiene a la jefa de enfermeras
+},
       {
         path: 'servicios/:id/asignar',
         component: GestionPersonalServicioComponent,
@@ -55,30 +55,29 @@ export const routes: Routes = [
         data: { roles: ROLES_ADMIN_FULL }
       },
 
-      // OTRAS SECCIONES
-      { 
-        path: 'turnos', 
-        component: TurnosComponent, 
-        canActivate: [roleGuard], 
-        data: { roles: [...ROLES_JEFATURAS, 'jefa_enfermeras_servicio'] } 
-      },
-      { 
-        path: 'categorias', 
-        component: CategoriasComponent, 
-        canActivate: [roleGuard], 
-        data: { roles: ROLES_JEFATURAS } 
-      },
-      { 
-        path: 'incidencias', 
-        component: IncidenciasComponent, 
-        canActivate: [roleGuard], 
-        data: { roles: [...ROLES_JEFATURAS, 'tecnico'] } 
-      },
+     { 
+  path: 'turnos', 
+  component: TurnosComponent, 
+  canActivate: [roleGuard], 
+  data: { roles: [...ROLES_JEFATURAS] } 
+},
+    { 
+  path: 'categorias', 
+  component: CategoriasComponent, 
+  canActivate: [roleGuard], 
+  data: { roles: [...ROLES_JEFATURAS] } 
+},
+ { 
+  path: 'incidencias', 
+  component: IncidenciasComponent, 
+  canActivate: [roleGuard], 
+  data: { roles: [...ROLES_JEFATURAS, 'responsable_tecnico'] } 
+},
       { 
         path: 'vacaciones', 
         component: VacacionesComponent, 
         canActivate: [roleGuard], 
-        data: { roles: ROLES_ADMIN_FULL } 
+        data: { roles: [...ROLES_JEFATURAS,'jefa_enfermeras_servicio'] } 
       },
       { 
         path: 'novedades', 
