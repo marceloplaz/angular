@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http'; // Eliminamos HttpHeaders para evitar duplicidad
+import { HttpClient,HttpParams } from '@angular/common/http'; // Eliminamos HttpHeaders para evitar duplicidad
 import { Observable } from 'rxjs';
+
 import { environment } from '../../environments/environment.development';
 
 @Injectable({
@@ -9,7 +10,7 @@ import { environment } from '../../environments/environment.development';
 export class TurnoService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl; 
-
+  
   // --- CONFIGURACIÓN Y LISTAS ---
 
 
@@ -93,7 +94,7 @@ export class TurnoService {
   }
   
   getResumenMensual(servicioId: number, mesId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/turnos/resumen-mensual`, {
+  return this.http.get(`${this.apiUrl}/reportes/turnos/resumen-mensual`, {
       params: {
         servicio_id: servicioId.toString(),
         mes_id: mesId.toString()
@@ -121,6 +122,7 @@ export class TurnoService {
   vincularTurnosAServicio(data: { servicio_id: number, turnos_ids: number[] }): Observable<any> {
     return this.http.post(`${this.apiUrl}/servicios/vincular-turnos`, data);
   }
+
   
   buscarProfesionales(termino: string): Observable<any[]> {
   return this.http.get<any[]>(`${this.apiUrl}/buscar-profesionales`, {
@@ -141,4 +143,16 @@ eliminarTipoTurno(id: number): Observable<any> {
   return this.http.delete(`${this.apiUrl}/turnos/${id}`);
 }
 
+getReporteSemanalPdf(semanaId: number, servicioId: number, categoriaId: number): Observable<Blob> {
+    // Configuramos los parámetros de búsqueda (?servicio_id=X&categoria_id=Y)
+    const params = new HttpParams()
+      .set('servicio_id', servicioId.toString())
+      .set('categoria_id', categoriaId.toString());
+
+    // Es CRUCIAL especificar responseType: 'blob' para archivos binarios (PDF)
+return this.http.get(`${this.apiUrl}/reportes/semanal/${semanaId}`, {
+      params: params,
+      responseType: 'blob' 
+    });
+}
 }

@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { DatePickerModule } from 'primeng/datepicker';
+
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
 import { NovedadComponent } from '../novedad/novedad';
@@ -12,6 +14,7 @@ import { formatDate } from '@angular/common';
 import { DialogModule } from 'primeng/dialog'; 
 import { ToastrService } from 'ngx-toastr'; 
 import Swal from 'sweetalert2';
+import { environment } from '../../../environments/environment';
 
 export interface ResumenMensual {
   usuario_nombre: string;
@@ -43,6 +46,7 @@ export class TurnosComponent implements OnInit {
   private toastr = inject(ToastrService);
   private turnoService = inject(TurnoService);
   private cdRef = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
   alias: string = 'Usuario Administrativo';// para pdf login
   rolUsuario: string = ''; // para pdf login
 
@@ -859,7 +863,37 @@ toggleVistaMensual() {
       console.log('Cambiando a vista semanal...');
     }
   }
- // Switch para cambiar de vista
+ 
+  
+exportarPDFSemanal() {
+  // 1. Extraemos los IDs de tu objeto 'filters'
+  const semanaId = this.filters.semana_id;
+  const servicioId = this.filters.servicio_id;
+  const categoriaId = this.filters.categoria_id;
+
+  // 2. Validación básica
+  if (!semanaId || !servicioId || !categoriaId) {
+    this.toastr.warning('Por favor seleccione Servicio, Categoría y Semana', 'Atención');
+    return;
+  }
+
+  // 3. Construimos la URL usando el environment que ya importaste
+ const url = `${environment.apiUrl}/reportes/semanal/${semanaId!}?servicio_id=${servicioId!}&categoria_id=${categoriaId!}`;
+
+  // 4. Petición HTTP para obtener el Blob
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (res: Blob) => {
+      const fileURL = URL.createObjectURL(res);
+      window.open(fileURL, '_blank');
+      // Opcional: revokeObjectURL después de un tiempo para liberar memoria
+    },
+    error: (err: any) => {
+      console.error('Error al generar la vista previa', err);
+      this.toastr.error('No se pudo generar el reporte', 'Error');
+    }
+  });
+}
+  // Switch para cambiar de vista
 exportarReporteMensual() {
   // 1. Usamos 'loading' (debes declararlo arriba) o 'cargando' si ya existía
   this.loading = true; 

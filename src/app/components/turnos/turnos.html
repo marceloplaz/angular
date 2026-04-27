@@ -59,6 +59,16 @@
                 <i class="pi pi-file-pdf me-2 text-danger"></i> EXPORTAR A PDF
               </a>
             </li>
+           <li><hr class="dropdown-divider"></li>
+<li>
+  <a class="dropdown-item py-2" (click)="exportarPDFSemanal()" style="cursor: pointer;">
+    <i class="pi pi-file-pdf me-2 text-danger"></i> 
+    <span *ngIf="!loading">EXPORTAR REPORTE SEMANAL</span>
+    <span *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> GENERANDO...</span>
+  </a>
+</li>
+
+
           </ul>
         </div>
       </div>
