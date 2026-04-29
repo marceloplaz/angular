@@ -5,6 +5,7 @@ import { NovedadService } from '../../services/novedad';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NovedadListar } from '../../interfaces/novedad';
 import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -37,7 +38,9 @@ export class NovedadComponent implements OnInit {
   novedadForm = this._fb.nonNullable.group({
     usuario_reemplazo_id: ['', [Validators.required]],
     tipo_novedad: ['permiso', [Validators.required]],
+    fecha_devolucion: [''],
     observacion: ['', [Validators.maxLength(250)]]
+
   });
 
   constructor() {
@@ -73,6 +76,7 @@ novedadesFiltradas = computed(() => {
     // 1. Cargamos el historial siempre al iniciar
     this.cargarDatos();
     this.obtenerHistorial();
+    
     // 2. Si el padre nos pasa un ID de turno, activamos el formulario automáticamente
     if (this.turnoOrigenId()) {
       this.modoRegistro.set(true);
@@ -141,22 +145,36 @@ registrarNovedad(): void {
     });
 }
 
-confirmarDevolucion(id: number): void {
-  this.cargando.set(true);
-  
-  this._novedadService.devolverTurno(id)
-    .subscribe({
-      next: (res) => {
-        this._toastr.success('¡Estado actualizado!');
-        
-        // ESTA LÍNEA ES LA QUE CAMBIA LA IMAGEN A VERDE
-        this.obtenerHistorial(); 
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        this._toastr.error('Error al actualizar en el servidor');
-      }
-    });
+confirmarDevolucion(novedad: any) {
+  if (!novedad.id) return;
+
+  novedad.procesando = true;
+
+  this._novedadService.confirmarDevolucion(novedad.id).subscribe({
+    // Agregamos :any a resp y :any a err para quitar el error TS7006
+    next: (resp: any) => { 
+      novedad.procesando = false;
+      novedad.con_devolucion = 1;
+      
+      Swal.fire({
+        title: '¡Éxito!',
+        text: 'Turno devuelto correctamente',
+        icon: 'success',
+        confirmButtonColor: '#198754' // El verde de tu hospital app
+      });
+    },
+    error: (err: any) => {
+      novedad.procesando = false;
+      console.error(err);
+      
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo procesar la devolución',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
+    }
+  });
 }
 
 

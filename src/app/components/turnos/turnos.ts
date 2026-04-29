@@ -47,6 +47,8 @@ export class TurnosComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private cdRef = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
+  
+
   alias: string = 'Usuario Administrativo';// para pdf login
   rolUsuario: string = ''; // para pdf login
 
@@ -71,14 +73,17 @@ export class TurnosComponent implements OnInit {
   loading: boolean = false;  
   mostrarVistaMensual: boolean = false;
   fechasSeleccionadas: Date[] = [];
+  mostrarNovedades: boolean = false;
   
+  
+
   // --- Nuevas propiedades para la lógica de turnos ---
 esMensual: boolean = false;
 areaIdSeleccionado: any = null;
 listaAreas: any[] = []; 
 mostrarModalCalendario: boolean = false; // Controla la visibilidad del modal de calendario
 diasSeleccionados: string[] = [];        // Aquí guardarás las fechas seleccionadas
-
+todasLasGestiones: any[] = [];
 
   filters = { 
     servicio_id: null as any, 
@@ -279,14 +284,20 @@ cargarTiposDeTurnos() {
   });
 }
 
- cargarConfiguracionInicial() {
-  // Ya no llamamos a getServicios() aquí porque lo hace cargarListasJerarquicas()
+
+// 1. Carga inicial (Corre una sola vez al abrir el componente)
+cargarConfiguracionInicial() {
+  this.loading = true;
   this.turnoService.getConfiguracionCalendario().subscribe((resCal: any) => {
     const data = resCal.data || resCal;
-    const gestionActual = data.gestiones?.find((g: any) => g.año == this.filters.gestion);
+    this.todasLasGestiones = data.gestiones; // Guardamos todo el árbol en una variable nueva
+
+    // Buscamos el año 2026 (o el que tengas en filters.gestion)
+    const gestionActual = this.todasLasGestiones?.find((g: any) => g.año == this.filters.gestion);
     
     if (gestionActual) {
       this.mesesDisponibles = gestionActual.meses;
+      // Buscamos el mes que el servidor dice que es el "actual"
       const mesActual = this.mesesDisponibles.find((m: any) => m.numero_mes == data.mes_actual) || this.mesesDisponibles[0];
       
       if (mesActual) {
@@ -296,8 +307,23 @@ cargarTiposDeTurnos() {
       }
     }
     this.cargarTurnos();
+    this.loading = false;
   });
 }
+
+// 2. Nueva función: Se dispara cuando el usuario cambia el año en el <select>
+onCambioGestion() {
+  const gestion = this.todasLasGestiones.find((g: any) => g.año == this.filters.gestion);
+  if (gestion) {
+    this.mesesDisponibles = gestion.meses;
+    // Al cambiar de año, seleccionamos el primer mes (Enero) por defecto
+    if (this.mesesDisponibles.length > 0) {
+      this.onCambioMes(this.mesesDisponibles[0].id);
+    }
+  }
+}
+
+
   
 
   cargarTurnos() {
@@ -999,5 +1025,21 @@ exportarPDFMensual() {
     }
   });
 }
+alGuardarNovedad() {
+  // 1. Cambiamos el nombre al que realmente existe en tu componente
+  console.log('Refrescando datos para la semana:', this.filters.semana_id);
+  this.cargarListasJerarquicas(); 
+  
+  // 2. Cerramos el panel/modal
+  this.mostrarNovedades = false;
+  this.turnoSeleccionado = null;
 
+  // 3. Notificación (Asegúrate de que arriba diga: private _toastr = inject(ToastrService);)
+  this.toastr.success('Asignación actualizada', '¡Éxito!', {
+    timeOut: 3000,
+    progressBar: true,
+    progressAnimation: 'increasing',
+    toastClass: 'ngx-toastr hospital-green-toast' 
+  });
+}
  }

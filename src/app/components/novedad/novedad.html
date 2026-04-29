@@ -14,20 +14,15 @@
   </div>
 
   @if (modoRegistro()) {
-    <div class="card border-0 shadow-lg rounded-3 mb-4 animate__animated animate__fadeIn">
+    <div class="card border-0 shadow-lg rounded-3 mb-4">
       <div class="card-header bg-success text-white py-3 px-4">
-        <div class="d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 small fw-bold"><i class="bi bi-pencil-square me-2"></i>DATOS DE LA NOVEDAD</h5>
-          <span class="badge bg-white text-success">ID ASIGNACIÓN: {{ turnoOrigenId() }}</span>
-        </div>
+        <h5 class="mb-0 small fw-bold">DATOS DE LA NOVEDAD</h5>
       </div>
-      
       <div class="card-body p-4">
         <form [formGroup]="novedadForm" (ngSubmit)="registrarNovedad()">
           <div class="row g-3">
-            
             <div class="col-md-6">
-              <label class="form-label small fw-bold text-secondary text-uppercase">Tipo de Novedad</label>
+              <label class="form-label small fw-bold text-secondary">TIPO</label>
               <select class="form-select border-2" formControlName="tipo_novedad">
                 <option value="permiso">Permiso</option>
                 <option value="vacacion">Vacación</option>
@@ -36,35 +31,36 @@
               </select>
             </div>
 
-           <div class="col-md-6">
-  <label class="form-label small fw-bold text-secondary text-uppercase">PERSONAL DE REEMPLAZO</label>
-  <select class="form-select border-2" formControlName="usuario_reemplazo_id">
-    <option value="">Seleccione un profesional...</option>
-    
-    @for (p of listaPersonalFormateada(); track p.id) {
-      <option [value]="p.id">
-        {{ p.nombre }}
-      </option>
-    }
-  </select>
-</div>
-
-            <div class="col-12">
-              <label class="form-label small fw-bold text-secondary text-uppercase">Observaciones / Motivo</label>
-              <textarea class="form-control border-2" rows="3" formControlName="observacion" placeholder="Detalle el motivo de la novedad..."></textarea>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">REEMPLAZO</label>
+              <select class="form-select border-2" formControlName="usuario_reemplazo_id">
+                <option value="">Seleccione...</option>
+                @for (p of listaPersonalFormateada(); track p.id) {
+                  <option [value]="p.id">{{ p.nombre }}</option>
+                }
+              </select>
             </div>
 
-            <div class="col-12 d-flex gap-2 mt-3">
-              <button type="submit" class="btn btn-success px-4 py-2 fw-bold w-100" [disabled]="cargando() || novedadForm.invalid">
-                @if (cargando()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
-                } @else {
-                  <i class="bi bi-check-lg me-2"></i>GUARDAR NOVEDAD
-                }
+            @if (novedadForm.get('tipo_novedad')?.value === 'devolucion_turno') {
+              <div class="col-12">
+                <div class="p-3 border border-warning rounded bg-light">
+                  <label class="form-label small fw-bold text-warning">FECHA DE DEVOLUCIÓN</label>
+                  <input type="date" class="form-control border-2 border-warning" formControlName="fecha_devolucion">
+                </div>
+              </div>
+            }
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-secondary">OBSERVACIONES</label>
+              <textarea class="form-control border-2" rows="3" formControlName="observacion"></textarea>
+            </div>
+
+            <div class="col-12 d-flex gap-2">
+              <button type="submit" class="btn btn-success w-100 fw-bold" [disabled]="cargando()">
+                @if (cargando()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                GUARDAR
               </button>
-              <button type="button" class="btn btn-outline-secondary px-4 py-2 w-100" (click)="cancelarRegistro()">
-                CANCELAR
-              </button>
+              <button type="button" class="btn btn-outline-secondary w-100" (click)="cancelarRegistro()">CANCELAR</button>
             </div>
           </div>
         </form>
@@ -72,6 +68,7 @@
     </div>
   } @else {
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden animate__animated animate__fadeIn">
+      
       <div class="card-header bg-white border-0 pt-4 px-4">
         <div class="row align-items-center">
           <div class="col-md-6">
@@ -108,13 +105,12 @@
                 <th class="pe-4">Reemplazo</th>
               </tr>
             </thead>
-            
-            
             <tbody>
               @if (cargando()) {
                 <tr>
                   <td colspan="7" class="text-center py-5">
                     <div class="spinner-border text-success spinner-border-sm"></div>
+                    <div class="small text-muted mt-2">Cargando historial...</div>
                   </td>
                 </tr>
               } @else {
@@ -132,44 +128,40 @@
                       <span class="badge rounded-pill bg-info text-dark">
                         {{ (novedad.tipo_novedad?.replace('_', ' ') || 'N/A') | uppercase }}
                       </span>
-            
-                        <td class="text-center">
-  @if (novedad.tipo_novedad === 'devolucion_turno') {
-    
-    @if (novedad.con_devolucion == 1) { <span class="badge bg-success shadow-sm px-3">
-         <i class="bi bi-check-circle-fill me-1"></i> Devuelto
-      </span>
-    } @else {
-      <span class="badge bg-danger shadow-sm px-2 mb-1">PENDIENTE</span>
-      <button 
-          type="button" 
-          class="btn fw-bold shadow-sm py-1 px-2 border-0"
-          style="background-color: #fcf3cf; color: #856404; font-size: 0.7rem; min-width: 90px;"
-          (click)="confirmarDevolucion(novedad)"
-          [disabled]="novedad.procesando">
-          
-          @if (novedad.procesando) {
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          } @else {
-            <i class="bi bi-arrow-left-right me-1"></i> Confirmar
-          }
-        </button>
-
-
-    }
-
-  }
-</td>
-
-
-
-                   
-                   
-                   
-                   
-                   
+                    </td>
+                    <td class="text-center">
+                      @if (novedad.tipo_novedad === 'devolucion_turno') {
+                        @if (novedad.con_devolucion == 1) { 
+                          <span class="badge bg-success shadow-sm px-3">
+                            <i class="bi bi-check-circle-fill me-1"></i> Devuelto
+                          </span>
+                        } @else {
+                          <span class="badge bg-danger shadow-sm px-2 mb-1 d-block">PENDIENTE</span>
+                          <button 
+                              type="button" 
+                              class="btn fw-bold shadow-sm py-1 px-2 border-0"
+                              style="background-color: #fcf3cf; color: #856404; font-size: 0.7rem; min-width: 90px;"
+                              (click)="confirmarDevolucion(novedad)"
+                              [disabled]="novedad.procesando">
+                              @if (novedad.procesando) {
+                                <span class="spinner-border spinner-border-sm"></span>
+                              } @else {
+                                <i class="bi bi-arrow-left-right me-1"></i> Confirmar
+                              }
+                          </button>
+                        }
+                      } @else {
+                        <span class="text-muted small">---</span>
+                      }
+                    </td>
                     <td class="small">{{ novedad.solicitante?.persona?.nombre_completo || 'N/A' }}</td>
                     <td class="pe-4 small">{{ novedad.reemplazo?.persona?.nombre_completo || 'N/A' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-muted small">
+                      No se encontraron novedades registradas.
+                    </td>
                   </tr>
                 }
               }
@@ -179,9 +171,8 @@
       </div>
     </div>
   }
-
   <div class="d-flex justify-content-center mt-4">
-    <button type="button" class="btn btn-light px-5 py-2 shadow-sm border" (click)="volver()">
+    <button type="button" class="btn btn-light border px-5 py-2 shadow-sm" (click)="volver()">
       <i class="bi bi-arrow-left me-2"></i> Volver al Inicio
     </button>
   </div>

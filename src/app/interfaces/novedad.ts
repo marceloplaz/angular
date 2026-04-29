@@ -22,6 +22,7 @@ asignacion?: { id: number; servicio?: { id: number; nombre: string; };// declara
     turno?: {nombre: string; hora_inicio: string;hora_fin: string;}; // el tipo de turno y horas  "Mañana"
   };
 
+  
   solicitante?: {  id: number;
     persona: { nombre_completo: string; };
   };

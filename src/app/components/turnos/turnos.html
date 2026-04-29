@@ -3,31 +3,50 @@
   <div class="card shadow-sm border-0 mb-3 p-3 bg-white" style="border-radius: 12px;">
     <div class="row g-2 align-items-end">
       <div class="col-md-2">
-        <label class="fw-bold extra-small mb-1 text-secondary">SERVICIO</label>
+        <label class="form-label small fw-bold text-success">SERVICIO</label>
         <select class="form-select form-select-sm border-light-subtle" [(ngModel)]="filters.servicio_id" (change)="onFilterChange()">
           <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
         </select>
       </div>
 
       <div class="col-md-2">
-        <label class="fw-bold extra-small mb-1 text-secondary">CATEGORÍA</label>
+        <label class="form-label small fw-bold text-success">CATEGORÍA</label>
         <select class="form-select form-select-sm border-light-subtle" [(ngModel)]="filters.categoria_id" (change)="onFilterChange()">
           <option value="">Todas</option>
           <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
         </select>
       </div>
 
-      <div class="col-md-5">
-        <label class="fw-bold extra-small mb-1 text-secondary">SEMANA</label>
-        <select class="form-select form-select-sm border-light-subtle" [(ngModel)]="filters.semana_id" (change)="onFilterChange()">
+     
+      <div class="col-md-1">
+        <label class="form-label small fw-bold text-success">GESTIÓN</label>
+        <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.gestion" (change)="onCambioGestion()">
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+          <option value="2028">2028</option>
+          <option value="2029">2029</option>
+          <option value="2030">2030</option>
+        </select>
+      </div>
+
+  <div class="col-md-2">
+        <label class="form-label small fw-bold text-success mb-1">MES</label>
+        <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.mes_id" (change)="onCambioMes(filters.mes_id)">
+          <option *ngFor="let m of mesesDisponibles" [value]="m.id">{{ m.nombre | uppercase }}</option>
+        </select>
+      </div>
+
+    <div class="col-md-3">
+        <label class="form-label small fw-bold text-success mb-1">SEMANA</label>
+        <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.semana_id" (change)="cargarTurnos()">
           <option *ngFor="let s of semanasDisponibles" [value]="s.id">
-            Semana {{ s.numero_semana }} ({{ s.fecha_inicio | date:'dd/MM' }} a {{ s.fecha_fin | date:'dd/MM' }})
+            Sem. {{ s.numero_semana }} ({{ s.fecha_inicio | date:'dd/MM' }} al {{ s.fecha_fin | date:'dd/MM' }})
           </option>
         </select>
       </div>
 
-      <div class="col-md-3 text-end">
-        <div class="btn-group w-100">
+      <div class="col-md-3">
+                <div class="btn-group w-100">
           <button type="button" class="btn btn-teal dropdown-toggle shadow-sm" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="pi pi-cog me-1"></i> ACCIONES
           </button>
@@ -98,11 +117,27 @@
                 
 
               <div class="badge-turno shadow-sm" 
-     [style.backgroundColor]="turno.color || '#1abc9c'"
+     [style.backgroundColor]="turno.tipo_novedad === 'REEMPLAZO' || turno.novedad ? '#fd7e14' : (turno.color || '#1abc9c')"
      (click)="abrirOpcionesTurno(turno, p)">
   
   <div class="turno-title text-truncate fw-bold">
     {{ turno.nombre_turno | uppercase }}
+  </div>
+
+  <div *ngIf="turno.novedad" class="mt-1 border-top border-white-50 pt-1">
+    <div class="extra-small fw-bold" style="font-size: 0.6rem; line-height: 1.1;">
+      
+      <span *ngIf="p.usuario_id === turno.novedad.usuario_solicitante_id">
+        <i class="pi pi-arrow-right me-1"></i>REMP POR: 
+        <span class="text-white">{{ turno.novedad.reemplazo?.persona?.nombres | slice:0:10 }}...</span>
+      </span>
+
+      <span *ngIf="p.usuario_id === turno.novedad.usuario_reemplazo_id">
+        <i class="pi pi-user-plus me-1"></i>CUBRIENDO A: 
+        <span class="text-white">{{ turno.novedad.solicitante?.persona?.nombres | slice:0:10 }}...</span>
+      </span>
+
+    </div>
   </div>
 
   <div class="extra-small text-white-50 text-uppercase" style="font-size: 0.55rem;">

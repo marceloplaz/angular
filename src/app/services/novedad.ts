@@ -29,11 +29,18 @@ export class NovedadService {
 permutarTurnos(datos: any): Observable<any> {
     return this._http.post(`${this._apiUrl}/permutar-turnos`, datos);
   }
+
+  confirmarDevolucion(id: number | string): Observable<any> {
+  // Esto genera: api/v1/novedades/37/confirmar-devolucion
+  return this._http.post(`${this._apiUrl}/${id}/confirmar-devolucion`, {});
+}
 // Línea 32 corregida
 devolverTurno(id: number): Observable<any> {
   // Usamos _apiUrl que es como la declaraste arriba
   return this._http.put(`${this._apiUrl}/${id}/devolver`, {});
 }
+
+
   /**
    * Opcional: Obtener historial de novedades por servicio
    */

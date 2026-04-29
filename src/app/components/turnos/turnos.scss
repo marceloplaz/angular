@@ -76,3 +76,22 @@
 
 .text-teal { color: var(--verde-agua); }
 .extra-small { font-size: 0.7rem; }
+.bg-light-orange {
+  background-color: rgba(253, 126, 20, 0.1);
+}
+
+.badge-turno {
+  cursor: pointer;
+  transition: transform 0.2s;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.badge-turno:hover {
+  transform: scale(1.05);
+}
+
+/* Color naranja para reemplazos */
+.text-orange {
+  color: #fd7e14;
+}
