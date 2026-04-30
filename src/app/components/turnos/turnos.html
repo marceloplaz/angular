@@ -115,27 +115,32 @@
             <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
               <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else plantillaBoton">
                 
-
-              <div class="badge-turno shadow-sm" 
-     [style.backgroundColor]="turno.tipo_novedad === 'REEMPLAZO' || turno.novedad ? '#fd7e14' : (turno.color || '#1abc9c')"
+<div class="badge-turno shadow-sm" 
+     [style.backgroundColor]="turno.color"
      (click)="abrirOpcionesTurno(turno, p)">
   
   <div class="turno-title text-truncate fw-bold">
     {{ turno.nombre_turno | uppercase }}
   </div>
+  
+ 
 
   <div *ngIf="turno.novedad" class="mt-1 border-top border-white-50 pt-1">
     <div class="extra-small fw-bold" style="font-size: 0.6rem; line-height: 1.1;">
       
-      <span *ngIf="p.usuario_id === turno.novedad.usuario_solicitante_id">
-        <i class="pi pi-arrow-right me-1"></i>REMP POR: 
-        <span class="text-white">{{ turno.novedad.reemplazo?.persona?.nombres | slice:0:10 }}...</span>
-      </span>
+      <ng-container *ngIf="p.usuario_id === turno.novedad.usuario_solicitante_id">
+        <i class="pi pi-arrow-right me-1"></i>REMP POR:<br>
+        <span class="text-white text-uppercase">
+            {{ turno.novedad.reemplazo_nombre }}
+        </span>
+      </ng-container>
 
-      <span *ngIf="p.usuario_id === turno.novedad.usuario_reemplazo_id">
-        <i class="pi pi-user-plus me-1"></i>CUBRIENDO A: 
-        <span class="text-white">{{ turno.novedad.solicitante?.persona?.nombres | slice:0:10 }}...</span>
-      </span>
+      <ng-container *ngIf="p.usuario_id === turno.novedad.usuario_reemplazo_id">
+        <i class="pi pi-user-plus me-1"></i>CUBRIENDO A:<br>
+        <span class="text-white text-uppercase">
+            {{ turno.novedad.solicitante_nombre }}
+        </span>
+      </ng-container>
 
     </div>
   </div>
