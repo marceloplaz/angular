@@ -10,6 +10,13 @@
     </button>
   </div>
 
+  <input type="file" #fileInput (change) = "onFileSelected($event)" accept=".xlsx, .xls" style="display: none;">
+  
+  <!-- Botón estético para Carga Masiva -->
+  <button class="btn btn-success" (click)="fileInput.click()">
+    <i class="fas fa-file-excel"></i> Carga Masiva (Excel)
+  </button>
+  
   <div class="d-flex justify-content-end mb-3">
   <button 
     class="btn btn-outline-danger shadow-sm rounded-pill px-4" 

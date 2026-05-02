@@ -64,4 +64,28 @@ getCatalogosFormulario(): Observable<any> {
   return this.http.get(urlLimpia, { headers: this.getHeaders() });
 }
 
+// ... dentro de tu class PersonaService
+
+/**
+ * Importa personal masivamente desde un archivo Excel (TGN, SUS o CONTRATO)
+ */
+importarPersonalExcel(archivo: File): Observable<any> {
+  // Limpiamos la URL para que apunte a /personal/importar
+  const urlImport = this.API_URL.replace('/usuarios', '') + '/personal/importar';
+  
+  // IMPORTANTE: Para enviar archivos NO debemos enviar 'Content-Type': 'application/json'
+  // Creamos headers solo con el Token
+  const token = localStorage.getItem('token');
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/json'
+    // El navegador pondrá el Content-Type: multipart/form-data automáticamente
+  });
+
+  const formData = new FormData();
+  formData.append('file', archivo);
+
+  return this.http.post<any>(urlImport, formData, { headers });
+}
+
 }

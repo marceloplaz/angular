@@ -58,7 +58,42 @@ export class PersonalComponent implements OnInit {
     this.cargarDatos(); 
   }
 
-  // --- LÓGICA DE DATOS ---
+  // --- NUEVO MÉTODO PARA CARGA MASIVA ---
+
+  onFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+
+    if (file) {
+      // Validar extensión (opcional pero recomendado)
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      if (extension !== 'xlsx' && extension !== 'xls') {
+        alert('Por favor, selecciona un archivo Excel válido (.xlsx o .xls)');
+        return;
+      }
+
+      // Confirmación simple antes de procesar
+      if (confirm(`¿Deseas importar el personal desde el archivo "${file.name}"?`)) {
+        
+        this._personaService.importarPersonalExcel(file).subscribe({
+          next: (res) => {
+            alert('¡Importación exitosa! El personal ha sido registrado correctamente.');
+            this.cargarDatos(); // Refrescamos la tabla automáticamente
+          },
+          error: (err) => {
+            console.error('Error en importación:', err);
+            const errorMsg = err.error?.error || 'Hubo un problema al procesar el archivo.';
+            alert('Error: ' + errorMsg);
+          }
+        });
+      }
+      
+      // Limpiar el input para permitir subir el mismo archivo si fuera necesario
+      event.target.value = '';
+    }
+  }
+
+
+
 
   cargarDatos( page: number = 1): void {
     this.paginaActual = page; // Actualizamos la página actual
@@ -208,5 +243,6 @@ onPageChange(event: any) {
     }
   });
 }
+
 
 }
