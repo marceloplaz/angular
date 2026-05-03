@@ -105,86 +105,93 @@
             <th class="col-total">HORAS</th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngFor="let p of personalAgrupado" class="row-hover border-bottom">
-            <td class="col-personal text-start p-2">
-              <div class="fw-bold text-dark small">{{ p.usuario_nombre | uppercase }}</div>
-              <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
-            </td>
-            
-            <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
-              <ng-container *ngIf="obtenerTurnoAsignado(p, dia) as turno; else plantillaBoton">
-                
-<div class="badge-turno shadow-sm" 
-     [style.backgroundColor]="turno.color"
-     (click)="abrirOpcionesTurno(turno, p)">
-  
-  <div class="turno-title text-truncate fw-bold">
-    {{ turno.nombre_turno | uppercase }}
-  </div>
-  
- 
-
-  <div *ngIf="turno.novedad" class="mt-1 border-top border-white-50 pt-1">
-    <div class="extra-small fw-bold" style="font-size: 0.6rem; line-height: 1.1;">
-      
-      <ng-container *ngIf="p.usuario_id === turno.novedad.usuario_solicitante_id">
-        <i class="pi pi-arrow-right me-1"></i>REMP POR:<br>
-        <span class="text-white text-uppercase">
-            {{ turno.novedad.reemplazo_nombre }}
-        </span>
-      </ng-container>
-
-      <ng-container *ngIf="p.usuario_id === turno.novedad.usuario_reemplazo_id">
-        <i class="pi pi-user-plus me-1"></i>CUBRIENDO A:<br>
-        <span class="text-white text-uppercase">
-            {{ turno.novedad.solicitante_nombre }}
-        </span>
-      </ng-container>
-
-    </div>
-  </div>
-
-
-<div class="extra-small text-white-50 text-uppercase" style="font-size: 0.55rem;">
-  {{ turno.area_nombre }}
-</div>
-
-
-
-
-
-
-
-
-  <div class="text-white fw-bold mt-1" style="font-size: 0.65rem;">
-    <i class="pi pi-clock me-1" style="font-size: 0.6rem;"></i>
-    <span>
-      <ng-container *ngIf="turno.horario && !turno.horario.includes('2026'); else usarHoras">
-      {{ turno.horario }}
-    </ng-container>
+       
     
-    <ng-template #usarHoras>
-      {{ turno.hora_inicio?.length > 10 ? (turno.hora_inicio | slice:11:16) : (turno.hora_inicio | slice:0:5) }}
-      {{ turno.hora_fin ? ' - ' : '' }}
-      {{ turno.hora_fin?.length > 10 ? (turno.hora_fin | slice:11:16) : (turno.hora_fin | slice:0:5) }}
-    </ng-template>
-    </span>
-  </div>
-</div>
 
+<tbody>
+  <tr *ngFor="let p of personalAgrupado" class="row-hover border-bottom">
+    
+    <!-- 1. INFORMACIÓN DEL PERSONAL -->
+    <td class="col-personal text-start p-2">
+      <div class="fw-bold text-dark small">{{ p.usuario_nombre | uppercase }}</div>
+      <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
+    </td>
+    
+    <!-- 2. CELDAS DE TURNOS (SOPORTE MULTITURNO) -->
+    <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
+      
+      <!-- Contenedor para iterar todos los turnos del día -->
+      <ng-container *ngFor="let turno of obtenerTurnosAsignados(p, dia)">
+        <div class="badge-turno shadow-sm mb-1" 
+             [style.backgroundColor]="turno.color"
+             (click)="abrirOpcionesTurno(turno, p)">
+          
+          <div class="turno-title text-truncate fw-bold">
+            {{ turno.nombre_turno | uppercase }}
+          </div>
+
+          <!-- Lógica de Novedades (Reemplazos) -->
+          <div *ngIf="turno.novedad" class="mt-1 border-top border-white-50 pt-1">
+            <div class="extra-small fw-bold" style="font-size: 0.6rem; line-height: 1.1;">
+              <ng-container *ngIf="p.usuario_id === turno.novedad.usuario_solicitante_id">
+                <i class="pi pi-arrow-right me-1"></i>REMP POR:<br>
+                <span class="text-white text-uppercase">{{ turno.novedad.reemplazo_nombre }}</span>
               </ng-container>
-              <ng-template #plantillaBoton>
-                <button class="btn-add-soft" (click)="abrirModalAsignar(p, dia)">
-                  <i class="pi pi-plus"></i>
-                </button>
-              </ng-template>
-            </td>
 
-            <td class="col-total bg-light fw-bold text-teal">{{ calcularDiasTrabajados(p) }}</td>
-            <td class="col-total fw-bold">{{ calcularTotalHoras(p) }}h</td>
-          </tr>
-        </tbody>
+              <ng-container *ngIf="p.usuario_id === turno.novedad.usuario_reemplazo_id">
+                <i class="pi pi-user-plus me-1"></i>CUBRIENDO A:<br>
+                <span class="text-white text-uppercase">{{ turno.novedad.solicitante_nombre }}</span>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- Área del turno -->
+          <div class="extra-small text-white-50 text-uppercase" style="font-size: 0.55rem;">
+            {{ turno.area_nombre }}
+          </div>
+
+          <!-- LÓGICA DE HORARIO (Integrada) -->
+          <div class="text-white fw-bold mt-1" style="font-size: 0.65rem;">
+            <i class="pi pi-clock me-1" style="font-size: 0.6rem;"></i>
+            <span>
+              <ng-container *ngIf="turno.horario && !turno.horario.includes('2026'); else usarHoras">
+                {{ turno.horario }}
+              </ng-container>
+              
+              <ng-template #usarHoras>
+                {{ turno.hora_inicio?.length > 10 ? (turno.hora_inicio | slice:11:16) : (turno.hora_inicio | slice:0:5) }}
+                {{ turno.hora_fin ? ' - ' : '' }}
+                {{ turno.hora_fin?.length > 10 ? (turno.hora_fin | slice:11:16) : (turno.hora_fin | slice:0:5) }}
+              </ng-template>
+            </span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Botón para añadir turno (Siempre visible) -->
+      <button class="btn-add-soft mt-1" (click)="abrirModalAsignar(p, dia)">
+        <i class="pi pi-plus"></i>
+      </button>
+    </td>
+
+    <!-- 3. COLUMNAS DE TOTALES -->
+    <td class="col-total fw-bold">
+      {{ calcularDiasTrabajados(p) }}
+    </td>
+    <td class="col-total fw-bold text-primary">
+      {{ calcularTotalHoras(p) }}h
+    </td>
+
+  </tr>
+</tbody>
+
+
+
+
+
+
+
+
       </table>
     </div>
   </div>

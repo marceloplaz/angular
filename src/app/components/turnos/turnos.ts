@@ -475,20 +475,54 @@ async capturarPantalla() {
   doc.setDrawColor(40, 167, 69);
   doc.setLineWidth(1);
   doc.line(15, 25, pageWidth - 15, 25);
+// 2. PREPARACIÓN DE DATOS PARA LA TABLA DEL PDF
 
-  // 2. PREPARACIÓN DE DATOS PARA LA TABLA
-  const bodyData = this.personalAgrupado.map(p => {
+
+// 2. PREPARACIÓN DE DATOS PARA LA TABLA DEL PDF
+// Usamos solo personalAgrupado para evitar el error de propiedad inexistente
+const bodyData = this.personalAgrupado.map((p: any) => {
+    // Iniciamos la fila con el nombre
     const fila = [p.usuario_nombre.toUpperCase()];
     
     this.diasSemana.forEach(dia => {
-      const turno = this.obtenerTurnoAsignado(p, dia);
-      // Formato multilínea: Nombre del turno y debajo el horario
-      fila.push(turno ? `${turno.nombre_turno}\n${turno.horario}` : '');
+        const fechaBuscada = this.obtenerFechaReal(dia);
+        
+        // Buscamos TODOS los turnos del usuario para esta fecha
+        // Importante: No filtramos por servicio aquí para que salgan todos en el PDF
+        const turnosDelDia = p.turnos?.filter((t: any) => t.fecha === fechaBuscada) || [];
+
+        if (turnosDelDia.length > 0) {
+            // Mapeamos los múltiples turnos (esto arregla lo de Doña Acebo)
+            const textoCeldas = turnosDelDia.map((t: any) => {
+                let horarioStr = '';
+                if (t.horario && !t.horario.includes('2026')) {
+                    horarioStr = t.horario;
+                } else {
+                    const inicio = t.hora_inicio?.length > 10 ? t.hora_inicio.slice(11, 16) : t.hora_inicio?.slice(0, 5);
+                    const fin = t.hora_fin?.length > 10 ? t.hora_fin.slice(11, 16) : t.hora_fin?.slice(0, 5);
+                    horarioStr = `${inicio || '--:--'} - ${fin || '--:--'}`;
+                }
+
+                // Agregamos el nombre del servicio/área (esto identifica si es Ginecología o Cirugía)
+                const nombreServicio = t.area_nombre || t.servicio_nombre || 'GENERAL';
+                
+                return `${t.nombre_turno.toUpperCase()}\n(${nombreServicio.toUpperCase()})\n${horarioStr}`;
+            }).join('\n\n'); // Doble salto para separar los dos turnos
+
+            fila.push(textoCeldas);
+        } else {
+            fila.push('-');
+        }
     });
 
+    // Agregamos los totales de Días y Horas
+    fila.push(`${this.calcularDiasTrabajados(p)}`);
     fila.push(`${this.calcularTotalHoras(p)}h`);
+    
     return fila;
-  });
+});
+
+
 
   // 3. GENERACIÓN DE TABLA AUTOMÁTICA
   autoTable(doc, {
@@ -611,27 +645,19 @@ calcularTotalHoras(p: any): number {
   //}
 
   
- obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
-    if (!usuario || !usuario.turnos) return null;
+ obtenerTurnosAsignados(usuario: any, nombreDiaColumna: string): any[] {
+    if (!usuario || !usuario.turnos) return []; // Siempre devolver array
 
     const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
-    
-    // Buscamos la asignación
-    const asignacion = usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
+    const asignaciones = usuario.turnos.filter((t: any) => t.fecha === fechaBuscada);
 
-    if (asignacion) {
-        // Si el objeto asignación no tiene las horas directamente, 
-        // revisamos si vienen dentro de una propiedad 'turno' (típico de Eloquent)
-        return {
-            ...asignacion,
-            nombre_turno: asignacion.nombre_turno || asignacion.turno?.nombre_turno || 'S/N',
-            hora_inicio: asignacion.hora_inicio || asignacion.turno?.hora_inicio || '--:--',
-            hora_fin: asignacion.hora_fin || asignacion.turno?.hora_fin || '--:--',
-            area_nombre: asignacion.area_nombre || asignacion.area?.nombre || 'GENERAL'
-        };
-    }
-
-    return null;
+    return asignaciones.map((asignacion: any) => ({
+        ...asignacion,
+        nombre_turno: asignacion.nombre_turno || asignacion.turno?.nombre_turno || 'S/N',
+        hora_inicio: asignacion.hora_inicio || '--:--',
+        hora_fin: asignacion.hora_fin || '--:--',
+        area_nombre: asignacion.area_nombre || 'GENERAL'
+    }));
 }
 
   obtenerFechaReal(nombreDia: string): string {
