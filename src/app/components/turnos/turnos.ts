@@ -637,12 +637,6 @@ calcularTotalHoras(p: any): number {
     }
   }
 
-  // --- MÉTODOS AUXILIARES ---
-//obtenerTurnoAsignado(usuario: any, nombreDiaColumna: string) {
-  //  if (!usuario?.turnos) return null;
-    //const fechaBuscada = this.obtenerFechaReal(nombreDiaColumna);
-    //return usuario.turnos.find((t: any) => t.fecha === fechaBuscada);
-  //}
 
   
  obtenerTurnosAsignados(usuario: any, nombreDiaColumna: string): any[] {
