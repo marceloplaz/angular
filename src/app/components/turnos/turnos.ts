@@ -15,6 +15,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ToastrService } from 'ngx-toastr'; 
 import Swal from 'sweetalert2';
 import { environment } from '../../../environments/environment';
+import { ReporteMensualService } from 'src/app/services/reporte-mensual';
 
 
 export interface ResumenMensual {
@@ -48,7 +49,7 @@ export class TurnosComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private cdRef = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
-  
+  private _reporteMensualService = inject(ReporteMensualService); 
   alias: string = 'Usuario Administrativo';// para pdf login
   rolUsuario: string = ''; // para pdf login
 
@@ -90,8 +91,11 @@ todasLasGestiones: any[] = [];
     categoria_id: '' as any,
     gestion: 2026, 
     mes_id: null as any, 
-    semana_id: null as any 
-  };
+    semana_id: null as any,
+    servicio_nombre: '' as string, // <--- Agregar esta
+    categoria_nombre: '' as string, // <--- Agregar esta
+    mes_nombre: '' as string, // <--- Agregar esta
+    };
 
   diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   cargando: boolean = false;
@@ -128,7 +132,8 @@ get personalParaReemplazo() {
     nombre_completo: p.usuario_nombre || p.nombre || (p.persona ? p.persona.nombre_completo : 'Sin nombre')
   }));
 }
- 
+
+
 
 
 ngOnInit() {
@@ -138,20 +143,86 @@ ngOnInit() {
   if (nombreGuardado) { this.alias = nombreGuardado; }
   if (rolGuardado) { this.rolUsuario = rolGuardado; }
   
-  //this.cargarCategorias();
   this.cargarListasJerarquicas();
   this.cargarTiposDeTurnos();
   this.cargarConfiguracionInicial();
 
-  // Llamada correcta: verificamos si hay servicio seleccionado primero
   if (this.filters.servicio_id) {
     this.cargarAreas();
   }
+
+  // ========================================================
+  // NUEVO: ESCUCHA PARA GENERACIÓN DE PDF (ORQUESTACIÓN)
+  // ========================================================
+
+
+
+  this._reporteMensualService.solicitarDatos$.subscribe(() => {
+  // Forzamos actualización de nombres antes de enviar al PDF
+  this.actualizarNombresDeFiltros(); 
+
+  const datos = {
+    filtros: {
+      servicio: this.filters.servicio_nombre,
+      mes: this.filters.mes_nombre,
+      gestion: this.filters.gestion, 
+      categoria: this.filters.categoria_nombre
+    },
+    contenido: this.listaTurnos 
+  };
+  this._reporteMensualService.enviarDatosParaPDF(datos);
+});
+
+
+
+  // ========================================================
+
 } // <-- Fin de ngOnInit
 
+actualizarNombresDeFiltros() {
+  // 1. Nombre del Mes
+  const mes = this.mesesDisponibles.find(m => m.id == this.filters.mes_id);
+  this.filters.mes_nombre = mes ? mes.nombre.toUpperCase() : '';
+
+  // 2. Nombre del Servicio
+  const serv = this.servicios.find(s => s.id == this.filters.servicio_id);
+  this.filters.servicio_nombre = serv ? serv.nombre : '';
+
+  // 3. Nombre de la Categoría
+  const cat = this.categorias.find(c => c.id == this.filters.categoria_id);
+  this.filters.categoria_nombre = cat ? cat.nombre : 'TODAS';
+}
+
+// En el cambio de Mes
+onMesChange(mesId: any) {
+  this.filters.mes_id = mesId; // Asegurar el ID
+  const mesSeleccionado = this.mesesDisponibles.find(m => m.id == mesId);
+  if (mesSeleccionado) {
+    this.filters.mes_nombre = mesSeleccionado.nombre.toUpperCase();
+  }
+  // Tu lógica de negocio...
+}
+
+// En el cambio de Filtros (Servicio y Categoría)
+onServicioChange() {
+  const serv = this.servicios.find(s => s.id == this.filters.servicio_id);
+  this.filters.servicio_nombre = serv ? serv.nombre : '';
+
+  const cat = this.categorias.find(c => c.id == this.filters.categoria_id);
+  this.filters.categoria_nombre = cat ? cat.nombre : 'TODAS';
+
+  this.cargarTurnos();
+}
+
+// Para la Categoría (que usas onCategoriaChange)
+onCategoriaChange(event: any) {
+  const catSeleccionada = this.categorias.find(c => c.id == this.filters.categoria_id);
+  this.filters.categoria_nombre = catSeleccionada ? catSeleccionada.nombre : 'TODAS';
+  this.cargarTurnos();
+}
 
 
-  
+
 
 
 // En tu clase TurnosComponent:

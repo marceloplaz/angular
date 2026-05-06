@@ -24,14 +24,15 @@
     </a>
     
     <!-- Este es el submenú que ahora tiene coordenadas absolutas -->
-    <ul class="submenu-vertical">
-        <li>
-            <a (click)="generarPDFMensualGeneral()" class="submenu-link">
-                <i class="bi bi-file-earmark-pdf-fill text-danger"></i> 
-                <span>Reporte Mensual PDF</span>
-            </a>
-        </li>
-    </ul>
+   <ul class="submenu-vertical">
+    <li>
+        <!-- Añadimos cursor pointer para que parezca un botón real -->
+        <a (click)="generarPDFMensualGeneral()" class="submenu-link" style="cursor: pointer;">
+            <i class="bi bi-file-earmark-pdf-fill text-danger"></i> 
+            <span>Reporte Mensual PDF</span>
+        </a>
+    </li>
+</ul>
 </div>
 
             <a routerLink="/dashboard/servicios" class="nav-item" routerLinkActive="active">
