@@ -18,6 +18,16 @@ export interface MiembroEquipo {
 //  Estructura de la respuesta completa del servidor si 
 export interface ApiResponseTurnos {
   status: string;
-  equipo_visible: MiembroEquipo[];
-  message?: string;
+  equipo_visible: MiembroEquipo[]; // Cambiar 'data' por 'equipo_visible'
+}
+export interface TurnoAsignado {
+    fecha: string;
+    turno: {
+        nombre_turno: string;
+        hora_inicio: string;
+        hora_fin: string;
+    };
+    area: {
+        nombre: string;
+    };
 }

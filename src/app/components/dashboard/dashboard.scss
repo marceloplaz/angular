@@ -1,12 +1,16 @@
+/* ==========================================================================
+   ESTRUCTURA PRINCIPAL Y SIDEBAR
+   ========================================================================== */
+
 /* Contenedor Principal */
 .main-wrapper { 
     display: flex; 
     height: 100vh; 
     overflow: hidden; 
-    background-color: #f0f7f4; /* Fondo verde menta muy pálido */
+    background-color: #f0f7f4; /* Fondo verde menta pálido */
 }
 
-/* --- SIDEBAR VERDE --- */
+/* --- SIDEBAR --- */
 .sidebar { 
     width: 280px; 
     display: flex; 
@@ -14,6 +18,9 @@
     z-index: 1000; 
     background-color: #ffffff;
     border-right: 1px solid #e1e9e5;
+    /* CRÍTICO: Permite que el submenú flote fuera de la sidebar */
+    overflow: visible !important; 
+    position: relative;
 }
 
 .brand-logo {
@@ -37,13 +44,31 @@
 .nav-label { 
     font-size: 11px; 
     font-weight: 800; 
-    color: #2d5a42; /* Texto verde oscuro */
+    color: #2d5a42; 
     padding: 20px 25px 10px; 
     letter-spacing: 1.2px;
-    text-uppercase: true;
+    text-transform: uppercase;
 }
 
-/* --- ITEMS DEL MENÚ --- */
+/* ==========================================================================
+   SISTEMA DE NAVEGACIÓN Y SUBMENÚ
+   ========================================================================== */
+
+.nav-item-wrapper {
+    position: relative;
+    overflow: visible; /* Asegura que el submenú no se corte */
+
+    /* Activación del submenú al pasar el mouse */
+    &:hover {
+        .submenu-vertical {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+    }
+}
+
 .nav-item {
     display: flex; 
     align-items: center; 
@@ -54,35 +79,79 @@
     transition: all 0.3s ease; 
     margin: 4px 15px; 
     border-radius: 10px;
+    cursor: pointer;
+
+    i { 
+        font-size: 1.2rem; 
+        margin-right: 15px; 
+        color: #27ae60; 
+        opacity: 0.8; 
+    }
+
+    &:hover { 
+        background-color: #e8f5ee; 
+        color: #1e8449; 
+        transform: translateX(5px); 
+    }
+
+    &.active { 
+        background-color: #27ae60; 
+        color: white !important; 
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); 
+
+        i { color: white !important; opacity: 1; }
+    }
 }
 
-.nav-item i { 
-    font-size: 1.2rem; 
-    margin-right: 15px; 
-    color: #27ae60; 
-    opacity: 0.8; 
+/* --- SUBMENÚ FLOTANTE --- */
+.submenu-vertical {
+    display: none; 
+    position: absolute;
+    left: 100%; /* Se posiciona justo a la derecha de la sidebar */
+    top: 5px; 
+    background-color: #ffffff;
+    min-width: 200px;
+    box-shadow: 8px 4px 15px rgba(0,0,0,0.1);
+    border-radius: 0 10px 10px 0;
+    list-style: none;
+    padding: 8px 0;
+    z-index: 9999;
+    border: 1px solid #e1e9e5;
+    border-left: none;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+
+    li {
+        a.submenu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            color: #4a4a4a;
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+
+            i {
+                color: #27ae60;
+                font-size: 1rem;
+            }
+
+            &:hover {
+                background-color: #f1f8f4;
+                color: #27ae60;
+            }
+        }
+    }
 }
 
-/* Hover: Fondo verde suave */
-.nav-item:hover { 
-    background-color: #e8f5ee; 
-    color: #1e8449; 
-    transform: translateX(5px); 
-}
+/* ==========================================================================
+   ÁREA DE CONTENIDO Y CALENDARIO
+   ========================================================================== */
 
-/* Estado Activo: Verde sólido */
-.nav-item.active { 
-    background-color: #27ae60; 
-    color: white !important; 
-    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); 
-}
-
-.nav-item.active i { 
-    color: white !important;
-    opacity: 1; 
-}
-
-/* --- CONTENIDO --- */
 .content-area { 
     flex: 1; 
     overflow-y: auto; 
@@ -98,52 +167,43 @@
     justify-content: space-between;
 }
 
+/* Estilos de Turnos en Calendario */
+.calendar-grid .d-grid > div {
+    min-height: 80px !important; 
+    padding: 4px 2px !important;
+}
+
+.turno-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.badge-turno {
+    font-size: 0.6rem;
+    color: white;
+    padding: 1px 4px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+    width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.horario-texto {
+    font-size: 0.55rem;
+    color: #666;
+    line-height: 1;
+}
+
+/* --- UTILIDADES --- */
+.cursor-pointer { cursor: pointer; }
+.transition-all { transition: all 0.3s ease; }
+
 .user-name {
     color: #2d5a42;
     font-weight: 600;
-}
-/* Estilo para los sub-ítems del menú */
-.nav-group .nav-item.small {
-    font-size: 0.85rem;
-    margin-bottom: 2px;
-    opacity: 0.9;
-}
-
-/* Línea sutil a la izquierda para guiar el submenú */
-.border-start {
-    border-width: 2px !important;
-    border-color: #a3cfbb !important; /* El verde que estás usando en las tablas */
-}
-
-/* Animación de la flecha cuando se despliega (opcional) */
-.nav-item[aria-expanded="true"] .bi-chevron-down {
-    transform: rotate(180deg);
-    transition: transform 0.3s;
-}
-
-/* Efecto hover suave para sub-ítems */
-.nav-group .nav-item.small:hover {
-    background-color: #f0f6f3;
-    color: #1a4f32;
-}
-.menu-item {
-  color: #555;
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
-
-  i { font-size: 1.1rem; }
-
-  &:hover {
-    background-color: #f8f9fa;
-    color: #1abc9c;
-  }
-
-  &.active {
-    background-color: #1abc9c; // El verde de tu app
-    color: white !important;
-    border-radius: 8px;
-    margin: 0 10px;
-    
-    i { color: white; }
-  }
 }

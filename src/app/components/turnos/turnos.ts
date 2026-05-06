@@ -16,6 +16,7 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { environment } from '../../../environments/environment';
 
+
 export interface ResumenMensual {
   usuario_nombre: string;
   total_dias: number;
@@ -48,7 +49,6 @@ export class TurnosComponent implements OnInit {
   private cdRef = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
   
-
   alias: string = 'Usuario Administrativo';// para pdf login
   rolUsuario: string = ''; // para pdf login
 

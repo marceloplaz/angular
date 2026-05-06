@@ -1,20 +1,39 @@
 <div class="main-wrapper">
-    <aside class="sidebar">
-        <div class="brand-logo d-flex align-items-center">
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <aside class="sidebar" [class.d-none]="!sidebarVisible()">
+        <a routerLink="/dashboard" class="brand-logo d-flex align-items-center text-decoration-none">
             <div class="logo-box me-3">
                 <i class="bi bi-hospital"></i>
             </div>
-            <span class="fw-bold text-success">HOSPITAL APP</span>
-        </div>
+            <span class="fw-bold text-success text-uppercase" style="font-size: 0.8rem;">Hospital San Juan de Dios</span>
+        </a>
 
         <nav class="mt-3">
-            <div class="nav-label">GESTIÓN MÉDICA</div>
+            <a routerLink="/dashboard" class="nav-item" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">
+                <i class="bi bi-house-door"></i> Inicio / Dashboard
+            </a>
+
+            <div class="nav-label mt-3">GESTIÓN MÉDICA</div>
             <a routerLink="/dashboard/personal" class="nav-item" routerLinkActive="active">
                 <i class="bi bi-person-badge"></i> Gestión de Personal
             </a>
-            <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
-                <i class="bi bi-calendar-check"></i> Gestión de Turnos
+            
+        <div class="nav-item-wrapper has-submenu">
+    <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
+        <i class="bi bi-calendar-check"></i> Gestión de Turnos
+    </a>
+    
+    <!-- Este es el submenú que ahora tiene coordenadas absolutas -->
+    <ul class="submenu-vertical">
+        <li>
+            <a (click)="generarPDFMensualGeneral()" class="submenu-link">
+                <i class="bi bi-file-earmark-pdf-fill text-danger"></i> 
+                <span>Reporte Mensual PDF</span>
             </a>
+        </li>
+    </ul>
+</div>
+
             <a routerLink="/dashboard/servicios" class="nav-item" routerLinkActive="active">
                 <i class="bi bi-clipboard-pulse"></i> Servicios
             </a>
@@ -27,33 +46,219 @@
                 <i class="bi bi-sun"></i> Vacaciones
             </a>
             <a routerLink="/dashboard/novedades" class="nav-item" routerLinkActive="active">
-                <i class="bi bi-sun"></i> Informacion de Novedades Laborales
+                <i class="bi bi-info-circle"></i> Novedades Laborales
             </a>
-
             <a routerLink="/dashboard/incidencias" class="nav-item" routerLinkActive="active">
                 <i class="bi bi-tools"></i> Incidencias Técnicas
             </a>
-            <div class="nav-label mt-3">CONFIGURACION DE SISTEMA</div>
-            <a routerLink="/dashboard/configuracion-sistema" routerLinkActive="active" class="menu-item">
-            <i class="pi pi-cog me-2"></i> Configuración de Sistema
-</a>
+
+            <div class="nav-label mt-3">CONFIGURACIÓN</div>
+            <a routerLink="/dashboard/configuracion-sistema" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-gear"></i> Configuración de Sistema
+            </a>
         </nav>
     </aside>
 
+    <!-- ÁREA DE CONTENIDO PRINCIPAL -->
     <main class="content-area">
-        <header class="top-bar">
-            <div class="search-box">
-                <i class="bi bi-search text-muted me-2"></i>
-                <span class="text-muted small">Buscar en el sistema...</span>
+        <!-- BARRA SUPERIOR -->
+        <header class="top-bar d-flex justify-content-between align-items-center px-4">
+            <div class="search-box d-flex align-items-center">
+                <i (click)="toggleSidebar()" class="bi bi-list fs-4 me-3 cursor-pointer"></i>
+                <input type="text" class="form-control form-control-sm border-0 bg-transparent" placeholder="Buscar en el sistema...">
             </div>
-            <div class="user-info">
-                <span class="user-name">jugadordeunbit</span>
-                <button class="btn btn-sm btn-outline-danger ms-3 rounded-pill">Salir</button>
+            
+            <div class="user-info d-flex align-items-center">
+                <div class="text-end me-3">
+                    <span class="user-name d-block fw-bold text-capitalize">{{ usuario() }}</span>
+                    <small class="text-success fw-bold">● En línea</small>
+                </div>
+                <button (click)="logout()" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                    <i class="bi bi-box-arrow-right me-1"></i> Salir
+                </button>
             </div>
         </header>
 
+        <!-- CONTENEDOR DINÁMICO -->
         <div class="p-4">
-            <router-outlet></router-outlet>
+            @if (esInicio()) {
+                <div class="animate__animated animate__fadeIn">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-grid-fill text-warning me-2 fs-4"></i>
+                            <h2 class="h4 mb-0 fw-bold">Panel de Control Personal</h2>
+                        </div>
+                        <span class="badge bg-white text-dark shadow-sm py-2 px-3 border">
+                            <i class="bi bi-calendar-event me-2"></i>{{ fechaActual() }}
+                        </span>
+                    </div>
+
+                    <!-- Indicadores y Buscador -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm p-3 bg-primary text-white h-100">
+                                <h6 class="small opacity-75">Servicios Asignados</h6>
+                                <h4 class="fw-bold mb-0">{{ misServicios().length }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card border-0 shadow-sm p-3 border-start border-warning border-4 h-100">
+                                <h6 class="text-muted small">Estado Hoy</h6>
+                                <h4 class="fw-bold mb-0">Libre</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card border-0 shadow-sm p-3 border-start border-success border-4 h-100">
+                                <h6 class="text-muted small">Horas Semanales</h6>
+                                <h4 class="fw-bold mb-0 text-success">36h / 40h</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- BUSCADOR DE PROFESIONALES -->
+                        <div class="col-md-5">
+                            <div class="card p-3 shadow-sm border-0 h-100 position-relative">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="small">
+                                        <i class="bi bi-search text-primary me-2"></i>
+                                        <span class="text-muted fw-bold">Buscar Profesional</span>
+                                    </div>
+                                    @if (usuarioBuscadoId()) {
+                                        <button (click)="restablecerVistaPropia()" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" style="font-size: 0.7rem;">
+                                            <i class="bi bi-arrow-left-circle"></i> Mi Vista
+                                        </button>
+                                    }
+                                </div>
+                                
+                                <input 
+                                    type="text" 
+                                    class="form-control form-control-sm border-primary-subtle" 
+                                    placeholder="Escriba apellido del profesional..."
+                                    (input)="buscarUsuario($event)">
+
+                                <!-- Lista de resultados desplegable -->
+                                @if (listaPersonas().length > 0) {
+                                    <ul class="list-group position-absolute shadow-lg w-100" style="z-index: 1100; top: 100%; left: 0;">
+                                        @for (p of listaPersonas(); track p.id) {
+                                            <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center cursor-pointer p-2" 
+                                                (click)="seleccionarUsuario(p)">
+                                                <span class="small">{{ p.persona?.nombre_completo || p.name }}</span>
+                                                <span class="badge bg-light text-muted border" style="font-size: 0.6rem;">ID: {{ p.id }}</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- CALENDARIO -->
+                        <div class="col-md-8">
+                            <div class="card border-0 shadow-sm p-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold m-0 text-uppercase" style="font-size: 0.9rem;">
+                                        <i class="bi bi-calendar3 text-warning me-2"></i>
+                                        Guardias: {{ servicioActivo()?.nombre || 'Sin servicio seleccionado' }}
+                                    </h5>
+                                </div>
+                                
+                                <button (click)="generarPDF()" 
+                    class="btn btn-sm btn-outline-danger border-0 d-flex align-items-center gap-2 px-3"
+                    style="font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
+                <i class="bi bi-file-earmark-pdf-fill fs-6"></i>
+                <span>PDF-TURNOS-MES</span>
+            </button>
+                                <div class="calendar-grid">
+                                    <!-- Cabecera Días -->
+                                    <div class="d-grid text-center text-muted fw-bold mb-2" style="grid-template-columns: repeat(7, 1fr); font-size: 0.7rem;">
+                                        <div>LUN</div><div>MAR</div><div>MIE</div><div>JUE</div><div>VIE</div><div>SAB</div><div>DOM</div>
+                                    </div>
+
+                                    <!-- Cuerpo del calendario -->
+                                    <div class="d-grid" style="grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                                        @for (dia of diasDelMes(); track $index) {
+                                            <div class="text-center p-1 rounded-2 border position-relative" 
+                                                 [ngClass]="{'bg-light border-0': !dia, 'bg-white shadow-xs': dia}"
+                                                 style="min-height: 80px;">
+                                                
+                                                @if (dia) {
+                                                    <span class="position-absolute top-0 end-0 me-1 mt-1 text-muted fw-bold" style="font-size: 0.65rem;">
+                                                        {{ dia }}
+                                                    </span>
+                                                }
+
+                                                @if (tieneTurno(dia); as turno) {
+                                                    <div class="mt-3 p-1 border-start border-4 text-start" [style.border-color]="turno.color">
+                                                        <div class="text-uppercase fw-bold text-muted mb-1" style="font-size: 0.5rem; line-height: 1;">
+                                                            {{ turno.area_nombre || 'Guardia' }}
+                                                        </div>
+                                                        <div class="fw-bold" [style.color]="turno.color" style="font-size: 0.6rem; line-height: 1.1;">
+                                                            {{ turno.nombre_turno }}
+                                                        </div>
+                                                        <div class="text-dark fw-bold mt-1" style="font-size: 0.55rem;">
+                                                            <i class="bi bi-clock"></i> {{ extraerHora(turno.horario) }}
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LISTA DE SERVICIOS -->
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm p-4 h-100">
+                                <h5 class="fw-bold mb-4" style="font-size: 0.9rem;">
+                                    <i class="bi bi-hospital text-success me-2"></i>Servicios Disponibles
+                                </h5>
+                                
+                                <div class="services-list">
+                                    @for (item of misServicios(); track item.id) {
+                                        <div (click)="seleccionar(item)" 
+                                             class="d-flex align-items-center justify-content-between p-3 mb-3 rounded border-start border-4 cursor-pointer transition-all"
+                                             [ngClass]="{
+                                                'bg-white shadow border-primary': servicioActivo()?.id === item.id,
+                                                'bg-light border-transparent': servicioActivo()?.id !== item.id
+                                             }">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 35px; height: 35px; font-weight: bold; font-size: 0.8rem;">
+                                                    {{ item.nombre.substring(0,1) }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold small">{{ item.nombre }}</h6>
+                                                    <small class="text-muted" style="font-size: 0.7rem;">Click para ver turnos</small>
+                                                </div>
+                                            </div>
+                                            @if (servicioActivo()?.id === item.id) {
+                                                <i class="bi bi-check-circle-fill text-primary"></i>
+                                            }
+                                        </div>
+                                    } @empty {
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="bi bi-info-circle d-block fs-2 mb-2"></i>
+                                            <p class="small">No hay servicios para mostrar</p>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="mt-auto text-center border-top pt-3">
+                                    <button routerLink="/dashboard/servicios" class="btn btn-link btn-sm text-decoration-none small">
+                                        Gestionar catálogos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- RENDERIZADO DE RUTAS HIJAS -->
+            <div class="router-container">
+                <router-outlet></router-outlet>
+            </div>
         </div>
     </main>
 </div>

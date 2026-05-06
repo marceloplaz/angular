@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment.development';
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,6 +21,8 @@ export class TurnoService {
     params: { servicio_id: servicioId.toString() }
   });
    }
+
+   
 
    getFiltrosJerarquia(): Observable<{ categorias: any[], servicios: any[] }> {
     return this.http.get<{ categorias: any[], servicios: any[] }>(`${this.apiUrl}/filtros-jerarquia`);
@@ -124,10 +127,19 @@ export class TurnoService {
   }
 
   
-  buscarProfesionales(termino: string): Observable<any[]> {
-  return this.http.get<any[]>(`${this.apiUrl}/buscar-profesionales`, {
-    params: { buscar: termino }
-  });
+ buscarProfesionales(termino: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/buscar-profesionales`, {
+      params: { buscar: termino }
+    });
+  }
+
+  /**
+   * Obtiene los servicios asignados a un usuario específico (para ver el calendario de otros)
+   */
+ 
+
+getServiciosPorUsuario(usuarioId: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/usuarios/${usuarioId}/servicios`);
 }
 
   crearTurno(data: { nombre_turno: string, hora_inicio: string, hora_fin: string, duracion_horas: number }): Observable<any> {

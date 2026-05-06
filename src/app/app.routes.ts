@@ -23,12 +23,14 @@ const ROLES_JEFATURAS = [...ROLES_ADMIN_FULL, 'jefe_medico_servicio', 'jefa_enfe
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+
   {
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [authGuard],
     children: [
       // SECCIÓN PERSONAL
+     
       {
         path: 'personal',
         canActivate: [roleGuard],
@@ -92,7 +94,7 @@ export const routes: Routes = [
         data: { roles: ['super_admin', 'admin'] } 
       },
 
-      { path: '', redirectTo: 'personal', pathMatch: 'full' }
+    
     ]
   },
   { path: 'unauthorized', component: LoginComponent }, // Idealmente un componente 403
