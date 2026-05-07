@@ -43,115 +43,8 @@ public anioVisualizado = signal<number>(new Date().getFullYear()); // 2026
     { initialValue: this.router.url }
   );
 
-private generarCalendarioMensualPDF(reporte: any): void {
-  const doc = new jsPDF('l', 'mm', 'a4');
-  const { filtros, contenido } = reporte;
+  // Borra la función generarCalendarioMensualPDF completa de este archivo.
 
-  // 1. Configuración de Fecha y Calendario
-  const año = filtros.gestion; // 2026
-  const mesIndex = filtros.mes - 1; 
-  const diasEnMes = new Date(año, mesIndex + 1, 0).getDate();
-  const primerDiaDelaSemana = new Date(año, mesIndex, 1).getDay();
-  // Ajuste para que el calendario empiece en Lunes
-  const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
-
-  // 2. Encabezado Institucional
-  doc.setFillColor(...PDF_COLORS['VERDE_HOSPITAL']  );
-  doc.rect(0, 0, 297, 35, 'F'); // Fondo de cabecera
-
-  doc.setFontSize(20);
-  doc.setTextColor(...PDF_COLORS['BLANCO']);
-  doc.text('HOSPITAL SAN JUAN DE DIOS', 14, 15);
-  
-  doc.setFontSize(10);
-  doc.text(`ROL MENSUAL DE TURNOS - ${filtros.servicio}`, 14, 22);
-  doc.text(`Mes: ${filtros.mes} | Gestión: ${filtros.gestion} | Categoría: ${filtros.categoria}`, 14, 28);
-  doc.text(`Usuario: ${this.usuario()}`, 280, 15, { align: 'right' }); // jugadordeunbit
-
-  // 3. Agrupación de turnos por día
-  const turnosPorDia: { [key: number]: any[] } = {};
-  contenido.forEach((t: any) => {
-    if (!turnosPorDia[t.dia]) turnosPorDia[t.dia] = [];
-    turnosPorDia[t.dia].push(t);
-  });
-
-  // 4. Construcción de Filas (Semanas)
-  const filasCalendario = [];
-  let semana: any[] = Array(7).fill("");
-
-  for (let i = 0; i < desplazamiento + diasEnMes; i++) {
-    const diaActual = i - desplazamiento + 1;
-    const columna = i % 7;
-
-    if (diaActual > 0) {
-      const turnos = turnosPorDia[diaActual] || [];
-      
-      // Formateo dinámico del contenido de la celda
-      const contenidoCelda = [
-        { content: `${diaActual}`, styles: { fontStyle: 'bold', fontSize: 10 } }
-      ];
-
-      
-      const textoTurnos = turnos.map(t => {
-  // 1. Procesamiento de Nombre y Apellido
-  const inicialNombre = t.nombre.split(' ')[0];
-  const inicialApellido = t.nombre.split(' ')[1] ? t.nombre.split(' ')[1][0] + '.' : '';
-  
-  // 2. Procesamiento del Área (ej. 'CIRUGIA', 'PEDIATRIA')
-  // Usamos toUpperCase para mantener la estética hospitalaria
-  const area = t.area ? t.area.toUpperCase() : 'S/A';
-
-  // 3. Retorno del bloque de texto con el Área incorporada
-  // Formato: [Turno] Horario | AREA
-  //          Nombre Apellido.
-  return `[${t.turno[0]}] ${t.horario} | ${area}\n${inicialNombre} ${inicialApellido}`;
-}).join('\n──────────\n');
-      
-      
-      
-      // Mapeo de turnos: Nombre + Turno + Horario
-     
-
-      semana[columna] = {
-        content: `${diaActual}\n\n${textoTurnos}`,
-        styles: {
-          fillColor: diaActual % 2 === 0 ? PDF_COLORS[' FONDO_MENTA'] : PDF_COLORS['BLANCO'],
-          textColor: PDF_COLORS['VERDE_OSCURO'],
-          fontSize: 7,
-          minCellHeight: 32,
-          valign: 'top'
-        }
-      };
-    }
-
-    if (columna === 6 || diaActual === diasEnMes) {
-      filasCalendario.push(semana);
-      semana = Array(7).fill("");
-    }
-  }
-
-  // 5. Renderizado de la Tabla
-  autoTable(doc, {
-    startY: 40,
-    head: [['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO']],
-    body: filasCalendario,
-    theme: 'grid',
-    headStyles: {
-      fillColor: PDF_COLORS['VERDE_OSCURO'],
-      textColor: PDF_COLORS['BLANCO'],
-      halign: 'center'
-    },
-    styles: {
-      lineWidth: 0.1,
-      lineColor: PDF_COLORS['VERDE_HOSPITAL']
-    }
-  });
-
-  const servicioLimpio = filtros.servicio.replace(/\s+/g, '_');
-  const nombreArchivo = `Rol_${servicioLimpio}_${mesIndex}_${año}_${this.usuario()}.pdf`;
-
-  doc.save(nombreArchivo);
-}
 
 
 
@@ -170,29 +63,17 @@ constructor(
 }
 
 /**
- * Método que dispara la acción desde el HTML (Línea 29)
- */
+ * Método que dispara la acción desde el HTML 
+ * */
 generarPDFMensualGeneral(): void {
-  console.log('Solicitando datos al componente de turnos...');
+  console.log('Iniciando proceso de reporte para Marcelo...');
+  
+  // 1. Solo enviamos la señal. 
+  // El Service y el TurnosComponent ya saben qué hacer entre ellos.
   this._reporteMensualService.solicitarReporteActual();
 
-  // En tu función orquestadora
-this._reporteMensualService.enviarDatos$.pipe(take(1)).subscribe(reporte => {
-  if (reporte && reporte.contenido && reporte.contenido.length > 0) {
-    this.crearDocumentoPDF(reporte);
-  } else {
-    // Implementa una alerta visual (ej. Toastr o Swal) para Marcelo
-    console.warn('No hay turnos asignados para generar el PDF.');
-    
-  }
-});
-}
-
-
-private crearDocumentoPDF(reporte: any): void {
-  // Aquí puedes decidir si generas un reporte simple o el calendario
-  // En tu caso, llamamos a la lógica compleja que construimos:
-  this.generarCalendarioMensualPDF(reporte);
+  // Opcional: Una alerta simple para saber que el proceso inició
+  // this.toastr.info('Generando documento...', 'Reporte');
 }
 
 

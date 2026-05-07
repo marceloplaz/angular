@@ -135,7 +135,6 @@ get personalParaReemplazo() {
 
 
 
-
 ngOnInit() {
   const nombreGuardado = localStorage.getItem('usuario_nombre');
   const rolGuardado = localStorage.getItem('usuario_rol');
@@ -154,30 +153,58 @@ ngOnInit() {
   // ========================================================
   // NUEVO: ESCUCHA PARA GENERACIÓN DE PDF (ORQUESTACIÓN)
   // ========================================================
-
-
-
   this._reporteMensualService.solicitarDatos$.subscribe(() => {
-  // Forzamos actualización de nombres antes de enviar al PDF
-  this.actualizarNombresDeFiltros(); 
+    this.actualizarNombresDeFiltros(); 
 
-  const datos = {
-    filtros: {
-      servicio: this.filters.servicio_nombre,
-      mes: this.filters.mes_nombre,
-      gestion: this.filters.gestion, 
-      categoria: this.filters.categoria_nombre
-    },
-    contenido: this.listaTurnos 
-  };
-  this._reporteMensualService.enviarDatosParaPDF(datos);
-});
+    // 1. CAMBIO CLAVE: Llamar al servicio para obtener los datos REALES del backend
+    // Usamos los filtros actuales para pedir solo lo que corresponde al reporte
+    this.turnoService.getReporteMensual(
+      this.filters.mes_id, 
+      this.filters.gestion, 
+      this.filters.servicio_id
+    ).subscribe(datosReales => {
+      
+      const turnosAgrupadosPorDia: any = {};
+      
+      console.log('--- PROCESANDO DATOS REALES DE LARAVEL PARA PDF ---');
+      
+      // 2. Procesamos los datos que vienen de la tabla 'turnos_asignados'
+      datosReales.forEach(t => {
+        // En Laravel, la tabla turnos_asignados tiene el campo 'fecha'
+        const fechaKey = t.fecha; 
 
+        if (fechaKey) {
+          if (!turnosAgrupadosPorDia[fechaKey]) {
+            turnosAgrupadosPorDia[fechaKey] = [];
+          }
+          
+          turnosAgrupadosPorDia[fechaKey].push({
+            // Accedemos a la relación cargada con with(['usuario.persona', 'turno'])
+            usuario: t.usuario?.persona?.nombre_completo || 'Personal',
+            turno: t.turno?.nombre_turno || 'S/T',
+            inicio: t.turno?.hora_inicio ? t.turno.hora_inicio.substring(0, 5) : '00:00',
+            fin: t.turno?.hora_fin ? t.turno.hora_fin.substring(0, 5) : '00:00'
+          });
+        }
+      });
 
+      // 3. Enviamos el objeto final al servicio del PDF
+      const datosParaPDF = {
+        filtros: {
+          servicio: this.filters.servicio_nombre,
+          mes: this.filters.mes_nombre,
+          gestion: this.filters.gestion, 
+          categoria: this.filters.categoria_nombre,
+          mes_id: Number(this.filters.mes_id) 
+        },
+        contenido: turnosAgrupadosPorDia 
+      };
 
-  // ========================================================
-
-} // <-- Fin de ngOnInit
+      console.log('📦 ENVIANDO DATOS AL SERVICE PDF:', datosParaPDF);
+      this._reporteMensualService.enviarDatosParaPDF(datosParaPDF);
+    });
+  });
+}
 
 actualizarNombresDeFiltros() {
   // 1. Nombre del Mes

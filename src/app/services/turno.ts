@@ -137,7 +137,15 @@ export class TurnoService {
    * Obtiene los servicios asignados a un usuario específico (para ver el calendario de otros)
    */
  
+getReporteMensual(mes_id: number, gestion: number, servicio_id: number): Observable<any[]> {
+  // Usar HttpParams asegura que los caracteres especiales se escapen correctamente
+  const params = new HttpParams()
+    .set('mes_id', mes_id.toString())
+    .set('gestion', gestion.toString())
+    .set('servicio_id', servicio_id.toString());
 
+  return this.http.get<any[]>(`${this.apiUrl}/reporte-mensual`, { params });
+}
 getServiciosPorUsuario(usuarioId: number): Observable<any> {
   return this.http.get(`${this.apiUrl}/usuarios/${usuarioId}/servicios`);
 }
