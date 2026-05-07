@@ -178,28 +178,45 @@ ngOnInit() {
             turnosAgrupadosPorDia[fechaKey] = [];
           }
           
-          const p = t.usuario?.persona;
-// Probamos diferentes combinaciones por si acaso
-const nombreReal = p?.nombres || '';
-const apellidoReal = p?.apellidos || '';
+        // 1. Apuntamos a la ruta correcta según tu JSON: t -> usuario -> persona
+const persona = t.usuario?.persona || {}; 
+const nombreDb = persona.nombre_completo?.trim() || '';
+
+// También extraemos nombres/apellidos por si nombre_completo fallara
+const nombres = persona.nombres?.trim() || '';
+const apellidos = persona.apellidos?.trim() || '';
 
 let nombreCompleto = 'PERSONAL';
 
-if (nombreReal || apellidoReal) {
-    nombreCompleto = `${nombreReal} ${apellidoReal}`.trim();
-} else if (t.usuario?.name) { 
-    // Plan B: Si no hay 'persona', intentamos usar el 'name' de la tabla 'users'
-    nombreCompleto = t.usuario.name;
+// LÓGICA DE PRIORIDAD
+if (nombreDb) {
+    // Si existe nombre_completo en la BD, lo usamos (Es lo que buscas)
+    nombreCompleto = nombreDb.toUpperCase();
+} 
+else if (nombres || apellidos) {
+    // Si no, intentamos concatenar
+    nombreCompleto = `${nombres} ${apellidos}`.replace(/\s+/g, ' ').toUpperCase().trim();
 }
-        
-        // 2. IMPORTANTE: El objeto DEBE tener estas claves para que el PDF las lea
-       turnosAgrupadosPorDia[t.fecha].push({
-        usuario: nombreCompleto, // Guardamos el nombre unido y en mayúsculas
-        area: t.area?.nombre || 'GENERAL',      // Sacamos el nombre de la tabla 'areas'
-        turno: t.turno?.nombre_turno || 'S/T',
-        inicio: t.turno?.hora_inicio ? t.turno.hora_inicio.substring(0, 5) : '00:00',
-        fin: t.turno?.hora_fin ? t.turno.hora_fin.substring(0, 5) : '00:00'
-    });
+else if (t.usuario?.name) {
+    // Como último recurso, el nombre de usuario (ej. "lflores")
+    nombreCompleto = t.usuario.name.toUpperCase();
+}
+
+// 2. Registro en el objeto para el PDF
+if (!turnosAgrupadosPorDia[t.fecha]) {
+    turnosAgrupadosPorDia[t.fecha] = [];
+}
+
+turnosAgrupadosPorDia[t.fecha].push({
+    usuario: nombreCompleto, 
+    area: t.area?.nombre || 'GENERAL',
+    turno: t.turno?.nombre_turno || 'S/T',
+    inicio: t.turno?.hora_inicio ? t.turno.hora_inicio.substring(0, 5) : '00:00',
+    fin: t.turno?.hora_fin ? t.turno.hora_fin.substring(0, 5) : '00:00'
+});
+
+
+
         }
       });
 

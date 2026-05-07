@@ -80,7 +80,7 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
         
                    const textoTurnos = turnos.map((t: any) => {
     // Usamos las propiedades exactas que definimos en el componente
-    const nombre = t.usuario || 'PERSONAL';
+    const nombre =t.usuario || 'PERSONAL';
     const area = t.area || 'GENERAL';
     const tipo = t.turno || 'S/T';
     const horario = `(${t.inicio} - ${t.fin})`;
