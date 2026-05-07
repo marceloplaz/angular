@@ -178,13 +178,28 @@ ngOnInit() {
             turnosAgrupadosPorDia[fechaKey] = [];
           }
           
-          turnosAgrupadosPorDia[fechaKey].push({
-            // Accedemos a la relación cargada con with(['usuario.persona', 'turno'])
-            usuario: t.usuario?.persona?.nombre_completo || 'Personal',
-            turno: t.turno?.nombre_turno || 'S/T',
-            inicio: t.turno?.hora_inicio ? t.turno.hora_inicio.substring(0, 5) : '00:00',
-            fin: t.turno?.hora_fin ? t.turno.hora_fin.substring(0, 5) : '00:00'
-          });
+          const p = t.usuario?.persona;
+// Probamos diferentes combinaciones por si acaso
+const nombreReal = p?.nombres || '';
+const apellidoReal = p?.apellidos || '';
+
+let nombreCompleto = 'PERSONAL';
+
+if (nombreReal || apellidoReal) {
+    nombreCompleto = `${nombreReal} ${apellidoReal}`.trim();
+} else if (t.usuario?.name) { 
+    // Plan B: Si no hay 'persona', intentamos usar el 'name' de la tabla 'users'
+    nombreCompleto = t.usuario.name;
+}
+        
+        // 2. IMPORTANTE: El objeto DEBE tener estas claves para que el PDF las lea
+       turnosAgrupadosPorDia[t.fecha].push({
+        usuario: nombreCompleto, // Guardamos el nombre unido y en mayúsculas
+        area: t.area?.nombre || 'GENERAL',      // Sacamos el nombre de la tabla 'areas'
+        turno: t.turno?.nombre_turno || 'S/T',
+        inicio: t.turno?.hora_inicio ? t.turno.hora_inicio.substring(0, 5) : '00:00',
+        fin: t.turno?.hora_fin ? t.turno.hora_fin.substring(0, 5) : '00:00'
+    });
         }
       });
 

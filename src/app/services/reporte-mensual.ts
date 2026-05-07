@@ -55,13 +55,7 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
     doc.text(`ROL MENSUAL DE TURNOS - ${filtros.servicio}`, 14, 22);
     doc.text(`Mes: ${filtros.mes} | Gestión: ${filtros.gestion} | Categoría: ${filtros.categoria}`, 14, 28);
 
-    // 3. Construcción de Filas del Calendario
-    reporte.contenido['2026-05-01'] = [{
-    usuario: 'MARCELO',
-    turno: 'Tarde',
-    inicio: '13:00',
-    fin: '19:00'
-}];
+    
     const filasCalendario = [];
     let semana: any[] = Array(7).fill("");
 
@@ -84,18 +78,17 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
         // Buscamos los turnos en el objeto 'contenido' enviado desde el componente
         const turnos = contenido[fechaKey] || [];
         
-                                                                const textoTurnos = turnos.map((t: any) => {
-                                                        // Según tu consola, el nombre viene como t.usuario_nombre o t.usuario
-                                                        // Si t.usuario es "MARCELO PLAZA", tomamos el primero
-                                                      const nombre = t.usuario ? t.usuario.split(' ')[0] : 'Personal';
-                                                       
-                                                        // Usamos t.nombre_turno para que aparezca "noche", "Mañana", etc.
-                                                        const tipoTurno = t.nombre_turno || t.turno || 'S/T';
-                                                        
-                                                        // Usamos t.duracion_horas para las horas
-                                                        const horas = t.duracion_horas || t.horas || 0;
+                   const textoTurnos = turnos.map((t: any) => {
+    // Usamos las propiedades exactas que definimos en el componente
+    const nombre = t.usuario || 'PERSONAL';
+    const area = t.area || 'GENERAL';
+    const tipo = t.turno || 'S/T';
+    const horario = `(${t.inicio} - ${t.fin})`;
 
-                                                        return `• ${t.turno}\n  ${nombre} (${t.inicio} - ${t.fin})`;
+    // Formato: • Turno | Área
+    //          Nombre
+    //          (Horas)
+    return `• ${tipo} | ${area}\n  ${nombre}\n  ${horario}`;
                                                         }).join('\n──────────\n');
 
         semana[indexColumna] = {
@@ -103,8 +96,8 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
     styles: {
         fillColor: diaActual % 2 === 0 ? PDF_COLORS['FONDO_MENTA'] : [255, 255, 255],
         textColor: PDF_COLORS['VERDE_OSCURO'],
-        fontSize: 6.5, // Reducimos un poco el tamaño para que quepa el nombre largo
-        minCellHeight: 35, // Aumentamos un poco el alto para dar espacio al área
+        fontSize: 6, // Reducimos un poco el tamaño para que quepa el nombre largo
+        minCellHeight: 38, // Aumentamos un poco el alto para dar espacio al área
         valign: 'top'
           }
         };
