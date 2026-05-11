@@ -10,6 +10,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { PDF_COLORS } from '../../constants/pdf-colors';
 import { ReporteMensualService } from '../../services/reporte-mensual';
+import { VacacionService } from '../../services/vacacion';
+
 
 
 
@@ -24,8 +26,15 @@ import { ReporteMensualService } from '../../services/reporte-mensual';
 export class DashboardComponent implements OnInit { // <--- Agregado OnInit aquí
   private router = inject(Router);
   private servicioService = inject(ServicioService);
+  private vacacionService = inject(VacacionService);
   private nombreOriginal = signal<string>('');
   private authService = inject(AuthService);
+
+  public saldoRestante: number = 0;
+  public diasConsumidos: number = 0;
+  public totalDerecho: number = 15; // Valor base por defecto
+  public porcentajeUso: number = 0;
+
   public usuario = signal(''); 
   public sidebarVisible = signal(true);
   public listaPersonas = signal<any[]>([]); 
@@ -33,8 +42,8 @@ export class DashboardComponent implements OnInit { // <--- Agregado OnInit aqu�
   public fechaActual = signal(new Date().toLocaleDateString('es-ES'));
   public turnosDelMes = signal<any[]>([]);
   public usuarioBuscadoId = signal<number | null>(null);
- public mesVisualizado = signal<number>(new Date().getMonth() + 1); // 5 para Mayo
-public anioVisualizado = signal<number>(new Date().getFullYear()); // 2026
+  public mesVisualizado = signal<number>(new Date().getMonth() + 1); // 5 para Mayo
+  public anioVisualizado = signal<number>(new Date().getFullYear()); // 2026
   private urlSignal = toSignal(
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
@@ -43,7 +52,8 @@ public anioVisualizado = signal<number>(new Date().getFullYear()); // 2026
     { initialValue: this.router.url }
   );
 
-  // Borra la función generarCalendarioMensualPDF completa de este archivo.
+  
+
 
 
 
@@ -176,6 +186,9 @@ ngOnInit() {
     this.nombreOriginal.set(this.usuario());
   }
   
+  //para vacaciones
+  this.cargarResumenVacaciones();
+
 
   // 2. Cargamos los servicios (usamos el método que ya tienes definido)
   this.servicioService.getServiciosInicio().subscribe({
@@ -189,6 +202,44 @@ ngOnInit() {
       }
     },
     error: (err: any) => console.error('Error al cargar servicios asignados:', err)
+  });
+}
+
+// para cargar las vacaciones que se necesita
+
+cargarResumenVacaciones() {
+  // Obtenemos el ID del usuario desde el localStorage o tu AuthService
+  const userId = Number(localStorage.getItem('usuario_id')); 
+
+  if (userId) {
+    this.vacacionService.getHistorialByUsuario(userId).subscribe({
+      next: (res) => {
+        // Buscamos la última vacación con estado 1 (Aprobado)
+        // Usamos el historial que viene de tu API de Laravel
+        const ultimaAprobada = res.historial.find((v: any) => v.estado === 1);
+        
+        if (ultimaAprobada) {
+          this.saldoRestante = ultimaAprobada.saldo_restante;
+          this.totalDerecho = ultimaAprobada.total_dias_derecho;
+        } else {
+          // Si no hay aprobadas, asumimos los días por defecto (ej. 15)
+          this.saldoRestante = 15;
+          this.totalDerecho = 15;
+        }
+        
+        // Calculamos los días consumidos para la barra de progreso
+        this.diasConsumidos = this.totalDerecho - this.saldoRestante;
+      },
+      error: (err) => console.error('Error al cargar saldo de vacaciones', err)
+    });
+  }
+}
+
+//ruta para para solicitar la vacacion
+irAFormulario(tipo: string) {
+  // Navega al mismo componente pero enviando el tipo como parámetro
+  this.router.navigate(['/administracion/vacaciones/nuevo'], { 
+    queryParams: { tipo: tipo } 
   });
 }
 
@@ -221,11 +272,19 @@ seleccionar(servicio: any) {
   });
 }
 
-buscarUsuario(event: any) {
-  const nombre = event.target.value;
-  if (nombre.length > 3) {
-    this.servicioService.buscarProfesionales(nombre).subscribe(res => {
-      this.listaPersonas.set(res); // Para mostrar sugerencias si deseas
+buscarUsuario(valor: string) {
+  // Ahora 'valor' es directamente el texto del input
+  if (!valor || valor.trim() === '') {
+    this.restablecerVistaPropia();
+    return;
+  }
+
+  if (valor.length >= 3) {
+    this.servicioService.buscarProfesionales(valor).subscribe({
+      next: (res: any) => {
+        this.listaPersonas.set(res);
+      },
+      error: (err: any) => console.error('Error al buscar:', err)
     });
   }
 }

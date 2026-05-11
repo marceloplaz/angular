@@ -155,27 +155,38 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let user of servicioSeleccionado?.usuarios">
-                      <td class="ps-3 py-2">
-                        <div class="fw-bold small text-dark">{{ user.usuario_nombre }}</div>
-                        <div class="extra-small text-info fw-bold text-uppercase" style="font-size: 0.65rem;">
-                          {{ user.descripcion || 'Asignación Permanente' }}
-                        </div>
-                      </td>
-                      <td class="small text-muted">{{ user.email }}</td>
-                      <td class="text-center">
-                        <span class="badge rounded-pill bg-success px-2 py-1" style="font-size: 0.6rem;">
-                          ACTIVO
-                        </span>
-                      </td>
-                    </tr>
-                    <tr *ngIf="servicioSeleccionado?.usuarios?.length === 0">
-                      <td colspan="3" class="text-center py-5 text-muted">
-                        <i class="bi bi-people fs-2 d-block opacity-25"></i>
-                        <span class="small">No hay personal asignado a este servicio.</span>
-                      </td>
-                    </tr>
-                  </tbody>
+  <tr *ngFor="let user of servicioSeleccionado?.usuarios">
+    <td class="ps-3 py-2">
+      <div class="fw-bold small text-dark">{{ user.usuario_nombre }}</div>
+      <div class="extra-small text-info fw-bold text-uppercase" style="font-size: 0.65rem;">
+        {{ user.descripcion || 'Asignación Permanente' }}
+      </div>
+    </td>
+    <td class="small text-muted">{{ user.email }}</td>
+    <td class="text-center">
+      <button 
+        (click)="cambiarEstadoProfesional(user)" 
+        [disabled]="loading"
+        class="btn btn-sm rounded-pill px-2 py-1 shadow-sm border-0"
+        [ngClass]="{
+          'btn-success': user.estado === 1,
+          'btn-secondary': user.estado !== 1
+        }"
+        style="font-size: 0.6rem; min-width: 80px;">
+        
+        <i class="bi" [ngClass]="user.estado === 1 ? 'bi-check-circle-fill' : 'bi-slash-circle'"></i>
+        {{ user.estado === 1 ? ' ACTIVO' : ' INACTIVO' }}
+      </button>
+    </td>
+  </tr>
+
+  <tr *ngIf="servicioSeleccionado?.usuarios?.length === 0">
+    <td colspan="3" class="text-center py-5 text-muted">
+      <i class="bi bi-people fs-2 d-block opacity-25"></i>
+      <span class="small">No hay personal asignado a este servicio.</span>
+    </td>
+  </tr>
+</tbody>
                 </table>
               </div>
             </div>

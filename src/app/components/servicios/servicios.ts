@@ -287,6 +287,35 @@ vincularDirecto(usuario: any) {
       }
     });
   }
+
+
+cambiarEstadoProfesional(user: any) {
+  const nuevoEstado = user.estado === 1 ? 0 : 1;
+  const payload = {
+    usuario_id: user.usuario_id || user.id,
+    servicio_id: this.servicioSeleccionado.id,
+    estado: nuevoEstado
+  };
+
+  this.loading = true;
+  this._servicioService.actualizarEstadoVinculacion(payload).subscribe({
+    next: (resp) => {
+      // FORZAR ACTUALIZACIÓN LOCAL
+      user.estado = nuevoEstado; // Esto cambia la referencia visual del botón inmediatamente
+      this.loading = false;
+      this.toastr.success('Estado actualizado');
+      
+      // Opcional: Si quieres que todo el modal se refresque desde la DB
+      // this.verDetalles(this.servicioSeleccionado); 
+    },
+    error: (err) => {
+      this.loading = false;
+      this.toastr.error('Error al cambiar estado');
+    }
+  });
+}
+
+
 }
 
 

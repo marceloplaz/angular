@@ -32,7 +32,9 @@ public servicioSeleccionado = signal<any>(null);
       }
     );
 }
-
+actualizarEstadoVinculacion(datos: { usuario_id: number, servicio_id: number, estado: number }): Observable<any> {
+  return this.http.post(`${this.url}/actualizar-estado`, datos);
+}
 
 
   /**

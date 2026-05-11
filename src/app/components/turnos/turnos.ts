@@ -875,7 +875,19 @@ eliminarTurno() {
 }
 
   abrirModalAsignar(personal: any, dia: string) {
-  // 1. Limpieza y preparación de datos
+  
+  if (personal.estado == 0) {
+    this.mostrarAvisoInactivo();
+    return;
+  }
+
+  // 2. Solo extraemos/aseguramos el estado y mantenemos el resto del objeto
+  this.personalSeleccionado = { 
+    ...personal, 
+    estado: personal.estado ?? 1 
+  };
+    // 1. Limpieza y preparación de datos
+  
   this.personalSeleccionado = { ...personal };
   this.diaSeleccionado = dia;
   this.fechaUnica = dia;
@@ -911,19 +923,27 @@ eliminarTurno() {
       error: (err) => console.error("Error al cargar turnos vinculados:", err)
     });
   }
-
   // 3. Abrir el modal de asignación
   this.mostrarModal = true;
 }
 
 
+
+mostrarAvisoInactivo() {
+  Swal.fire({
+    title: 'Personal Inactivo',
+    text: 'Este profesional no puede recibir turnos porque su vinculación está desactivada.',
+    icon: 'warning',
+    confirmButtonColor: '#20c997'
+  });
+}
 abrirCalendario() {
     this.mostrarModalCalendario = true;
     // No cerramos 'mostrarModal' para que se vea de fondo, 
     // pero el 'appendTo="body"' del HTML hará que el calendario flote encima.
 }
 
-// Asegúrate de inicializar la variable al inicio de tu clase
+
 
 
 // Función para procesar los días elegidos

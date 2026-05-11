@@ -119,6 +119,8 @@
     
     <!-- 2. CELDAS DE TURNOS (SOPORTE MULTITURNO) -->
     <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
+    
+      
       
       <!-- Contenedor para iterar todos los turnos del día -->
       <ng-container *ngFor="let turno of obtenerTurnosAsignados(p, dia)">
@@ -168,10 +170,13 @@
         </div>
       </ng-container>
 
-      <!-- Botón para añadir turno (Siempre visible) -->
-      <button class="btn-add-soft mt-1" (click)="abrirModalAsignar(p, dia)">
-        <i class="pi pi-plus"></i>
-      </button>
+      <!-- Botón para añadir turno (Siempre visible si esta activo) -->
+     <!-- Ahora el botón es limpio y directo -->
+<button class="btn-add-soft mt-1" 
+        (click)="abrirModalAsignar(p, dia)"
+        title="Asignar turno">
+  <i class="pi pi-plus"></i>
+</button>
     </td>
 
     <!-- 3. COLUMNAS DE TOTALES -->

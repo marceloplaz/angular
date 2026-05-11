@@ -95,62 +95,122 @@
                     </div>
 
                     <!-- Indicadores y Buscador -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <div class="card border-0 shadow-sm p-3 bg-primary text-white h-100">
-                                <h6 class="small opacity-75">Servicios Asignados</h6>
-                                <h4 class="fw-bold mb-0">{{ misServicios().length }}</h4>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card border-0 shadow-sm p-3 border-start border-warning border-4 h-100">
-                                <h6 class="text-muted small">Estado Hoy</h6>
-                                <h4 class="fw-bold mb-0">Libre</h4>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card border-0 shadow-sm p-3 border-start border-success border-4 h-100">
-                                <h6 class="text-muted small">Horas Semanales</h6>
-                                <h4 class="fw-bold mb-0 text-success">36h / 40h</h4>
-                            </div>
-                        </div>
-                        
-                        <!-- BUSCADOR DE PROFESIONALES -->
-                        <div class="col-md-5">
-                            <div class="card p-3 shadow-sm border-0 h-100 position-relative">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="small">
-                                        <i class="bi bi-search text-primary me-2"></i>
-                                        <span class="text-muted fw-bold">Buscar Profesional</span>
-                                    </div>
-                                    @if (usuarioBuscadoId()) {
-                                        <button (click)="restablecerVistaPropia()" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" style="font-size: 0.7rem;">
-                                            <i class="bi bi-arrow-left-circle"></i> Mi Vista
-                                        </button>
-                                    }
-                                </div>
-                                
-                                <input 
-                                    type="text" 
-                                    class="form-control form-control-sm border-primary-subtle" 
-                                    placeholder="Escriba apellido del profesional..."
-                                    (input)="buscarUsuario($event)">
+                    
+                   
 
-                                <!-- Lista de resultados desplegable -->
-                                @if (listaPersonas().length > 0) {
-                                    <ul class="list-group position-absolute shadow-lg w-100" style="z-index: 1100; top: 100%; left: 0;">
-                                        @for (p of listaPersonas(); track p.id) {
-                                            <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center cursor-pointer p-2" 
-                                                (click)="seleccionarUsuario(p)">
-                                                <span class="small">{{ p.persona?.nombre_completo || p.name }}</span>
-                                                <span class="badge bg-light text-muted border" style="font-size: 0.6rem;">ID: {{ p.id }}</span>
-                                            </li>
-                                        }
-                                    </ul>
-                                }
-                            </div>
-                        </div>
-                    </div>
+
+
+
+
+                        <div class="row g-2 align-items-stretch">
+  <div class="col-md-2">
+    <div class="card shadow-sm border-0 h-100 bg-primary text-white" style="border-radius: 12px;">
+      <div class="card-body p-2 d-flex flex-column justify-content-center">
+        <p class="mb-1 fw-bold" style="font-size: 0.65rem; text-transform: uppercase;">Servicios</p>
+        <h2 class="mb-0 fw-bold">3</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
+      <div class="card-body p-2 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="text-muted fw-bold" style="font-size: 0.65rem;">VACACIÓN</span>
+          <i class="fas fa-calendar-check text-success" style="font-size: 0.8rem;"></i>
+        </div>
+        <h4 class="mb-2 fw-bold" style="color: #0ba044;">{{ saldoRestante }} <small class="fs-6 fw-normal">Días</small></h4>
+        
+        <div class="mt-auto">
+          <button (click)="irAFormulario('vacacion')" class="btn btn-sm w-100 mb-1 text-white fw-bold py-1" style="background-color: #166534; font-size: 0.6rem; border-radius: 6px;">
+            <i class="fas fa-plane-departure me-1"></i> FORM.  VACACION
+          </button>
+          <button (click)="irAFormulario('permiso')" class="btn btn-sm w-100 btn-outline-success fw-bold py-1" style="font-size: 0.6rem; border-radius: 6px; border: 1.5px solid #22c55e; color: #166534;">
+            <i class="fas fa-file-alt me-1"></i> FORM. PERMISO A CUENTA VACACION
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-2">
+    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
+      <div class="card-body p-2 d-flex flex-column justify-content-center">
+        <p class="text-muted mb-1 fw-bold" style="font-size: 0.65rem;">HORAS SEMANALES</p>
+        <h4 class="mb-0 fw-bold text-success">36h <span class="text-muted" style="font-size: 0.7rem;">/ 40h</span></h4>
+      </div>
+    </div>
+  </div>
+<div class="col-md-5">
+  <div class="card shadow-sm border-0 h-100" style="border-radius: 12px; background-color: #f8fafc;">
+    <div class="card-body p-2 d-flex flex-column justify-content-center position-relative">
+      
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        <div style="font-size: 0.7rem;">
+          <i class="fas fa-search text-primary me-1"></i>
+          <span class="text-muted fw-bold">Buscar Profesional</span>
+        </div>
+        @if (usuarioBuscadoId()) {
+          <button (click)="restablecerVistaPropia()" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" style="font-size: 0.65rem;">
+            <i class="fas fa-arrow-left"></i> Mi Vista
+          </button>
+        }
+      </div>
+      
+      <div class="input-group input-group-sm">
+        <input type="text" 
+               #txtBuscar
+               (keyup)="buscarUsuario(txtBuscar.value)" 
+               class="form-control border-2 shadow-none" 
+               placeholder="Escriba apellido..."
+               style="border-radius: 8px; border-color: #e2e8f0;">
+      </div>
+
+
+@if (listaPersonas().length > 0) {
+  <div class="list-group position-absolute shadow-lg w-100" 
+       style="top: 100%; left: 0; z-index: 1050; max-height: 250px; overflow-y: auto; border-radius: 8px; margin-top: 5px; border: 1px solid #dee2e6; background: white;">
+    
+    @for (u of listaPersonas(); track u.id) {
+      <button type="button" 
+              (click)="seleccionarUsuario(u); txtBuscar.value = ''"
+              class="list-group-item list-group-item-action border-0 py-2 px-3 d-flex align-items-center result-item">
+        
+        <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+          <i class="fas fa-user-md text-primary"></i>
+        </div>
+
+        <div class="d-flex flex-column text-start">
+          <span class="fw-bold text-dark" style="font-size: 0.95rem; line-height: 1.2;">
+            {{ u.persona?.nombre_completo | uppercase }}
+          </span>
+          <small class="text-muted" style="font-size: 0.7rem;">
+            {{ u.categoria?.nombre || 'Personal del Hospital' }}
+          </small>
+        </div>
+
+        <i class="fas fa-chevron-right ms-auto text-muted small"></i>
+      </button>
+    
+    }
+        </div>
+      }
+        </div>
+      </div>
+    </div>
+  </div>
+
+                                
+
+
+
+
+
+
+
+
+                                
+      
 
                     <div class="row g-4">
                         <!-- CALENDARIO -->

@@ -95,3 +95,21 @@
 .text-orange {
   color: #fd7e14;
 }
+/* Botón bloqueado: se vuelve gris y muestra un candado */
+.btn-disabled-grayscale {
+    border-color: #d1d5db !important;
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+}
+
+/* Fila inactiva: efecto de "congelado" */
+.row-inactivo {
+    background-color: #f9fafb !important;
+    border-left: 4px solid #9ca3af;
+}
+
+.text-inactivo {
+    color: #9ca3af !important;
+}
