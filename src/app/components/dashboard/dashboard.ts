@@ -89,25 +89,51 @@ generarPDFMensualGeneral(): void {
 
 private obtenerIdDesdeToken(): number | null {
   const token = this.authService.getToken();
-  if (!token) return null;
+  
+  // 1. Verificación de existencia y formato (un JWT debe tener 2 puntos / 3 partes)
+  if (!token || token.split('.').length !== 3) {
+    return null;
+  }
 
   try {
-    // Decodificamos la base64 del payload (segunda parte del JWT)
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    // 2. Extraer el payload (la parte media)
+    const base64Url = token.split('.')[1];
+
+    // 3. CORRECCIÓN CRÍTICA: atob() falla con caracteres Base64URL (usados en JWT)
+    // Reemplazamos '-' por '+' y '_' por '/' para que sea Base64 estándar
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+    // 4. Decodificación segura (maneja caracteres latinos/especiales si los hay)
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    const payload = JSON.parse(jsonPayload);
     
-    // En Laravel Sanctum/Passport, el ID suele venir en 'sub' o 'prv'
-    // Puedes hacer un console.log(payload) la primera vez para estar seguro
+    // 5. Retornar el ID (Laravel usa 'sub' para el ID del usuario)
     return payload.sub ? Number(payload.sub) : null;
+
   } catch (e) {
-    console.error("Error crítico: No se pudo decodificar la identidad del token", e);
+    // Si el error persiste aquí, el token está corrupto o mal formado
+    console.error("Error decodificando el token:", e);
     return null;
   }
 }
-  
-  public esInicio = computed(() => {
-    const url = this.urlSignal();
-    return url === '/dashboard' || url === '/dashboard/';
-  });
+
+public esInicio = computed(() => {
+  // Asegúrate de que urlSignal() se actualice con los eventos del Router
+  const url = this.urlSignal();
+  return url === '/dashboard' || url === '/dashboard/';
+});
+
+
+
+
+
+
 
   // Esto fallaba porque el import traía una versión vieja del servicio
   public servicioActivo = this.servicioService.servicioSeleccionado;

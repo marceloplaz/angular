@@ -13,7 +13,7 @@ import { ServiciosComponent } from './components/servicios/servicios';
 import { GestionPersonalServicioComponent } from './components/servicios/gestion-personal-servicio/gestion-personal-servicio';
 import { CategoriasComponent } from './components/categorias/categorias';
 import { IncidenciasComponent } from './components/incidencias/incidencias';
-import { VacacionesComponent } from './components/vacaciones/vacaciones';
+import { VacacionComponent } from './components/vacaciones/vacaciones';
 import { NovedadComponent } from './components/novedad/novedad';
 import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
 
@@ -77,7 +77,7 @@ export const routes: Routes = [
 },
       { 
         path: 'vacaciones', 
-        component: VacacionesComponent, 
+        component: VacacionComponent, 
         canActivate: [roleGuard], 
         data: { roles: [...ROLES_JEFATURAS,'jefa_enfermeras_servicio'] } 
       },

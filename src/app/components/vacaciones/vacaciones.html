@@ -1,1 +1,142 @@
-<p>vacaciones works!</p>
+<div class="table-responsive shadow-sm rounded">
+
+  <!-- Barra de Filtros Reintegrada -->
+  <div class="card mb-3 border-0 shadow-sm">
+    <div class="card-body bg-light">
+      <div class="row g-2">
+        <!-- Buscador por Nombre -->
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-success"></i>
+            </span>
+            <input type="text" 
+                   class="form-control border-start-0" 
+                   placeholder="Buscar Personal" 
+                   [(ngModel)]="filtros.termino"
+                   (input)="aplicarFiltros()">
+          </div>
+        </div>
+
+        <!-- Filtro Gestión -->
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="filtros.gestion" (change)="aplicarFiltros()">
+            <option value="">Gestión (Todas)</option>
+            <option *ngFor="let g of listadoGestiones" [value]="g.id">{{ g['año'] }}</option>
+          </select>
+        </div>
+
+       
+
+        <!-- Botón Limpiar -->
+        <div class="col-md-1">
+          <button class="btn btn-outline-secondary w-100" (click)="filtros.termino=''; filtros.gestion=''; filtros.servicio=''; filtros.categoria=''; aplicarFiltros()">
+            <i class="bi bi-eraser"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Datos -->
+  <table class="table table-hover align-middle">
+    <thead style="background-color: #166534; color: white;">
+      <tr class="text-center">
+        <th>Especialista</th>
+        <th>Ingreso Inst.</th>
+        <th>Servicio</th>
+      <th>Categoría</th>
+        <th>Periodo (Desde-Hasta)</th>
+        <th>Programación (Inicio-Fin)</th>
+        <th>Días (Der./Cons./Saldo)</th>
+        <th>Permiso Cuenta</th>
+        <th>Motivo / Observaciones</th>
+        <th>Aprobado Por</th>
+        <th>Registro</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let v of vacacionesFiltradas" class="text-center">
+        <!-- Acceso anidado a user -> persona -->
+        <td class="fw-bold text-start">
+          {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
+        </td>
+
+        <td>
+          <small>{{ v.user?.persona?.fecha_ingreso_institucion | date:'dd/MM/yyyy' }}</small>
+        </td>
+
+        <td>
+        <span class="badge bg-info text-dark">
+        {{ v.servicio?.nombre || 'Sin Servicio' }}
+        </span>
+      </td>
+
+      <!-- Celda: Categoría -->
+      <td>
+        <span class="text-muted small fw-bold">
+       {{ $any(v.user)?.categoria?.nombre || 'General' }}
+        </span>
+      </td>
+
+
+        <td>
+          <span class="badge border text-dark bg-light">
+            {{ v.periodo_desde | date:'dd/MM/yy' }} / {{ v.periodo_hasta | date:'dd/MM/yy' }}
+          </span>
+        </td>
+
+        <td>
+          <div class="d-flex flex-column">
+            <span class="text-success fw-bold">{{ v.fecha_inicio | date:'dd/MM/yyyy' }}</span>
+            <span class="text-muted small">al {{ v.fecha_fin | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </td>
+
+        <td>
+          <div class="badge rounded-pill bg-dark me-1" title="Total Derecho">{{ v.total_dias_derecho }}</div>
+          <div class="badge rounded-pill bg-danger me-1" title="Consumidos">{{ v.dias_consumidos }}</div>
+          <div class="badge rounded-pill bg-success" title="Saldo Actual">{{ v.saldo_restante }}</div>
+        </td>
+
+        <td>
+          <span [class]="v.permiso_cuenta === 1 ? 'text-success' : 'text-danger'">
+            <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+            {{ v.permiso_cuenta === 1 ? 'Activado' : 'No Activado' }}
+          </span>
+        </td>
+
+        <td class="text-start">
+          <div class="fw-bold small text-uppercase">{{ v.motivo_tipo }}</div>
+          <div class="text-muted" style="font-size: 0.75rem;">{{ v.observaciones || 'Sin observaciones' }}</div>
+        </td>
+
+        <td>
+          <span class="text-primary small">
+            <i class="bi bi-person-badge"></i> {{ v.aprobado_por || 'Admin' }}
+          </span>
+        </td>
+
+        <td><small class="text-muted">{{ v.created_at | date:'shortDate' }}</small></td>
+
+        <td>
+          <span [ngClass]="{
+            'badge bg-secondary': v.estado === 0,
+            'badge bg-success': v.estado === 1,
+            'badge bg-danger': v.estado === 2
+          }">
+            {{ v.estado === 0 ? 'Sin asignar' : v.estado === 1 ? 'Asignado' : 'Rechazado' }}
+          </span>
+        </td>
+      </tr>
+
+      <!-- Mensaje de tabla vacía -->
+      <tr *ngIf="vacacionesFiltradas.length === 0">
+        <td colspan="12" class="text-center py-4 text-muted italic">
+          No se encontraron registros para los filtros aplicados.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

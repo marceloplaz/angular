@@ -1,0 +1,124 @@
+// Variables de color institucionales
+$hospital-dark-green: #166534; // Verde oscuro para encabezados
+$hospital-light-green: #22c55e; // Verde lima para acentos y saldos positivos
+$hospital-bg-light: #f8fafc;
+$text-muted: #64748b;
+$danger-red: #ef4444;
+
+.table-container {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+
+  .table {
+    margin-bottom: 0;
+    
+    thead {
+      background-color: $hospital-dark-green;
+      color: white;
+      
+      th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem;
+        border: none;
+      }
+    }
+
+    tbody {
+      tr {
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+          background-color: rgba($hospital-light-green, 0.05);
+        }
+
+        td {
+          padding: 1rem;
+          vertical-align: middle;
+          border-bottom: 1px solid #f1f5f9;
+          color: #334155;
+        }
+      }
+    }
+  }
+}
+
+// Estilos para los campos de "Días" (Pills)
+.badge-days {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 35px;
+  text-align: center;
+
+  &.total { background-color: #334155; color: white; }
+  &.consumido { background-color: $danger-red; color: white; }
+  &.saldo { background-color: $hospital-light-green; color: white; }
+}
+
+// Estilos para los Estados (TINYINT)
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &.status-0 { background-color: #e2e8f0; color: #475569; } // Sin asignar
+  &.status-1 { background-color: rgba($hospital-light-green, 0.15); color: $hospital-dark-green; } // Asignado
+  &.status-2 { background-color: rgba($danger-red, 0.1); color: $danger-red; } // Rechazado
+}
+
+// Estilo para Permiso Cuenta (Activado/Inactivado)
+.permiso-toggle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  
+  .bi { font-size: 1.1rem; vertical-align: middle; }
+  &.active { color: $hospital-light-green; }
+  &.inactive { color: $text-muted; }
+}
+
+// Formato de fechas y periodos
+.date-container {
+  display: flex;
+  flex-direction: column;
+  
+  .primary-date {
+    font-weight: 600;
+    color: $hospital-dark-green;
+  }
+  
+  .secondary-date {
+    font-size: 0.7rem;
+    color: $text-muted;
+  }
+}
+
+// Estilo de Buscadores (Filtros)
+.filter-card {
+  border-left: 5px solid $hospital-dark-green;
+  background: white;
+  
+  .form-label {
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .form-control, .form-select {
+    border-color: #e2e8f0;
+    &:focus {
+      border-color: $hospital-light-green;
+      box-shadow: 0 0 0 2px rgba($hospital-light-green, 0.2);
+    }
+  }
+}
