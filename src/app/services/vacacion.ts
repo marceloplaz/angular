@@ -12,10 +12,11 @@ export class VacacionService {
   private apiUrl = `${environment.apiUrl}/vacaciones`;
 private rootApiUrl = environment.apiUrl;
   
-  /**
-   * Obtiene todas las solicitudes pendientes (Estado 0)
-   * Ideal para el panel de administración/jefatura.
-   */
+
+programarFechas(id: number, datos: { fecha_inicio: string, fecha_fin: string }): Observable<any> {
+        return this.http.put(`${this.apiUrl}/programar/${id}`, datos);
+  }
+
   getPendientes(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/pendientes`);
   }
@@ -84,4 +85,28 @@ getCategorias(): Observable<any[]> {
 
 
 
+  getHistorialKardex(userId: number): Observable<any> { // <--- Cambia any[] por any
+  return this.http.get<any>(`${this.apiUrl}/kardex/historial/${userId}`);
 }
+
+  /**
+   * Guarda un nuevo registro o actualiza uno existente en el Kardex
+   */
+  guardarKardex(datos: any): Observable<any> {
+    if (datos.id) {
+      // Si tiene ID, es una actualización
+      return this.http.put<any>(`${this.apiUrl}/kardex/${datos.id}`, datos);
+    } else {
+      // Si no tiene ID, es un registro nuevo
+      return this.http.post<any>(`${this.apiUrl}/kardex`, datos);
+    }
+  }
+
+  /**
+   * Elimina un registro del historial
+   */
+  eliminarRegistroKardex(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/kardex/${id}`);
+  }
+}
+

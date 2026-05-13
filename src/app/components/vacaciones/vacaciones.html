@@ -91,12 +91,28 @@
           </span>
         </td>
 
-        <td>
-          <div class="d-flex flex-column">
-            <span class="text-success fw-bold">{{ v.fecha_inicio | date:'dd/MM/yyyy' }}</span>
-            <span class="text-muted small">al {{ v.fecha_fin | date:'dd/MM/yyyy' }}</span>
-          </div>
-        </td>
+        <!-- En tu tabla principal de vacaciones -->
+    <td class="text-center">
+    <a href="javascript:void(0)" 
+     class="badge bg-light text-dark border text-decoration-none p-2 shadow-sm"
+     (click)="abrirModalKardex(v)"
+     data-bs-toggle="modal" 
+     data-bs-target="#modalKardex">
+    {{ v.periodo_desde | date:'dd/MM/yy' }} / {{ v.periodo_hasta | date:'dd/MM/yy' }}
+    </a>
+    </td>
+     
+    <td class="text-center">
+    <div class="d-flex flex-column gap-1">
+    <input type="date" class="form-control form-control-sm" 
+           [(ngModel)]="v.fecha_inicio" 
+           (change)="actualizarProgramacion(v)">
+    <small class="text-muted">al</small>
+    <input type="date" class="form-control form-control-sm" 
+           [(ngModel)]="v.fecha_fin" 
+           (change)="actualizarProgramacion(v)">
+  </div>
+    </td>
 
         <td>
           <div class="badge rounded-pill bg-dark me-1" title="Total Derecho">{{ v.total_dias_derecho }}</div>
@@ -143,4 +159,143 @@
       </tr>
     </tbody>
   </table>
+</div>
+
+
+
+
+<!-- MODAL KARDEX DE VACACIONES -->
+<div class="modal fade" id="modalKardex" tabindex="-1" aria-labelledby="modalKardexLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalKardexLabel">
+          <i class="bi bi-card-checklist me-2"></i>Kardex de Control de Vacaciones - Hospital San Juan de Dios
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" (click)="resetFormKardex()"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- SECCIÓN 1: INFORMACIÓN DEL PERSONAL (Tarjeta Física) -->
+        <div class="alert alert-secondary border-0 mb-4 shadow-sm">
+          <div class="row g-3">
+            <div class="col-md-5">
+              <span class="text-muted small d-block">Nombre y Apellidos:</span>
+              <strong class="text-uppercase text-primary">{{ usuarioSeleccionado?.persona?.nombre_completo }}</strong>
+            </div>
+            <div class="col-md-3">
+              <span class="text-muted small d-block">C.I. N°:</span>
+              <strong>{{ usuarioSeleccionado?.persona?.carnet_identidat }}</strong>
+            </div>
+            <div class="col-md-4">
+              <span class="text-muted small d-block">Fecha de Ingreso:</span>
+              <strong>{{ usuarioSeleccionado?.persona?.fecha_ingreso_institucion | date:'dd/MM/yyyy' }}</strong>
+            </div>
+            <div class="col-md-5">
+              <span class="text-muted small d-block">Cargo / Profesión:</span>
+              <strong class="text-uppercase">{{ usuarioSeleccionado?.persona?.cargo || 'PERSONAL DE SALUD' }}</strong>
+            </div>
+            <div class="col-md-3">
+              <span class="text-muted small d-block">Fecha Nacimiento:</span>
+              <strong>{{ usuarioSeleccionado?.persona?.fecha_nacimiento | date:'dd/MM/yyyy' }}</strong>
+            </div>
+            <div class="col-md-4">
+              <span class="text-muted small d-block">Item No:</span>
+              <span class="badge bg-dark fs-6">{{ usuarioSeleccionado?.persona?.item_no || 'S/I' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: FORMULARIO DE REGISTRO -->
+        <div class="card mb-4 border-primary shadow-sm">
+          <div class="card-header bg-primary text-white py-1">
+            <small class="fw-bold">{{ nuevoRegistro.id ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO DE CONTROL' }}</small>
+          </div>
+          <div class="card-body bg-light">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Gestión Cumplida</label>
+                <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.gestiones_cumplidas" placeholder="Ej: 2021-2022">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold">CAS (Días)</label>
+                <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.cas_calificacion">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold">Días Derecho</label>
+                <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.dias_derecho">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Descripción / Observación</label>
+                <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.descripcion" placeholder="Detalles adicionales">
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary btn-sm w-100 shadow-sm" (click)="enviarKardex()">
+                  <i class="bi bi-save me-1"></i> {{ nuevoRegistro.id ? 'Actualizar' : 'Registrar' }}
+                </button>
+              </div>
+            </div>
+            <div class="mt-2 text-end">
+              <span class="badge bg-info text-dark">
+                Saldo a generar: {{ (nuevoRegistro.cas_calificacion || 0) + (nuevoRegistro.dias_derecho || 0) }} días
+              </span>
+              <button *ngIf="nuevoRegistro.id" class="btn btn-link btn-sm text-danger p-0 ms-2" (click)="resetFormKardex()">Cancelar edición</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: TABLA DE HISTORIAL -->
+        <div class="table-responsive shadow-sm" style="max-height: 350px;">
+          <table class="table table-bordered table-hover text-center align-middle mb-0">
+            <thead class="table-dark small sticky-top">
+              <tr>
+                <th style="width: 15%;">GESTIÓN</th>
+                <th style="width: 10%;">CAS (Días)</th>
+                <th style="width: 10%;">DERECHO</th>
+                <th style="width: 20%;">PROGRAMACIÓN (DEL - AL)</th>
+                <th style="width: 25%;">DESCRIPCIÓN</th>
+                <th style="width: 10%;">SALDO</th>
+                <th style="width: 10%;">ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody class="small">
+              <tr *ngFor="let item of historialKardex" [class.table-warning]="item.id === nuevoRegistro.id">
+                <td class="fw-bold">{{ item.gestiones_cumplidas }}</td>
+                <td>{{ item.cas_calificacion }}</td>
+                <td>{{ item.dias_derecho }}</td>
+                <td>
+                  <span class="text-muted">{{ item.fecha_inicio | date:'dd/MM/yy' }}</span> 
+                  <i class="bi bi-arrow-right mx-1 small text-muted"></i>
+                  <span class="text-muted">{{ item.fecha_fin | date:'dd/MM/yy' }}</span>
+                </td>
+                <td class="text-start">{{ item.descripcion }}</td>
+                <td class="fw-bold text-primary bg-light">{{ item.saldo_restante }}</td>
+                <td>
+                  <div class="btn-group">
+                    <button class="btn btn-xs btn-outline-warning border-0" (click)="cargarParaEditar(item)" title="Editar">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-xs btn-outline-danger border-0" (click)="eliminarRegistro(item.id)" title="Eliminar">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="historialKardex.length === 0">
+                <td colspan="7" class="py-4 text-muted">
+                  <i class="bi bi-info-circle me-1"></i> No existen registros históricos para este usuario.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" (click)="resetFormKardex()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
 </div>
