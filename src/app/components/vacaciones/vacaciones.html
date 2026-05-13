@@ -63,10 +63,14 @@
           {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
         </td>
 
-        <td>
-          <small>{{ v.user?.persona?.fecha_ingreso_institucion | date:'dd/MM/yyyy' }}</small>
-        </td>
-
+       <td class="text-center">
+  <small class="fw-bold">
+    {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
+    <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
+      ---
+    </ng-container>
+  </small>
+</td>
         <td>
         <span class="badge bg-info text-dark">
         {{ v.servicio?.nombre || 'Sin Servicio' }}

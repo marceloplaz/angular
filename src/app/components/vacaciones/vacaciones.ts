@@ -46,19 +46,15 @@ export class VacacionComponent implements OnInit {
   this.vacacionService.getCategorias().subscribe(res => this.listadoCategorias = res);
 }
  
-
-
 cargarVacaciones() {
   this.vacacionService.getPendientes().subscribe({
     next: (res: any) => {
-      // Si res es el array directo, lo usamos. Si viene dentro de .data, extraemos eso.
-      const listaFinal = Array.isArray(res) ? res : (res.data || []);
-      
-      this.vacaciones = listaFinal;
+      // Acceso correcto al nuevo formato del backend
+      this.vacaciones = res.data || []; 
       this.vacacionesFiltradas = [...this.vacaciones];
       this.aplicarFiltros();
     },
-    error: (err) => console.error("Error al cargar:", err)
+    error: (err) => console.error("Error al cargar datos:", err)
   });
 }
  
