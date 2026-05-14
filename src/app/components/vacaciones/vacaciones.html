@@ -46,7 +46,8 @@
         <th>Ingreso Inst.</th>
         <th>Servicio</th>
       <th>Categoría</th>
-        <th>Periodo (Desde-Hasta)</th>
+        <th>Gestiones_Cumplidas</th>
+      <th>Periodo (Desde-Hasta)</th>
         <th>Programación (Inicio-Fin)</th>
         <th>Días (Der./Cons./Saldo)</th>
         <th>Permiso Cuenta</th>
@@ -82,6 +83,13 @@
         <span class="text-muted small fw-bold">
        {{ $any(v.user)?.categoria?.nombre || 'General' }}
         </span>
+      </td>
+      <td>
+        <input type="text" 
+               [(ngModel)]="v.gestiones_cumplidas" 
+               class="form-control form-control-sm text-center font-weight-bold" 
+               style="width: 110px; background-color: #f8f9fa;"
+               readonly>
       </td>
 
 
