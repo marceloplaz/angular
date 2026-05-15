@@ -4,9 +4,10 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth';
 import Swal from 'sweetalert2';
 import { Vacacion } from 'src/app/interfaces/vacacion';
-import { FormsModule } from '@angular/forms';
+
 import { bootstrapApplication } from '@angular/platform-browser';
 declare var bootstrap: any;
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-vacacion',
@@ -246,7 +247,7 @@ abrirModalKardex(v: any) {
     // Inicializamos fechas por si acaso se usará el formulario de salida
     fecha_inicio: null,
     fecha_fin: null,
-    motivo_tipo: 'VACACION_ANUAL'
+    motivo_tipo: 'PERMISO CUENTA VACACION'
   };
 
   // 3. Cargamos el historial del usuario
@@ -403,38 +404,46 @@ calcularDiasKardex() {
   }
 }
 
-
 guardarSalidaKardex() {
   if (this.diasExcedidos) {
     Swal.fire('Error', 'Los días superan el saldo disponible', 'error');
     return;
   }
 
-  // Creamos el payload limpiando explícitamente los campos de "Control"
-  // Esto evita que se guarde un registro mixto
   const payload = {
     ...this.nuevoRegistro,
-    dias_solicitados: this.diasCalculadosKardex, // Valor calculado (el -)
-    cas_calificacion: 0,   // Forzamos a 0 para que no sume
-    dias_derecho: 0,       // Forzamos a 0 para que no sume
+    dias_solicitados: this.diasCalculadosKardex,
+    fecha_retorno: this.nuevoRegistro.fecha_retorno,
+    fecha_solicitud: this.nuevoRegistro.fecha_solicitud,
+    cas_calificacion: 0,
+    dias_derecho: 0,
     tipo: 'SALIDA' 
   };
 
   this.vacacionService.guardarKardex(payload).subscribe({
     next: (res: any) => {
       if(res.res) {
-        // Usamos el ID del usuario seleccionado para recargar la tabla correcta
+        // 1. Recarga el historial del modal (Kardex)
         this.cargarHistorial(this.usuarioSeleccionado.id);
+        
+        // 2. IMPORTANTE: Recarga la tabla principal de vacaciones
+        // Llama aquí a la función que carga tu lista principal (la de atrás)
+     this.aplicarFiltros();
+
         this.resetFormKardex();
-        Swal.fire('Éxito', 'Permiso registrado y saldo descontado correctamente', 'success');
+        Swal.fire('Éxito', 'Permiso registrado, saldo descontado y fechas sincronizadas', 'success');
       }
     },
     error: (err) => {
       console.error('Error al registrar salida:', err);
-      Swal.fire('Error', 'No se pudo registrar la salida en el servidor', 'error');
+      // Muestra el error que viene del backend (ej. "Saldo insuficiente")
+      const mensajeError = err.error?.mensaje || 'No se pudo registrar la salida';
+      Swal.fire('Error', mensajeError, 'error');
     }
   });
 }
+
+
 
 calcularSaldoAcumulado(index: number): number {
     let saldoTotal = 0;
