@@ -22,7 +22,14 @@ export class VacacionComponent implements OnInit {
   listadoServicios: any[] = [];
   listadoCategorias: any[] = [];
   historialKardex: any[] = [];
+  diasExcedidos: boolean = false;
   usuarioSeleccionado: any = null;
+  vSeleccionada: any = null;
+  diasCalculadosModal: number = 0;
+  diasCalculadosKardex: number = 0;
+  public historial: any[] = [];  
+
+
 
   // Filtros flexibles para la interfaz
   filtros = {
@@ -40,8 +47,12 @@ nuevoRegistro: any = {
   gestiones_cumplidas: '',
   cas_calificacion: 0,
   dias_derecho: 20,
-  descripcion: ''
-};
+  descripcion: '',
+  fecha_inicio: null,
+  fecha_fin: null,
+    motivo_tipo: 'VACACION_ANUAL',
+}
+
 
   constructor(
     private vacacionService: VacacionService,
@@ -218,26 +229,34 @@ cargarVacaciones() {
 }
 
 abrirModalKardex(v: any) {
-  // 1. Asignamos el usuario para la cabecera (esto llena Nombre, CI, Fecha Ingreso, etc.)
+  // 1. Asignamos el usuario para la cabecera
   this.usuarioSeleccionado = v.user;
 
-  // 2. Preparamos el objeto para un nuevo registro interno (Kardex)
-  // Limpiamos datos antiguos y seteamos las llaves foráneas necesarias
+  // 2. Preparamos el objeto con los datos que YA vienen en la fila 'v'
   this.nuevoRegistro = {
-    user_id: v.usuario_id,
+    user_id: v.usuario_id || v.user_id,
     gestion_id: v.gestion_id,
     servicio_id: v.servicio_id,
-    cas_calificacion: 0,
-    dias_derecho: 0,
-    gestiones_cumplidas: '',
-    descripcion: ''
+    // AQUÍ ESTÁ LO QUE FALTABA: Precargamos los valores de la fila
+    cas_calificacion: v.cas_calificacion || 0, 
+    dias_derecho: v.total_dias_derecho || v.dias_derecho || 0,
+    gestiones_cumplidas: v.gestiones_cumplidas || '',
+    descripcion: '', // Se deja vacío para que el usuario escriba si desea
+    
+    // Inicializamos fechas por si acaso se usará el formulario de salida
+    fecha_inicio: null,
+    fecha_fin: null,
+    motivo_tipo: 'VACACION_ANUAL'
   };
 
-  // 3. Cargamos el historial de la tabla 'vacacion_kardex' (la carpeta física digitalizada)
-  this.cargarHistorial(v.usuario_id);
+  // 3. Cargamos el historial del usuario
+  this.cargarHistorial(this.nuevoRegistro.user_id);
 
-  // 4. Disparamos el modal de Bootstrap
-  // Nota: Si usas Bootstrap 5 estándar en Angular, asegúrate de que 'bootstrap' esté disponible globalmente
+  // 4. Reiniciamos los cálculos de días del modal para que no arrastre datos previos
+  this.diasCalculadosKardex = 0;
+  this.diasExcedidos = false;
+
+  // 5. Disparamos el modal
   const modalElement = document.getElementById('modalKardex');
   if (modalElement) {
     const modal = new bootstrap.Modal(modalElement);
@@ -245,22 +264,54 @@ abrirModalKardex(v: any) {
   }
 }
 
-// 2. Cargar historial del usuario
 cargarHistorial(userId: number) {
-  this.vacacionService.getHistorialKardex(userId).subscribe(res => {
-    if(res.res) {
-      this.historialKardex = res.data;
+  this.vacacionService.getHistorialKardex(userId).subscribe({
+    next: (res) => {
+      if (res.res) {
+        // 1. Asignamos los datos
+        this.historialKardex = res.data;
+
+        // 2. IMPORTANTE: Si tu backend no envía los datos ordenados, 
+        // ordénalos aquí por ID o Fecha de forma descendente.
+        this.historialKardex.sort((a, b) => b.id - a.id);
+
+        // 3. Opcional: Actualizar el saldo en el objeto del usuario actual
+        if (this.historialKardex.length > 0) {
+          this.usuarioSeleccionado.saldo_actual = this.historialKardex[0].saldo_restante;
+        }
+      }
+    },
+    error: (err) => {
+      console.error('Error al obtener el historial del Hospital:', err);
     }
   });
 }
 
+
 // 3. Guardar el registro (Suma automática ocurre en el controlador)
 enviarKardex() {
-  this.vacacionService.guardarKardex(this.nuevoRegistro).subscribe(res => {
-    if(res.res) {
-      this.cargarHistorial(this.nuevoRegistro.user_id);
-      this.resetFormKardex(); // Limpiar para el siguiente
-      Swal.fire('Guardado', 'La tarjeta de control ha sido actualizada', 'success');
+  // 1. Creamos el payload específico para INGRESO
+  const payload = {
+    ...this.nuevoRegistro,
+    gestion_id: this.nuevoRegistro.gestion_id || this.usuarioSeleccionado.gestion_id, 
+    fecha_inicio: null,
+    fecha_fin: null,
+    dias_solicitados: 0,
+    tipo: 'INGRESO' 
+  };
+
+  // 2. Llamamos al servicio pasando el payload
+  this.vacacionService.guardarKardex(payload).subscribe({
+    next: (res: any) => {
+      if(res.res) {
+        this.cargarHistorial(this.usuarioSeleccionado.id);
+        this.resetFormKardex();
+        Swal.fire('Guardado', 'La tarjeta de control ha sido actualizada', 'success');
+      }
+    },
+    error: (err) => {
+      console.error('Error al guardar gestión:', err);
+      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   });
 }
@@ -270,15 +321,37 @@ cargarParaEditar(item: any) {
   this.nuevoRegistro = { ...item }; // Copiamos los datos al formulario
 }
 
+
+
 resetFormKardex() {
+  // 1. Capturamos los IDs importantes antes de limpiar el objeto
+  const userId = this.usuarioSeleccionado?.id;
+  const gestionId = this.nuevoRegistro?.gestion_id;
+  const servicioId = this.nuevoRegistro?.servicio_id;
+
+  // 2. Limpiamos el objeto por completo
   this.nuevoRegistro = { 
-    id: null, user_id: this.usuarioSeleccionado.id, 
-    gestion_id: this.nuevoRegistro.gestion_id, 
-    servicio_id: this.nuevoRegistro.servicio_id,
-    gestiones_cumplidas: '', cas_calificacion: 0, 
-    dias_derecho: 20, descripcion: '' 
+    id: null, 
+    user_id: userId, 
+    gestion_id: gestionId, 
+    servicio_id: servicioId,
+    gestiones_cumplidas: '', 
+    cas_calificacion: 0, 
+    dias_derecho: 20, 
+    descripcion: '',
+    
+    // Campos para la Salida/Permiso
+    fecha_inicio: null,
+    fecha_fin: null,
+    motivo_tipo: 'VACACION_ANUAL',
+    dias_solicitados: 0
   };
+
+  // 3. Reseteamos los estados visuales del Hospital
+  this.diasCalculadosKardex = 0;
+  this.diasExcedidos = false;
 }
+
 
 eliminarRegistro(id: number) {
   if (confirm('¿Está seguro de eliminar este registro del historial?')) {
@@ -294,4 +367,99 @@ eliminarRegistro(id: number) {
     });
   }
 }
+
+prepararPermiso(v: any) {
+  this.vSeleccionada = { ...v }; // Clonamos para no afectar la tabla antes de guardar
+}
+
+
+calcularDiasKardex() {
+  if (this.nuevoRegistro.fecha_inicio && this.nuevoRegistro.fecha_fin) {
+    const inicio = new Date(this.nuevoRegistro.fecha_inicio + 'T00:00:00');
+    const fin = new Date(this.nuevoRegistro.fecha_fin + 'T00:00:00');
+    
+    if (fin < inicio) {
+      this.diasCalculadosKardex = 0;
+      this.diasExcedidos = false;
+      return;
+    }
+
+    const diff = fin.getTime() - inicio.getTime();
+    this.diasCalculadosKardex = Math.round(diff / (1000 * 60 * 60 * 24)) + 1;
+    
+    // --- CAMBIO CLAVE AQUÍ ---
+    // En lugar de confiar en un campo de la BD que puede estar en 0,
+    // usamos tu función que suma y resta todo el historial.
+    // El índice 0 es el saldo más reciente (el de arriba de la tabla).
+    const saldoDisponibleReal = this.calcularSaldoAcumulado(0);
+    
+    // Validamos: si pide más de lo que acumuló, excedido es true.
+    this.diasExcedidos = (this.diasCalculadosKardex > saldoDisponibleReal);
+    // -------------------------
+
+  } else {
+    this.diasCalculadosKardex = 0;
+    this.diasExcedidos = false;
+  }
+}
+
+
+guardarSalidaKardex() {
+  if (this.diasExcedidos) {
+    Swal.fire('Error', 'Los días superan el saldo disponible', 'error');
+    return;
+  }
+
+  // Creamos el payload limpiando explícitamente los campos de "Control"
+  // Esto evita que se guarde un registro mixto
+  const payload = {
+    ...this.nuevoRegistro,
+    dias_solicitados: this.diasCalculadosKardex, // Valor calculado (el -)
+    cas_calificacion: 0,   // Forzamos a 0 para que no sume
+    dias_derecho: 0,       // Forzamos a 0 para que no sume
+    tipo: 'SALIDA' 
+  };
+
+  this.vacacionService.guardarKardex(payload).subscribe({
+    next: (res: any) => {
+      if(res.res) {
+        // Usamos el ID del usuario seleccionado para recargar la tabla correcta
+        this.cargarHistorial(this.usuarioSeleccionado.id);
+        this.resetFormKardex();
+        Swal.fire('Éxito', 'Permiso registrado y saldo descontado correctamente', 'success');
+      }
+    },
+    error: (err) => {
+      console.error('Error al registrar salida:', err);
+      Swal.fire('Error', 'No se pudo registrar la salida en el servidor', 'error');
+    }
+  });
+}
+
+calcularSaldoAcumulado(index: number): number {
+    let saldoTotal = 0;
+    
+    // 1. Validar que el array tenga datos
+    if (!this.historialKardex || this.historialKardex.length === 0) return 0;
+
+    // 2. IMPORTANTE: Como la tabla muestra lo más nuevo arriba (descendente),
+    // para calcular el saldo de una fila "X", debemos sumar TODO lo que
+    // ocurrió desde el principio de la historia hasta esa fila.
+    // Recorremos desde el final del array (lo más antiguo) hasta el index actual.
+    
+    for (let i = this.historialKardex.length - 1; i >= index; i--) {
+        const item = this.historialKardex[i];
+        
+        if (item.tipo === 'INGRESO') {
+            // Sumamos días ganados
+            saldoTotal += (Number(item.cas_calificacion || 0) + Number(item.dias_derecho || 0));
+        } else if (item.tipo === 'SALIDA') {
+            // Restamos días consumidos
+            saldoTotal -= Number(item.dias_solicitados || 0);
+        }
+    }
+    
+    return saldoTotal;
+}
+
 }

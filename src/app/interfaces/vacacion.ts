@@ -6,6 +6,18 @@ id?: number;
   categoria_id: number;
   nombre_completo: string;
   // Estructura anidada que viene en tu JSON
+  tipo: 'INGRESO' | 'SALIDA';
+
+  cas_calificacion: number; // El extra por antigüedad
+  dias_derecho: number;      // Los 15, 20 o 30 días base
+  gestiones_cumplidas: string; // Ejemplo: "2023-2024"
+
+  gestion?: {
+    id: number;
+    año: string | number; // Cambiado de 'nombre' a 'año'
+    activo: number;
+  };
+
   user?: {
     id: number;
     name: string;
@@ -49,4 +61,5 @@ id?: number;
   servicio_nombre?: string;
   gestion_año?: number;
   categoria_nombre?: string;
+
 }

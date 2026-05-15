@@ -122,18 +122,31 @@
   </div>
     </td>
 
-        <td>
-          <div class="badge rounded-pill bg-dark me-1" title="Total Derecho">{{ v.total_dias_derecho }}</div>
-          <div class="badge rounded-pill bg-danger me-1" title="Consumidos">{{ v.dias_consumidos }}</div>
-          <div class="badge rounded-pill bg-success" title="Saldo Actual">{{ v.saldo_restante }}</div>
-        </td>
+        <!-- Columna: Días (Der./Cons./Saldo) -->
+<td class="text-center">
+  <div class="d-flex flex-column align-items-center gap-1" 
+       (click)="prepararPermiso(v)" 
+       style="cursor: pointer;" 
+       data-bs-toggle="modal" 
+       data-bs-target="#modalPermisoCuenta">
+    <span class="badge bg-dark w-100">Der: {{ v.total_dias_derecho }}</span>
+    <span class="badge bg-danger w-100">Cons: {{ v.dias_consumidos }}</span>
+    <span class="badge bg-success w-100">Sald: {{ v.saldo_restante }}</span>
+  </div>
+</td>
 
-        <td>
-          <span [class]="v.permiso_cuenta === 1 ? 'text-success' : 'text-danger'">
-            <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
-            {{ v.permiso_cuenta === 1 ? 'Activado' : 'No Activado' }}
-          </span>
-        </td>
+<!-- Columna: Permiso Cuenta -->
+<td class="text-center">
+  <button class="btn btn-sm" 
+          [ngClass]="v.permiso_cuenta === 1 ? 'btn-success' : 'btn-outline-secondary'"
+          (click)="prepararPermiso(v)"
+          data-bs-toggle="modal" 
+          data-bs-target="#modalPermisoCuenta">
+    <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
+    <br>
+    <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
+  </button>
+</td>
 
         <td class="text-start">
           <div class="fw-bold small text-uppercase">{{ v.motivo_tipo }}</div>
@@ -194,7 +207,7 @@
             </div>
             <div class="col-md-3">
               <span class="text-muted small d-block">C.I. N°:</span>
-              <strong>{{ usuarioSeleccionado?.persona?.carnet_identidat }}</strong>
+              <strong>{{ usuarioSeleccionado?.persona?.carnet_identidad }}</strong>
             </div>
             <div class="col-md-4">
               <span class="text-muted small d-block">Fecha de Ingreso:</span>
@@ -215,95 +228,157 @@
           </div>
         </div>
 
-        <!-- SECCIÓN 2: FORMULARIO DE REGISTRO -->
-        <div class="card mb-4 border-primary shadow-sm">
-          <div class="card-header bg-primary text-white py-1">
-            <small class="fw-bold">{{ nuevoRegistro.id ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO DE CONTROL' }}</small>
-          </div>
-          <div class="card-body bg-light">
-            <div class="row g-3">
-              <div class="col-md-3">
-                <label class="form-label small fw-bold">Gestión Cumplida</label>
-                <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.gestiones_cumplidas" placeholder="Ej: 2021-2022">
-              </div>
-              <div class="col-md-2">
-                <label class="form-label small fw-bold">CAS (Días)</label>
-                <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.cas_calificacion">
-              </div>
-              <div class="col-md-2">
-                <label class="form-label small fw-bold">Días Derecho</label>
-                <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.dias_derecho">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-bold">Descripción / Observación</label>
-                <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.descripcion" placeholder="Detalles adicionales">
-              </div>
-              <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-primary btn-sm w-100 shadow-sm" (click)="enviarKardex()">
-                  <i class="bi bi-save me-1"></i> {{ nuevoRegistro.id ? 'Actualizar' : 'Registrar' }}
-                </button>
-              </div>
-            </div>
-            <div class="mt-2 text-end">
-              <span class="badge bg-info text-dark">
-                Saldo a generar: {{ (nuevoRegistro.cas_calificacion || 0) + (nuevoRegistro.dias_derecho || 0) }} días
-              </span>
-              <button *ngIf="nuevoRegistro.id" class="btn btn-link btn-sm text-danger p-0 ms-2" (click)="resetFormKardex()">Cancelar edición</button>
-            </div>
-          </div>
-        </div>
 
-        <!-- SECCIÓN 3: TABLA DE HISTORIAL -->
-        <div class="table-responsive shadow-sm" style="max-height: 350px;">
-          <table class="table table-bordered table-hover text-center align-middle mb-0">
-            <thead class="table-dark small sticky-top">
-              <tr>
-                <th style="width: 15%;">GESTIÓN</th>
-                <th style="width: 10%;">CAS (Días)</th>
-                <th style="width: 10%;">DERECHO</th>
-                <th style="width: 20%;">PROGRAMACIÓN (DEL - AL)</th>
-                <th style="width: 25%;">DESCRIPCIÓN</th>
-                <th style="width: 10%;">SALDO</th>
-                <th style="width: 10%;">ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody class="small">
-              <tr *ngFor="let item of historialKardex" [class.table-warning]="item.id === nuevoRegistro.id">
-                <td class="fw-bold">{{ item.gestiones_cumplidas }}</td>
-                <td>{{ item.cas_calificacion }}</td>
-                <td>{{ item.dias_derecho }}</td>
-                <td>
-                  <span class="text-muted">{{ item.fecha_inicio | date:'dd/MM/yy' }}</span> 
-                  <i class="bi bi-arrow-right mx-1 small text-muted"></i>
-                  <span class="text-muted">{{ item.fecha_fin | date:'dd/MM/yy' }}</span>
-                </td>
-                <td class="text-start">{{ item.descripcion }}</td>
-                <td class="fw-bold text-primary bg-light">{{ item.saldo_restante }}</td>
-                <td>
-                  <div class="btn-group">
-                    <button class="btn btn-xs btn-outline-warning border-0" (click)="cargarParaEditar(item)" title="Editar">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-xs btn-outline-danger border-0" (click)="eliminarRegistro(item.id)" title="Eliminar">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="historialKardex.length === 0">
-                <td colspan="7" class="py-4 text-muted">
-                  <i class="bi bi-info-circle me-1"></i> No existen registros históricos para este usuario.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <div class="modal-footer bg-light py-2">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" (click)="resetFormKardex()">Cerrar</button>
-      </div>
+        
 
-    </div>
+        <div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-primary shadow-sm h-100">
+            
+              <div class="card-header bg-primary text-white py-1">
+    <small class="fw-bold">{{ nuevoRegistro.id ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO DE CONTROL' }}</small>
   </div>
+
+
+            <div class="card-body bg-light">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Gestión Cumplida</label>
+                        <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.gestiones_cumplidas" placeholder="Ej: 2024-2025">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">CAS (Días)</label>
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.cas_calificacion">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Derecho</label>
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.dias_derecho">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">Observación</label>
+                        <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevoRegistro.descripcion" placeholder="Carga anual de días">
+                    </div>
+                    <div class="col-12 mt-2">
+                        <button class="btn btn-primary btn-sm w-100 shadow-sm" (click)="enviarKardex()">
+                            <i class="bi bi-cloud-arrow-up"></i> Registrar Gestión
+                        </button>
+                    </div>
+                     <div class="mt-2 text-end">
+      <span class="badge bg-info text-dark">
+        Saldo a generar: {{ (nuevoRegistro.cas_calificacion || 0) + (nuevoRegistro.dias_derecho || 0) }} días
+      </span>
+      <button *ngIf="nuevoRegistro.id" class="btn btn-link btn-sm text-danger p-0 ms-2" (click)="resetFormKardex()">Cancelar edición</button>
+    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-danger shadow-sm h-100">
+            <div class="card-header bg-danger text-white py-1 small fw-bold">
+                <i class="bi bi-dash-square-fill me-1"></i> REGISTRAR SALIDA / PERMISO
+            </div>
+            <div class="card-body" style="background-color: #fffafa;">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Desde</label>
+                        <input type="date" class="form-control form-control-sm border-danger" [(ngModel)]="nuevoRegistro.fecha_inicio" (change)="calcularDiasKardex()">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Hasta</label>
+                        <input type="date" class="form-control form-control-sm border-danger" [(ngModel)]="nuevoRegistro.fecha_fin" (change)="calcularDiasKardex()">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">Motivo del Permiso</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="nuevoRegistro.motivo_tipo">
+                            <option value="VACACION_ANUAL">VACACION ANUAL</option>
+                            <option value="A_CUENTA_VACACION">A CUENTA DE VACACIÓN</option>
+                            <option value="BAJA_MEDICA">BAJA MÉDICA (S/D)</option>
+                            <option value="TRAMITE_PERSONAL">TRAMITE PERSONAL</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <div class="d-flex justify-content-between align-items-center bg-white border p-2 rounded shadow-sm">
+                            <span class="small fw-bold text-muted text-uppercase">Días a Descontar:</span>
+                            <h5 class="mb-0" [class.text-danger]="diasExcedidos" [class.text-success]="!diasExcedidos && diasCalculadosKardex > 0">
+                                {{ diasCalculadosKardex }}
+                            </h5>
+                        </div>
+                        <div *ngIf="diasExcedidos" class="text-danger small fw-bold text-center mt-1">
+                             <i class="bi bi-exclamation-triangle"></i> ¡Excede el saldo disponible!
+                        </div>
+                    </div>
+                    <div class="col-12 mt-2">
+                        
+                        <button class="btn btn-danger btn-sm w-100 shadow-sm" 
+        (click)="guardarSalidaKardex()" 
+        [disabled]="diasExcedidos || !nuevoRegistro.fecha_inicio || !nuevoRegistro.fecha_fin || diasCalculadosKardex <= 0">
+    <i class="bi bi-person-dash"></i> Descontar del Kardex
+</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive shadow-sm border rounded" style="max-height: 350px;">
+    <table class="table table-bordered table-sm table-hover text-center align-middle mb-0">
+        <thead class="table-dark sticky-top small">
+            <tr>
+                <th style="width: 14%;">GESTIÓN</th>
+                <th style="width: 8%;">CAS</th>
+                <th style="width: 10%;">DER. (+)</th>
+                <th style="width: 10%;">CONS. (-)</th>
+                <th style="width: 20%;">PERIODO</th>
+                <th style="width: 20%;">MOTIVO</th>
+                <th style="width: 12%;">SALDO</th>
+                <th class="table-success text-dark">TOTAL SALDO</th>
+                <th style="width: 6%;">ACC.</th>
+            </tr>
+        </thead>
+      
+<tbody class="small bg-white">
+    <tr *ngFor="let item of historialKardex; let i = index" 
+        [class.table-success]="item.dias_derecho > 0" 
+        [class.table-warning]="item.dias_solicitados > 0">
+        
+        <td class="fw-bold">{{ item.gestiones_cumplidas }}</td>
+        <td>{{ item.cas_calificacion || 0 }}</td>
+        <td class="text-success fw-bold">{{ item.dias_derecho ? '+' + item.dias_derecho : '' }}</td>
+        
+        <td class="text-danger fw-bold">
+            <span *ngIf="item.dias_solicitados > 0">-{{ item.dias_solicitados }}</span>
+        </td>
+        
+        <td>
+            <div *ngIf="item.fecha_inicio" class="x-small">
+                {{ item.fecha_inicio | date:'dd/MM/yy' }} - {{ item.fecha_fin | date:'dd/MM/yy' }}
+            </div>
+        </td>
+
+        <td class="text-start">
+            <span class="badge bg-info text-dark x-small" *ngIf="item.motivo_tipo">{{ item.motivo_tipo }}</span>
+            <div class="text-truncate" style="max-width: 150px;">{{ item.descripcion || item.observaciones }}</div>
+        </td>
+
+        <td class="fw-bold text-primary bg-light" style="font-size: 1rem;">{{ item.saldo_restante }}</td>
+
+        <td class="table-success fw-bold text-dark">
+            {{ calcularSaldoAcumulado(i) }}
+        </td>
+
+        <td class="text-center">
+            <button class="btn btn-sm p-0 text-danger" (click)="eliminarRegistro(item.id)">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </td>
+    </tr>
+</tbody>
+
+
+    </table>
 </div>

@@ -53,20 +53,17 @@ programarFechas(id: number, datos: { fecha_inicio: string, fecha_fin: string }):
  
  
   getGestiones(): Observable<any[]> {
-  // Antes: .../api/v1/vacaciones/gestiones (ERROR 404/CORS)
-  // Ahora: .../api/v1/gestiones (CORRECTO)
+  
   return this.http.get<any[]>(`${this.rootApiUrl}/gestiones`);
 }
 
- getServicios(): Observable<any[]> {
-  // ❌ Antes usabas: ${this.apiUrl}/servicios-lista
-  // ✅ Ahora usa: rootApiUrl para que la ruta sea api/v1/servicios-lista
+  getServicios(): Observable<any[]> {
+   
   return this.http.get<any[]>(`${this.rootApiUrl}/servicios-lista`); 
 }
 
 getCategorias(): Observable<any[]> {
-  // ❌ Antes usabas: ${this.apiUrl}/categorias-lista
-  // ✅ Ahora usa: rootApiUrl para que la ruta sea api/v1/categorias-lista
+  
   return this.http.get<any[]>(`${this.rootApiUrl}/categorias-lista`);
 }
   
