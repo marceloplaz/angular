@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth';
 import Swal from 'sweetalert2';
 import { Vacacion } from 'src/app/interfaces/vacacion';
-
+import { forkJoin, of, Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { bootstrapApplication } from '@angular/platform-browser';
 declare var bootstrap: any;
 import { FormsModule } from '@angular/forms';
@@ -51,7 +52,10 @@ nuevoRegistro: any = {
   descripcion: '',
   fecha_inicio: null,
   fecha_fin: null,
-    motivo_tipo: 'VACACION_ANUAL',
+  fecha_solicitud: '', 
+    fecha_retorno: '',    
+  motivo_tipo: 'VACACION_ANUAL',
+
 }
 
 
@@ -76,32 +80,71 @@ nuevoRegistro: any = {
 cargarVacaciones() {
   this.vacacionService.getPendientes().subscribe({
     next: (res: any) => {
-      // Acceso correcto al nuevo formato del backend
-      this.vacaciones = res.data || []; 
-      this.vacacionesFiltradas = [...this.vacaciones];
-      this.aplicarFiltros();
+      const vacacionesBase = res.data || []; 
+      
+      if (vacacionesBase.length === 0) {
+        this.vacaciones = [];
+        this.vacacionesFiltradas = [];
+        return;
+      }
+
+      // Creamos el array de observables asegurando que devuelvan 'Observable<any>'
+      const peticionesKardex: Observable<any>[] = vacacionesBase.map((v: any) => {
+        const idUsuario = v.usuario_id || v.user_id;
+        if (idUsuario) {
+          return this.vacacionService.getHistorialKardex(idUsuario).pipe(
+            catchError((err) => {
+              console.error(`Error con el Kardex del usuario ${idUsuario}:`, err);
+              return of({ res: false, data: [] }); // Mantiene la estructura en caso de error
+            })
+          );
+        }
+        return of({ res: false, data: [] });
+      });
+
+      // Procesamos de forma masiva con forkJoin
+      forkJoin(peticionesKardex).subscribe(
+        (respuestasKardex: any[]) => {
+          this.vacaciones = vacacionesBase.map((v: any, index: number) => {
+            const responseHttp = respuestasKardex[index];
+            
+            // 🌟 CORRECCIÓN CLAVE: Extraemos el array plano de movimientos (.data)
+            const movimientosPuros = responseHttp && responseHttp.data ? responseHttp.data : [];
+
+            return {
+              ...v,
+              kardex_vacaciones: movimientosPuros
+            };
+          });
+
+          // Ahora que 'kardex_vacaciones' es un array real, ejecutamos el cálculo
+          this.calcularSaldosPorGestion();
+          this.vacacionesFiltradas = [...this.vacaciones];
+        },
+        (error) => {
+          console.error("Error crítico en forkJoin:", error);
+        }
+      );
     },
-    error: (err) => console.error("Error al cargar datos:", err)
+    error: (err) => {
+      console.error("Error al cargar datos base de vacaciones:", err);
+    }
   });
 }
- 
 
-  aplicarFiltros() {
-  console.log('Datos en bruto:', this.vacaciones);
-    const busqueda = this.filtros.termino.toLowerCase().trim();
+aplicarFiltros() {
+  const busqueda = this.filtros.termino.toLowerCase().trim();
 
   this.vacacionesFiltradas = this.vacaciones.filter(v => {
-    // Busca en el objeto anidado que vimos en tu JSON
     const nombrePersona = v.user?.persona?.nombre_completo?.toLowerCase() || '';
     const nombreAlternativo = v.nombre_completo?.toLowerCase() || '';
 
     const cumpleNombre = nombrePersona.includes(busqueda) || nombreAlternativo.includes(busqueda);
-    
-    // Filtros de ID (asegúrate de que coincidan con los IDs que vienen de Laravel)
     const cumpleGestion = !this.filtros.gestion || v.gestion_id?.toString() === this.filtros.gestion;
     const cumpleServicio = !this.filtros.servicio || v.servicio_id?.toString() === this.filtros.servicio;
+    const cumpleCategoria = !this.filtros.categoria || v.user?.categoria_id?.toString() === this.filtros.categoria;
 
-    return cumpleNombre && cumpleGestion && cumpleServicio;
+    return cumpleNombre && cumpleGestion && cumpleServicio && cumpleCategoria;
   });
 }
 
@@ -291,10 +334,16 @@ cargarHistorial(userId: number) {
 
 // 3. Guardar el registro (Suma automática ocurre en el controlador)
 enviarKardex() {
+  
+  
+  const hoy = new Date();
+  const tzOffset = hoy.getTimezoneOffset() * 60000;
+  const fechaActual = new Date(hoy.getTime() - tzOffset).toISOString().split('T')[0];
   // 1. Creamos el payload específico para INGRESO
   const payload = {
     ...this.nuevoRegistro,
     gestion_id: this.nuevoRegistro.gestion_id || this.usuarioSeleccionado.gestion_id, 
+    fecha_solicitud: this.nuevoRegistro.fecha_solicitud || fechaActual,
     fecha_inicio: null,
     fecha_fin: null,
     dias_solicitados: 0,
@@ -340,7 +389,8 @@ resetFormKardex() {
     cas_calificacion: 0, 
     dias_derecho: 20, 
     descripcion: '',
-    
+    fecha_solicitud: '', 
+    fecha_retorno: '',   
     // Campos para la Salida/Permiso
     fecha_inicio: null,
     fecha_fin: null,
@@ -415,6 +465,7 @@ guardarSalidaKardex() {
     dias_solicitados: this.diasCalculadosKardex,
     fecha_retorno: this.nuevoRegistro.fecha_retorno,
     fecha_solicitud: this.nuevoRegistro.fecha_solicitud,
+    
     cas_calificacion: 0,
     dias_derecho: 0,
     tipo: 'SALIDA' 
@@ -470,5 +521,34 @@ calcularSaldoAcumulado(index: number): number {
     
     return saldoTotal;
 }
+calcularSaldosPorGestion() {
+  if (!this.vacaciones || this.vacaciones.length === 0) return;
 
+  this.vacaciones = this.vacaciones.map((v: any) => {
+    const movimientos = v.kardex_vacaciones || [];
+
+    let totalDerecho = 0;
+    let totalConsumido = 0;
+
+    // Procesamiento simple sin depender de orden de IDs o fechas
+    movimientos.forEach((mov: any) => {
+      if (mov.tipo === 'INGRESO') {
+        const cas = Number(mov.cas_calificacion) || 0;
+        const derecho = Number(mov.dias_derecho) || 0;
+        totalDerecho += (cas + derecho);
+      } else if (mov.tipo === 'SALIDA') {
+        totalConsumido += (Number(mov.dias_solicitados) || 0);
+      }
+    });
+
+    const saldoCalculado = totalDerecho - totalConsumido;
+
+    return {
+      ...v,
+      total_dias_derecho: totalDerecho,
+      dias_consumidos: totalConsumido,
+      saldo_restante: saldoCalculado >= 0 ? saldoCalculado : 0
+    };
+  });
+}
 }

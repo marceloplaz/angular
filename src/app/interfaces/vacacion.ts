@@ -12,6 +12,9 @@ id?: number;
   dias_derecho: number;      // Los 15, 20 o 30 días base
   gestiones_cumplidas: string; // Ejemplo: "2023-2024"
 
+fecha_solicitud?: string; 
+    fecha_retorno?: string;   
+
   gestion?: {
     id: number;
     año: string | number; // Cambiado de 'nombre' a 'año'

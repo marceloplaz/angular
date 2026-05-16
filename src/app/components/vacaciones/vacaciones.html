@@ -29,137 +29,93 @@
        
 
         <!-- Botón Limpiar -->
-        <div class="col-md-1">
-          <button class="btn btn-outline-secondary w-100" (click)="filtros.termino=''; filtros.gestion=''; filtros.servicio=''; filtros.categoria=''; aplicarFiltros()">
-            <i class="bi bi-eraser"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tabla de Datos -->
-  <table class="table table-hover align-middle">
-    <thead style="background-color: #166534; color: white;">
-      <tr class="text-center">
-        <th>Especialista</th>
-        <th>Ingreso Inst.</th>
-        <th>Servicio</th>
-      <th>Categoría</th>
-        <th>Gestiones_Cumplidas</th>
-      <th>Periodo (Desde-Hasta)</th>
-        <th>Programación (Inicio-Fin)</th>
-        <th>Días (Der./Cons./Saldo)</th>
-        <th>Permiso Cuenta</th>
-        <th>Motivo / Observaciones</th>
-        <th>Aprobado Por</th>
-        <th>Registro</th>
-        <th>Estado</th>
+        <div class="table-responsive shadow-sm border rounded">
+  <table class="table table-hover align-middle mb-0 text-center">
+    <thead style="background-color: #166534; color: white;" class="small sticky-top">
+      <tr>
+        <th style="width: 18%; text-align: left;" class="ps-3">Especialista</th>
+        <th style="width: 10%;">Ingreso Inst.</th>
+        <th style="width: 10%;">Servicio</th>
+        <th style="width: 8%;">Categoría</th>
+        <th style="width: 14%;">Días (Der./Cons./Saldo)</th>
+        <th style="width: 10%;">Permiso Cuenta</th>
+        <th style="width: 15%; text-align: left;" class="ps-3">Motivo / Observaciones</th>
+        <th style="width: 10%;">Aprobado Por</th>
+        <th style="width: 8%;">Registro</th>
+        <th style="width: 7%;">Estado</th>
       </tr>
     </thead>
-    <tbody>
-    <tr *ngFor="let v of vacacionesFiltradas" class="text-center">
-        <!-- Acceso anidado a user -> persona -->
-        <td class="fw-bold text-start">
+    
+    <tbody class="small bg-white">
+      <tr *ngFor="let v of vacacionesFiltradas">
+        
+        <td class="fw-bold text-start ps-3">
           {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
         </td>
 
-       <td class="text-center">
-  <small class="fw-bold">
-    {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
-    <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
-      ---
-    </ng-container>
-  </small>
-</td>
         <td>
-        <span class="badge bg-info text-dark">
-        {{ v.servicio?.nombre || 'Sin Servicio' }}
-        </span>
-      </td>
-
-      <!-- Celda: Categoría -->
-      <td>
-        <span class="text-muted small fw-bold">
-       {{ $any(v.user)?.categoria?.nombre || 'General' }}
-        </span>
-      </td>
-      <td>
-        <input type="text" 
-               [(ngModel)]="v.gestiones_cumplidas" 
-               class="form-control form-control-sm text-center font-weight-bold" 
-               style="width: 110px; background-color: #f8f9fa;"
-               readonly>
-      </td>
-
+          <small class="fw-bold text-secondary">
+            {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
+            <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
+              ---
+            </ng-container>
+          </small>
+        </td>
 
         <td>
-          <span class="badge border text-dark bg-light">
-            {{ v.periodo_desde | date:'dd/MM/yy' }} / {{ v.periodo_hasta | date:'dd/MM/yy' }}
+          <span class="badge bg-info text-dark">
+            {{ v.servicio?.nombre || 'Sin Servicio' }}
           </span>
         </td>
 
-        <!-- En tu tabla principal de vacaciones -->
-    <td class="text-center">
-    <a href="javascript:void(0)" 
-     class="badge bg-light text-dark border text-decoration-none p-2 shadow-sm"
-     (click)="abrirModalKardex(v)"
-     data-bs-toggle="modal" 
-     data-bs-target="#modalKardex">
-    {{ v.periodo_desde | date:'dd/MM/yy' }} / {{ v.periodo_hasta | date:'dd/MM/yy' }}
-    </a>
-    </td>
-     
-    <td class="text-center">
-    <div class="d-flex flex-column gap-1">
-    <input type="date" class="form-control form-control-sm" 
-           [(ngModel)]="v.fecha_inicio" 
-           (change)="actualizarProgramacion(v)">
-    <small class="text-muted">al</small>
-    <input type="date" class="form-control form-control-sm" 
-           [(ngModel)]="v.fecha_fin" 
-           (change)="actualizarProgramacion(v)">
-  </div>
-    </td>
+        <td>
+          <span class="text-muted small fw-bold">
+            {{ $any(v.user)?.categoria?.nombre || 'General' }}
+          </span>
+        </td>
 
-        <!-- Columna: Días (Der./Cons./Saldo) -->
 <td class="text-center">
-  <div class="d-flex flex-column align-items-center gap-1" 
-       (click)="prepararPermiso(v)" 
-       style="cursor: pointer;" 
-       data-bs-toggle="modal" 
-       data-bs-target="#modalPermisoCuenta">
-    <span class="badge bg-dark w-100">Der: {{ v.total_dias_derecho }}</span>
-    <span class="badge bg-danger w-100">Cons: {{ v.dias_consumidos }}</span>
-    <span class="badge bg-success w-100">Sald: {{ v.saldo_restante }}</span>
-  </div>
-</td>
+          <div *ngIf="v.saldo_restante !== undefined" class="d-flex flex-column align-items-center gap-1 p-1">
+            <span class="badge-day total">Der: {{ v.total_dias_derecho || 0 }}</span>
+            <span class="badge-day consumido">Cons: {{ v.dias_consumidos || 0 }}</span>
+            <span class="badge-day" [ngClass]="v.saldo_restante >= 0 ? 'saldo-positivo' : 'saldo-negativo'">
+              Sald: {{ v.saldo_restante }}
+            </span>
+          </div>
+        </td>        
 
-<!-- Columna: Permiso Cuenta -->
-<td class="text-center">
-  <button class="btn btn-sm" 
-          [ngClass]="v.permiso_cuenta === 1 ? 'btn-success' : 'btn-outline-secondary'"
-          (click)="prepararPermiso(v)"
-          data-bs-toggle="modal" 
-          data-bs-target="#modalPermisoCuenta">
-    <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
-    <br>
-    <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
-  </button>
-</td>
 
-        <td class="text-start">
-          <div class="fw-bold small text-uppercase">{{ v.motivo_tipo }}</div>
-          <div class="text-muted" style="font-size: 0.75rem;">{{ v.observaciones || 'Sin observaciones' }}</div>
+
+        <td>
+          <button class="btn btn-sm btn-permiso-cuenta w-100" 
+                  [ngClass]="v.permiso_cuenta === 1 ? 'active' : 'inactive'"
+                  (click)="abrirModalKardex(v)"
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalKardex"
+                  title="Clic para ver historial detallado (Kardex)">
+            <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
+            <br>
+            <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
+          </button>
+        </td>
+
+
+        <td class="text-start ps-3">
+          <div class="fw-bold small text-uppercase text-primary">{{ v.motivo_tipo }}</div>
+          <div class="text-muted text-wrap" style="font-size: 0.75rem; max-width: 200px;">
+            {{ v.observaciones || 'Sin observaciones' }}
+          </div>
         </td>
 
         <td>
-          <span class="text-primary small">
+          <span class="text-primary small fw-bold">
             <i class="bi bi-person-badge"></i> {{ v.aprobado_por || 'Admin' }}
           </span>
         </td>
 
-        <td><small class="text-muted">{{ v.created_at | date:'shortDate' }}</small></td>
+        <td>
+          <small class="text-muted">{{ v.created_at | date:'dd/MM/yyyy' }}</small>
+        </td>
 
         <td>
           <span [ngClass]="{
@@ -172,17 +128,14 @@
         </td>
       </tr>
 
-      <!-- Mensaje de tabla vacía -->
       <tr *ngIf="vacacionesFiltradas.length === 0">
-        <td colspan="12" class="text-center py-4 text-muted italic">
+        <td colspan="10" class="text-center py-4 text-muted italic bg-light">
           No se encontraron registros para los filtros aplicados.
         </td>
       </tr>
     </tbody>
   </table>
 </div>
-
-
 
 
 <!-- MODAL KARDEX DE VACACIONES -->
@@ -318,14 +271,7 @@
 
                                 </div>
   
-                            <div class="col-md-6 mb-3">
-    <label class="form-label">Fecha Inicio Vacación</label>
-    <input type="date" class="form-control" name="fecha_inicio_extra" [(ngModel)]="nuevoRegistro.fecha_inicio">
-</div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Fecha Fin Vacación</label>
-            <input type="date" class="form-control" name="fecha_fin_extra" [(ngModel)]="nuevoRegistro.fecha_fin">
-        </div>
+                            
                     
                     <div class="col-12 mt-2">
                         <div class="d-flex justify-content-between align-items-center bg-white border p-2 rounded shadow-sm">
@@ -357,15 +303,17 @@
     <table class="table table-bordered table-sm table-hover text-center align-middle mb-0">
         <thead class="table-dark sticky-top small">
             <tr>
-                <th style="width: 14%;">GESTIÓN</th>
-                <th style="width: 8%;">CAS</th>
-                <th style="width: 10%;">DER. (+)</th>
-                <th style="width: 10%;">CONS. (-)</th>
-                <th style="width: 20%;">PERIODO</th>
-                <th style="width: 20%;">MOTIVO</th>
-                <th style="width: 12%;">SALDO</th>
-                <th class="table-success text-dark">TOTAL SALDO</th>
-                <th style="width: 6%;">ACC.</th>
+                <th style="width: 12%;">GESTIÓN</th>
+                <th style="width: 10%;">F. SOLICITUD</th> 
+                <th style="width: 7%;">CAS</th>
+                <th style="width: 8%;">DER. (+)</th>
+                <th style="width: 8%;">CONS. (-)</th>
+                <th style="width: 16%;">PERIODO</th>
+                <th style="width: 10%;">F. RETORNO</th> 
+                <th style="width: 14%;">MOTIVO</th>
+                <th style="width: 7%;">SALDO</th>
+                <th class="table-success text-dark" style="width: 8%;">TOTAL SALDO</th>
+                <th style="width: 5%;">ACC.</th>
             </tr>
         </thead>
       
@@ -375,9 +323,10 @@
         [class.table-warning]="item.dias_solicitados > 0">
         
         <td class="fw-bold">{{ item.gestiones_cumplidas }}</td>
+        <td>{{ (item.fecha_solicitud | date:'dd/MM/yyyy') || '-' }}</td>
         <td>{{ item.cas_calificacion || 0 }}</td>
         <td class="text-success fw-bold">{{ item.dias_derecho ? '+' + item.dias_derecho : '' }}</td>
-        
+      
         <td class="text-danger fw-bold">
             <span *ngIf="item.dias_solicitados > 0">-{{ item.dias_solicitados }}</span>
         </td>
@@ -388,6 +337,7 @@
             </div>
         </td>
 
+        <td>{{ (item.fecha_retorno | date:'dd/MM/yyyy') || '-' }}</td>
         <td class="text-start">
             <span class="badge bg-info text-dark x-small" *ngIf="item.motivo_tipo">{{ item.motivo_tipo }}</span>
             <div class="text-truncate" style="max-width: 150px;">{{ item.descripcion || item.observaciones }}</div>
