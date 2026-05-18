@@ -68,107 +68,140 @@
           <th style="width: 7%;">Estado</th>
         </tr>
       </thead>
-      
       <tbody class="small bg-white">
-        <tr *ngFor="let v of vacacionesFiltradas">
-          
-          <td class="fw-bold text-start ps-3">
-            {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
-          </td>
+  <tr *ngFor="let v of vacacionesFiltradas">
+    
+    <td class="fw-bold text-start ps-3">
+      {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
+    </td>
 
-          <td>
-            <small class="fw-bold text-secondary">
-              {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
-              <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
-                ---
-              </ng-container>
-            </small>
-          </td>
+    <td>
+      <small class="fw-bold text-secondary">
+        {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
+        <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
+          ---
+        </ng-container>
+      </small>
+    </td>
 
-          <td>
-            <span class="badge bg-info text-dark">
-              {{ v.servicio?.nombre || 'Sin Servicio' }}
-            </span>
-          </td>
+    <td>
+      <span class="badge bg-info text-dark">
+        {{ v.servicio?.nombre || 'Sin Servicio' }}
+      </span>
+    </td>
 
-          <td>
-            <span class="text-muted small fw-bold">
-              {{ $any(v.user)?.categoria?.nombre || 'General' }}
-            </span>
-          </td>
+    <td>
+      <span class="text-muted small fw-bold">
+        {{ $any(v.user)?.categoria?.nombre || 'General' }}
+      </span>
+    </td>
 
-          <td class="text-center">
-            <div *ngIf="v.saldo_restante !== undefined" class="d-flex flex-column align-items-center gap-1 p-1">
-              <span cla
-              ss="badge-day total">Der: {{ v.total_dias_derecho || 0 }}</span>
-              <span class="badge-day consumido">Cons: {{ v.dias_consumidos || 0 }}</span>
-              <span class="badge-day" [ngClass]="v.saldo_restante >= 0 ? 'saldo-positivo' : 'saldo-negativo'">
-                Sald: {{ v.saldo_restante }}
-              </span>
-            </div>
-          </td>        
+    <td class="text-center">
+      <div *ngIf="v.saldo_restante !== undefined" class="d-flex flex-column align-items-center gap-1 p-1">
+        <span class="badge-day total">Der: {{ v.total_dias_derecho || 0 }}</span>
+        <span class="badge-day consumido">Cons: {{ v.dias_consumidos || 0 }}</span>
+        <span class="badge-day" [ngClass]="v.saldo_restante >= 0 ? 'saldo-positivo' : 'saldo-negativo'">
+          Sald: {{ v.saldo_restante }}
+        </span>
+      </div>
+    </td>        
 
-          <td>
-            <button class="btn btn-sm btn-permiso-cuenta w-100" 
-                    [ngClass]="v.permiso_cuenta === 1 ? 'active' : 'inactive'"
-                    (click)="abrirModalKardex(v)"
-                    data-bs-toggle="modal" 
-                    data-bs-target="#modalKardex"
-                    title="Clic para ver historial detallado (Kardex)">
-              <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
-              <br>
-              <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
-            </button>
-          </td>
+    <td>
+      <button class="btn btn-sm btn-permiso-cuenta w-100" 
+              [ngClass]="v.permiso_cuenta === 1 ? 'active' : 'inactive'"
+              (click)="abrirModalKardex(v)"
+              data-bs-toggle="modal" 
+              data-bs-target="#modalKardex"
+              title="Clic para ver historial detallado (Kardex)">
+        <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
+        <br>
+        <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
+      </button>
+    </td>
 
-          
-          <span class="badge bg-warning text-dark" style="cursor: pointer;" (click)="abrirModalProcesar(v)">
-  Sin asignar
-</span>
+    <td class="text-start ps-3 align-middle">
+      <span class="badge" 
+            [ngClass]="{
+              'bg-warning text-dark': v.estado === 0,
+              'bg-success': v.estado === 1,
+              'bg-danger': v.estado === 2
+            }"
+            style="cursor: pointer;" 
+            (click)="abrirModalProcesar(v)"
+            title="Clic para modificar estado o procesar">
+        <i class="bi bi-pencil-square me-1"></i>
+        {{ v.motivo_tipo ? v.motivo_tipo.replace('_', ' ') : 'SIN ASIGNAR' }}
+      </span>
+      
+      <small class="text-muted d-block mt-1" style="max-width: 220px; white-space: normal; word-wrap: break-word;">
+        {{ v.observaciones || v.motivo_detalle || 'Sin observaciones' }}
+      </small>
+    </td>
 
-          <td class="text-center align-middle">
-            <span *ngIf="v.estado === 1" class="fw-bold text-success small">
-              <i class="bi bi-person-check-fill me-1"></i>{{ v.aprobado_por || 'Admin' }}
-            </span>
-            <span *ngIf="v.estado === 2" class="text-danger fw-semibold small">
-              <i class="bi bi-person-x-fill me-1"></i>Rechazado
-            </span>
-            <span *ngIf="v.estado === 0" class="text-muted small italic">
-              Pendiente
-            </span>
-          </td>
+<td class="text-center align-middle">
+  <span *ngIf="v.estado === 1" class="fw-bold text-success small">
+    <i class="bi bi-person-check-fill me-1"></i>
+    {{ v.aprobador?.persona?.nombre_completo || v.aprobador?.name || v.aprobado_por_nombre || 'Marceloplaza' }}
+  </span>
+  <span *ngIf="v.estado === 2" class="text-danger fw-semibold small">
+    <i class="bi bi-person-x-fill me-1"></i>
+    <small class="d-block text-muted" style="font-size: 0.75rem;">
+      Por: {{ v.aprobador?.name || 'Admin' }}
+    </small>
+  </span>
+  <span *ngIf="v.estado === 0" class="text-muted small italic">
+    Pendiente
+  </span>
+</td>
 
-          <td class="text-center align-middle">
-            <span class="text-dark fw-semibold d-block">
-              {{ (v.created_at | date:'dd/MM/yyyy') || '---' }}
-            </span>
-            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;" *ngIf="v.created_at">
-              <i class="bi bi-clock small me-1"></i>{{ v.created_at | date:'HH:mm' }}
-            </small>
-          </td>
+    <td class="text-center align-middle">
+      <span class="text-dark fw-semibold d-block">
+        {{ (v.created_at | date:'dd/MM/yyyy') || '---' }}
+      </span>
+      <small class="text-muted d-block mt-1" style="font-size: 0.75rem;" *ngIf="v.created_at">
+        <i class="bi bi-clock small me-1"></i>{{ v.created_at | date:'HH:mm' }}
+      </small>
+    </td>
 
-          <td class="text-center align-middle">
-            <span *ngIf="v.estado === 0" class="badge bg-warning text-dark px-2 py-1 fs-6">
-              <i class="bi bi-clock-history me-1"></i>Sin asignar
-            </span>
+   <td class="text-center align-middle">
+  
+  <span *ngIf="v.estado === 0" 
+        class="badge bg-warning text-dark px-2 py-1 fs-6" 
+        style="cursor: pointer;"
+        (click)="abrirModalProcesar(v)"
+        title="Clic para Aprobar o Rechazar">
+    <i class="bi bi-clock-history me-1"></i>Sin asignar
+  </span>
 
-            <span *ngIf="v.estado === 1" class="badge bg-success px-2 py-1 fs-6">
-              <i class="bi bi-check-circle-fill me-1"></i>Asignado
-            </span>
+  <span *ngIf="v.estado === 1" 
+        class="badge bg-success px-2 py-1 fs-6" 
+        style="cursor: pointer;"
+        (click)="abrirModalProcesar(v)"
+        title="Clic para cambiar el estado actual">
+    <i class="bi bi-check-circle-fill me-1"></i>Asignado
+  </span>
 
-            <span *ngIf="v.estado === 2" class="badge bg-danger px-2 py-1 fs-6">
-              <i class="bi bi-x-circle-fill me-1"></i>Rechazado
-            </span>
-          </td>
+  <span *ngIf="v.estado === 2" 
+        class="badge bg-danger px-2 py-1 fs-6" 
+        style="cursor: pointer;"
+        (click)="abrirModalProcesar(v)"
+        title="Clic para recalificar solicitud">
+    <i class="bi bi-x-circle-fill me-1"></i>Rechazado
+  </span>
 
-        </tr>
+</td>
+  </tr>
 
-        <tr *ngIf="vacacionesFiltradas.length === 0">
-          <td colspan="10" class="text-center py-4 text-muted italic bg-light">
-            <i class="bi bi-exclamation-circle me-1"></i>No se encontraron registros para los filtros aplicados.
-          </td>
-        </tr>
-      </tbody>
+  <tr *ngIf="vacacionesFiltradas.length === 0">
+    <td colspan="10" class="text-center py-4 text-muted italic bg-light">
+      <i class="bi bi-exclamation-circle me-1"></i>No se encontraron registros para los filtros aplicados.
+    </td>
+  </tr>
+</tbody>
+     
+
+
+
     </table>
   </div>
 </div>
