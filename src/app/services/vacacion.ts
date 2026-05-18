@@ -17,17 +17,30 @@ programarFechas(id: number, datos: { fecha_inicio: string, fecha_fin: string }):
         return this.http.put(`${this.apiUrl}/programar/${id}`, datos);
   }
 
+  getVacacionesGenerales(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/general`); // Asegúrate de usar tu variable (this.apiUrl o this.URL)
+}
   getPendientes(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/pendientes`);
   }
+// En tu src/app/services/vacacion.ts
 
-  actualizarEstado(id: number, estado: number, observaciones?: string, dias?: number): Observable<any> {
-  return this.http.put<any>(`${this.apiUrl}/${id}/estado`, { 
-    estado, 
+actualizarEstado(
+  id: number, 
+  estado: number, 
+  observaciones: string, 
+  dias?: number,          
+  motivo_tipo?: string    
+): Observable<any> {
+  // Al estar la ruta limpia en Laravel, esto conecta directo a api/v1/vacaciones/{id}/estado
+  return this.http.put(`${this.apiUrl}/${id}/estado`, {
+    estado,
     observaciones,
-    dias_solicitados: dias // Enviamos los días ajustados en el modal
+    dias_solicitados: dias !== undefined ? dias : null, 
+    motivo_tipo: motivo_tipo ?? 'OTRO'
   });
 }
+
   /**
    * Obtiene el historial de vacaciones de un usuario específico.
    * @param id ID del usuario (de la tabla users)

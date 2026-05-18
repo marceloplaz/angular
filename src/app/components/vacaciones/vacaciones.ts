@@ -30,7 +30,7 @@ export class VacacionComponent implements OnInit {
   diasCalculadosModal: number = 0;
   diasCalculadosKardex: number = 0;
   public historial: any[] = [];  
-
+  estadoFiltro: string = '0';  
 
 
   // Filtros flexibles para la interfaz
@@ -78,7 +78,7 @@ nuevoRegistro: any = {
 }
  
 cargarVacaciones() {
-  this.vacacionService.getPendientes().subscribe({
+  this.vacacionService.getVacacionesGenerales().subscribe({
     next: (res: any) => {
       const vacacionesBase = res.data || []; 
       
@@ -120,6 +120,7 @@ cargarVacaciones() {
           // Ahora que 'kardex_vacaciones' es un array real, ejecutamos el cálculo
           this.calcularSaldosPorGestion();
           this.vacacionesFiltradas = [...this.vacaciones];
+ 
         },
         (error) => {
           console.error("Error crítico en forkJoin:", error);
@@ -131,20 +132,34 @@ cargarVacaciones() {
     }
   });
 }
-
 aplicarFiltros() {
-  const busqueda = this.filtros.termino.toLowerCase().trim();
+  if (!this.vacaciones) return;
+
+  const busqueda = this.filtros.termino?.toLowerCase().trim() || '';
 
   this.vacacionesFiltradas = this.vacaciones.filter(v => {
+    // 1. Filtro por Nombre Completo
     const nombrePersona = v.user?.persona?.nombre_completo?.toLowerCase() || '';
     const nombreAlternativo = v.nombre_completo?.toLowerCase() || '';
-
     const cumpleNombre = nombrePersona.includes(busqueda) || nombreAlternativo.includes(busqueda);
+
+    // 2. Filtros Selectores (Gestión, Servicio, Categoría)
     const cumpleGestion = !this.filtros.gestion || v.gestion_id?.toString() === this.filtros.gestion;
     const cumpleServicio = !this.filtros.servicio || v.servicio_id?.toString() === this.filtros.servicio;
     const cumpleCategoria = !this.filtros.categoria || v.user?.categoria_id?.toString() === this.filtros.categoria;
 
-    return cumpleNombre && cumpleGestion && cumpleServicio && cumpleCategoria;
+    // 3. 🌟 Comparación Blindada de Estados (Evita conflictos entre String y Number)
+    let cumpleEstado = false;
+    if (this.estadoFiltro === 'TODOS') {
+      cumpleEstado = true; // Si es TODOS, no restringe por estado
+    } else {
+      // Forzamos ambos lados a string para asegurar que '1' === '1' o '0' === '0'
+      const estadoRegistro = v.estado !== undefined && v.estado !== null ? v.estado.toString() : '';
+      cumpleEstado = estadoRegistro === this.estadoFiltro.toString();
+    }
+
+    // Retorna el registro solo si pasa todos los filtros en cadena
+    return cumpleNombre && cumpleGestion && cumpleServicio && cumpleCategoria && cumpleEstado;
   });
 }
 
@@ -173,40 +188,103 @@ aplicarFiltros() {
    * Abre el modal para procesar la vacación (Aprobar/Rechazar)
    * Se activa al hacer clic en permiso_cuenta o botón de acción
    */
-  async abrirModalProcesar(vacacion: Vacacion) {
-    // Calculamos el derecho sugerido según su ingreso
-    const derechoSugerido = this.obtenerDerechoPorAntiguedad(vacacion.fecha_ingreso_institucion);
+  /**
+   * Abre el modal para procesar la vacación (Aprobar/Rechazar)
+   * Se activa al hacer clic en permiso_cuenta o botón de acción
+   */
+  async abrirModalProcesar(vacacion: any) {
+    // 🌟 Extracción segura de datos para la interfaz del Hospital
+    const nombrePersonal = vacacion.nombre_completo || 
+                           vacacion.user?.persona?.nombre_completo || 
+                           vacacion.user?.name || 'Personal Hospital';
+                           
+    const fechaIngreso = vacacion.fecha_ingreso_institucion || 
+                         vacacion.user?.persona?.fecha_ingreso_institucion || 
+                         vacacion.user?.created_at;
+
+    // Calculamos el derecho sugerido según su ingreso real
+    const derechoSugerido = this.obtenerDerechoPorAntiguedad(fechaIngreso);
+
+    // Capturamos el estado actual directo de la base de datos (0, 1, 2)
+    const estadoActual = vacacion.estado !== undefined ? Number(vacacion.estado) : 0;
 
     const { value: formValues } = await Swal.fire({
       title: 'Procesar Solicitud de Vacación',
       html: `
         <div class="text-start" style="font-size: 0.9rem;">
-          <p><strong>Personal:</strong> ${vacacion.nombre_completo}</p>
+          <p><strong>Personal:</strong> ${nombrePersonal}</p>
           <p><strong>Derecho según Antigüedad:</strong> ${derechoSugerido} días</p>
           <hr>
+          
+          <label class="form-label fw-bold">Estado de la Solicitud:</label>
+          <select id="swal-estado" class="form-select mb-3">
+            <option value="0" ${estadoActual === 0 ? 'selected' : ''}>0: Sin asignar</option>
+            <option value="1" ${estadoActual === 1 ? 'selected' : ''}>1: Asignado (Aprobar)</option>
+            <option value="2" ${estadoActual === 2 ? 'selected' : ''}>2: Rechazado</option>
+          </select>
+
           <label class="form-label fw-bold">Días Solicitados a descontar:</label>
-          <input id="swal-dias" type="number" class="form-control mb-3" value="${vacacion.dias_solicitados}">
+          <input id="swal-dias" type="number" class="form-control mb-3" value="${vacacion.dias_solicitados || 0}">
+
+          <label class="form-label fw-bold">Tipo de Motivo:</label>
+          <select id="swal-motivo-tipo" class="form-select mb-3" ${estadoActual === 0 ? 'disabled' : ''}>
+            <option value="VACACION_PROGRAMADA" ${vacacion.motivo_tipo === 'VACACION_PROGRAMADA' ? 'selected' : ''}>VACACION PROGRAMADA</option>
+            <option value="SALUD" ${vacacion.motivo_tipo === 'SALUD' ? 'selected' : ''}>SALUD</option>
+            <option value="TRAMITE" ${vacacion.motivo_tipo === 'TRAMITE' ? 'selected' : ''}>TRAMITE</option>
+            <option value="FAMILIAR" ${vacacion.motivo_tipo === 'FAMILIAR' ? 'selected' : ''}>FAMILIAR</option>
+            <option value="PARTICULAR" ${vacacion.motivo_tipo === 'PARTICULAR' ? 'selected' : ''}>PARTICULAR</option>
+            <option value="OTRO" ${vacacion.motivo_tipo === 'OTRO' ? 'selected' : ''}>OTRO</option>
+          </select>
           
-          <label class="form-label fw-bold">Motivo Detalle:</label>
-          <textarea id="swal-motivo" class="form-control mb-3" rows="2">${vacacion.motivo_detalle || ''}</textarea>
-          
-          <label class="form-label fw-bold">Observaciones del Administrador:</label>
-          <textarea id="swal-obs" class="form-control" rows="2" placeholder="Nota opcional..."></textarea>
+          <label class="form-label fw-bold">Observaciones / Detalles:</label>
+          <textarea id="swal-obs" class="form-control mb-3" rows="2" 
+                    placeholder="Escriba el motivo u observaciones..." 
+                    ${estadoActual === 0 ? 'disabled' : ''}>${vacacion.observaciones || vacacion.motivo_detalle || ''}</textarea>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: '<i class="bi bi-check-circle"></i> Aprobar y Activar',
+      confirmButtonText: '<i class="bi bi-save"></i> Guardar Cambios',
       confirmButtonColor: '#166534',
       cancelButtonText: 'Cancelar',
+      didOpen: () => {
+        const selectEstado = document.getElementById('swal-estado') as HTMLSelectElement;
+        const selectMotivo = document.getElementById('swal-motivo-tipo') as HTMLSelectElement;
+        const txtObs = document.getElementById('swal-obs') as HTMLTextAreaElement;
+
+        // Escuchador en caliente para bloquear inputs si vuelve a estar "Sin Asignar"
+        selectEstado.addEventListener('change', () => {
+          const estadoSeleccionado = Number(selectEstado.value);
+          if (estadoSeleccionado === 0) {
+            selectMotivo.disabled = true;
+            txtObs.disabled = true;
+          } else {
+            selectMotivo.disabled = false;
+            txtObs.disabled = false;
+            txtObs.focus();
+          }
+        });
+      },
       preConfirm: () => {
+        const estado = Number((document.getElementById('swal-estado') as HTMLSelectElement).value);
         const dias = (document.getElementById('swal-dias') as HTMLInputElement).value;
-        if (!dias || Number(dias) <= 0) {
-          Swal.showValidationMessage('Debe ingresar un número de días válido');
+        const motivo_tipo = (document.getElementById('swal-motivo-tipo') as HTMLSelectElement).value;
+        const observaciones = (document.getElementById('swal-obs') as HTMLTextAreaElement).value;
+
+        if (estado === 1 && (!dias || Number(dias) < 0)) {
+          Swal.showValidationMessage('Debe ingresar un número de días válido para asignar');
+          return false;
         }
+
+        if (estado !== 0 && !observaciones.trim()) {
+          Swal.showValidationMessage('Debe ingresar un motivo u observaciones para cambiar el estado');
+          return false;
+        }
+
         return {
+          estado: estado,
           dias: Number(dias),
-          motivo: (document.getElementById('swal-motivo') as HTMLTextAreaElement).value,
-          obs: (document.getElementById('swal-obs') as HTMLTextAreaElement).value
+          motivo_tipo: motivo_tipo,
+          obs: observaciones
         };
       }
     });
@@ -216,26 +294,25 @@ aplicarFiltros() {
     }
   }
 
-  private ejecutarAprobacion(v: Vacacion, datos: any) {
-    // El 'aprobado_por' se gestionará en el backend con auth()->id(),
-    // pero aquí mandamos el estado 1 (Asignado) y los días confirmados.
-    
-    this.vacacionService.actualizarEstado(v.id!, 1, datos.obs, datos.dias).subscribe({
-      next: (res) => {
+  private ejecutarAprobacion(v: any, datos: any) {
+    this.vacacionService.actualizarEstado(v.id!, datos.estado, datos.obs, datos.dias, datos.motivo_tipo).subscribe({
+      next: (res: any) => {
         Swal.fire({
-          title: 'Activado',
-          text: `La vacación ha sido aprobada. Nuevo saldo: ${res.data.saldo_restante} días.`,
+          title: '¡Actualizado!',
+          text: 'La solicitud y el estado de la vacación se sincronizaron con éxito.',
           icon: 'success',
           confirmButtonColor: '#166534'
         });
-        this.cargarVacaciones(); // Recargamos para ver los cambios y el created_at
+        this.cargarVacaciones(); // Forzar recarga completa de la grilla
       },
       error: (err) => {
-        Swal.fire('Error', err.error.message || 'No se pudo procesar la solicitud', 'error');
+        Swal.fire('Error', err.error?.message || 'No se pudo procesar la solicitud', 'error');
       }
     });
   }
 
+
+  
   // Método para rechazar rápidamente si fuera necesario
   rechazarSolicitud(id: number) {
     Swal.fire({
@@ -293,8 +370,10 @@ abrirModalKardex(v: any) {
     motivo_tipo: 'PERMISO CUENTA VACACION'
   };
 
-  // 3. Cargamos el historial del usuario
-  this.cargarHistorial(this.nuevoRegistro.user_id);
+  if (this.nuevoRegistro.user_id) {
+    this.cargarHistorial(this.nuevoRegistro.user_id);
+  }
+  
 
   // 4. Reiniciamos los cálculos de días del modal para que no arrastre datos previos
   this.diasCalculadosKardex = 0;

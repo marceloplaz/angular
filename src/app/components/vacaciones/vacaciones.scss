@@ -163,4 +163,33 @@ $slate-dark: #334155;
       box-shadow: 0 0 0 2px rgba($hospital-dark-green, 0.15);
     }
   }
+  .badge-day {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+  width: 90px;
+}
+.badge-day.total {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+.badge-day.consumido {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+.saldo-positivo {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+.saldo-negativo {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
 }

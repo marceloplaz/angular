@@ -1,10 +1,8 @@
 <div class="table-responsive shadow-sm rounded">
 
-  <!-- Barra de Filtros Reintegrada -->
   <div class="card mb-3 border-0 shadow-sm">
     <div class="card-body bg-light">
       <div class="row g-2">
-        <!-- Buscador por Nombre -->
         <div class="col-md-4">
           <div class="input-group">
             <span class="input-group-text bg-white border-end-0">
@@ -18,123 +16,161 @@
           </div>
         </div>
 
-        <!-- Filtro Gestión -->
         <div class="col-md-2">
           <select class="form-select" [(ngModel)]="filtros.gestion" (change)="aplicarFiltros()">
             <option value="">Gestión (Todas)</option>
             <option *ngFor="let g of listadoGestiones" [value]="g.id">{{ g['año'] }}</option>
           </select>
         </div>
+      </div>
+    </div>
+  </div>
 
-       
+  <div class="btn-group mb-3" role="group" aria-label="Filtro de Vacaciones">
+  <button type="button" class="btn btn-outline-warning" 
+          [class.active]="estadoFiltro === '0'" 
+          (click)="estadoFiltro = '0'; aplicarFiltros()">
+    <i class="bi bi-clock-history"></i> Pendientes (Sin Asignar)
+  </button>
+  
+  <button type="button" class="btn btn-outline-success" 
+          [class.active]="estadoFiltro === '1'" 
+          (click)="estadoFiltro = '1'; aplicarFiltros()">
+    <i class="bi bi-check-circle"></i> Aprobados
+  </button>
+  
+  <button type="button" class="btn btn-outline-danger" 
+          [class.active]="estadoFiltro === '2'" 
+          (click)="estadoFiltro = '2'; aplicarFiltros()">
+    <i class="bi bi-x-circle"></i> Rechazados
+  </button>
 
-        <!-- Botón Limpiar -->
-        <div class="table-responsive shadow-sm border rounded">
-  <table class="table table-hover align-middle mb-0 text-center">
-    <thead style="background-color: #166534; color: white;" class="small sticky-top">
-      <tr>
-        <th style="width: 18%; text-align: left;" class="ps-3">Especialista</th>
-        <th style="width: 10%;">Ingreso Inst.</th>
-        <th style="width: 10%;">Servicio</th>
-        <th style="width: 8%;">Categoría</th>
-        <th style="width: 14%;">Días (Der./Cons./Saldo)</th>
-        <th style="width: 10%;">Permiso Cuenta</th>
-        <th style="width: 15%; text-align: left;" class="ps-3">Motivo / Observaciones</th>
-        <th style="width: 10%;">Aprobado Por</th>
-        <th style="width: 8%;">Registro</th>
-        <th style="width: 7%;">Estado</th>
-      </tr>
-    </thead>
-    
-    <tbody class="small bg-white">
-      <tr *ngFor="let v of vacacionesFiltradas">
-        
-        <td class="fw-bold text-start ps-3">
-          {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
-        </td>
+  <button type="button" class="btn btn-outline-secondary" 
+          [class.active]="estadoFiltro === 'TODOS'" 
+          (click)="estadoFiltro = 'TODOS'; aplicarFiltros()">
+    <i class="bi bi-list-task"></i> Mostrar Todos
+  </button>
+</div>
 
-        <td>
-          <small class="fw-bold text-secondary">
-            {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
-            <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
-              ---
-            </ng-container>
-          </small>
-        </td>
+  <div class="table-responsive shadow-sm border rounded">
+    <table class="table table-hover align-middle mb-0 text-center">
+      <thead style="background-color: #166534; color: white;" class="small sticky-top">
+        <tr>
+          <th style="width: 18%; text-align: left;" class="ps-3">Especialista</th>
+          <th style="width: 10%;">Ingreso Inst.</th>
+          <th style="width: 10%;">Servicio</th>
+          <th style="width: 8%;">Categoría</th>
+          <th style="width: 14%;">Días (Der./Cons./Saldo)</th>
+          <th style="width: 10%;">Permiso Cuenta</th>
+          <th style="width: 15%; text-align: left;" class="ps-3">Motivo / Observaciones</th>
+          <th style="width: 10%;">Aprobado Por</th>
+          <th style="width: 8%;">Registro</th>
+          <th style="width: 7%;">Estado</th>
+        </tr>
+      </thead>
+      
+      <tbody class="small bg-white">
+        <tr *ngFor="let v of vacacionesFiltradas">
+          
+          <td class="fw-bold text-start ps-3">
+            {{ v.user?.persona?.nombre_completo || 'Sin nombre' }}
+          </td>
 
-        <td>
-          <span class="badge bg-info text-dark">
-            {{ v.servicio?.nombre || 'Sin Servicio' }}
-          </span>
-        </td>
+          <td>
+            <small class="fw-bold text-secondary">
+              {{ ($any(v).fecha_ingreso_institucion || $any(v.user?.persona)?.fecha_ingreso_institucion) | date:'dd/MM/yyyy' }}
+              <ng-container *ngIf="!v.fecha_ingreso_institucion && !v.user?.persona?.fecha_ingreso_institucion">
+                ---
+              </ng-container>
+            </small>
+          </td>
 
-        <td>
-          <span class="text-muted small fw-bold">
-            {{ $any(v.user)?.categoria?.nombre || 'General' }}
-          </span>
-        </td>
-
-<td class="text-center">
-          <div *ngIf="v.saldo_restante !== undefined" class="d-flex flex-column align-items-center gap-1 p-1">
-            <span class="badge-day total">Der: {{ v.total_dias_derecho || 0 }}</span>
-            <span class="badge-day consumido">Cons: {{ v.dias_consumidos || 0 }}</span>
-            <span class="badge-day" [ngClass]="v.saldo_restante >= 0 ? 'saldo-positivo' : 'saldo-negativo'">
-              Sald: {{ v.saldo_restante }}
+          <td>
+            <span class="badge bg-info text-dark">
+              {{ v.servicio?.nombre || 'Sin Servicio' }}
             </span>
-          </div>
-        </td>        
+          </td>
 
+          <td>
+            <span class="text-muted small fw-bold">
+              {{ $any(v.user)?.categoria?.nombre || 'General' }}
+            </span>
+          </td>
 
+          <td class="text-center">
+            <div *ngIf="v.saldo_restante !== undefined" class="d-flex flex-column align-items-center gap-1 p-1">
+              <span cla
+              ss="badge-day total">Der: {{ v.total_dias_derecho || 0 }}</span>
+              <span class="badge-day consumido">Cons: {{ v.dias_consumidos || 0 }}</span>
+              <span class="badge-day" [ngClass]="v.saldo_restante >= 0 ? 'saldo-positivo' : 'saldo-negativo'">
+                Sald: {{ v.saldo_restante }}
+              </span>
+            </div>
+          </td>        
 
-        <td>
-          <button class="btn btn-sm btn-permiso-cuenta w-100" 
-                  [ngClass]="v.permiso_cuenta === 1 ? 'active' : 'inactive'"
-                  (click)="abrirModalKardex(v)"
-                  data-bs-toggle="modal" 
-                  data-bs-target="#modalKardex"
-                  title="Clic para ver historial detallado (Kardex)">
-            <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
-            <br>
-            <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
-          </button>
-        </td>
+          <td>
+            <button class="btn btn-sm btn-permiso-cuenta w-100" 
+                    [ngClass]="v.permiso_cuenta === 1 ? 'active' : 'inactive'"
+                    (click)="abrirModalKardex(v)"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalKardex"
+                    title="Clic para ver historial detallado (Kardex)">
+              <i class="bi" [ngClass]="v.permiso_cuenta === 1 ? 'bi-shield-check' : 'bi-plus-circle'"></i>
+              <br>
+              <small>{{ v.permiso_cuenta === 1 ? 'Activo' : 'Registrar' }}</small>
+            </button>
+          </td>
 
+          
+          <span class="badge bg-warning text-dark" style="cursor: pointer;" (click)="abrirModalProcesar(v)">
+  Sin asignar
+</span>
 
-        <td class="text-start ps-3">
-          <div class="fw-bold small text-uppercase text-primary">{{ v.motivo_tipo }}</div>
-          <div class="text-muted text-wrap" style="font-size: 0.75rem; max-width: 200px;">
-            {{ v.observaciones || 'Sin observaciones' }}
-          </div>
-        </td>
+          <td class="text-center align-middle">
+            <span *ngIf="v.estado === 1" class="fw-bold text-success small">
+              <i class="bi bi-person-check-fill me-1"></i>{{ v.aprobado_por || 'Admin' }}
+            </span>
+            <span *ngIf="v.estado === 2" class="text-danger fw-semibold small">
+              <i class="bi bi-person-x-fill me-1"></i>Rechazado
+            </span>
+            <span *ngIf="v.estado === 0" class="text-muted small italic">
+              Pendiente
+            </span>
+          </td>
 
-        <td>
-          <span class="text-primary small fw-bold">
-            <i class="bi bi-person-badge"></i> {{ v.aprobado_por || 'Admin' }}
-          </span>
-        </td>
+          <td class="text-center align-middle">
+            <span class="text-dark fw-semibold d-block">
+              {{ (v.created_at | date:'dd/MM/yyyy') || '---' }}
+            </span>
+            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;" *ngIf="v.created_at">
+              <i class="bi bi-clock small me-1"></i>{{ v.created_at | date:'HH:mm' }}
+            </small>
+          </td>
 
-        <td>
-          <small class="text-muted">{{ v.created_at | date:'dd/MM/yyyy' }}</small>
-        </td>
+          <td class="text-center align-middle">
+            <span *ngIf="v.estado === 0" class="badge bg-warning text-dark px-2 py-1 fs-6">
+              <i class="bi bi-clock-history me-1"></i>Sin asignar
+            </span>
 
-        <td>
-          <span [ngClass]="{
-            'badge bg-secondary': v.estado === 0,
-            'badge bg-success': v.estado === 1,
-            'badge bg-danger': v.estado === 2
-          }">
-            {{ v.estado === 0 ? 'Sin asignar' : v.estado === 1 ? 'Asignado' : 'Rechazado' }}
-          </span>
-        </td>
-      </tr>
+            <span *ngIf="v.estado === 1" class="badge bg-success px-2 py-1 fs-6">
+              <i class="bi bi-check-circle-fill me-1"></i>Asignado
+            </span>
 
-      <tr *ngIf="vacacionesFiltradas.length === 0">
-        <td colspan="10" class="text-center py-4 text-muted italic bg-light">
-          No se encontraron registros para los filtros aplicados.
-        </td>
-      </tr>
-    </tbody>
-  </table>
+            <span *ngIf="v.estado === 2" class="badge bg-danger px-2 py-1 fs-6">
+              <i class="bi bi-x-circle-fill me-1"></i>Rechazado
+            </span>
+          </td>
+
+        </tr>
+
+        <tr *ngIf="vacacionesFiltradas.length === 0">
+          <td colspan="10" class="text-center py-4 text-muted italic bg-light">
+            <i class="bi bi-exclamation-circle me-1"></i>No se encontraron registros para los filtros aplicados.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -152,35 +188,54 @@
 
       <div class="modal-body">
         <!-- SECCIÓN 1: INFORMACIÓN DEL PERSONAL (Tarjeta Física) -->
+    
         <div class="alert alert-secondary border-0 mb-4 shadow-sm">
-          <div class="row g-3">
-            <div class="col-md-5">
-              <span class="text-muted small d-block">Nombre y Apellidos:</span>
-              <strong class="text-uppercase text-primary">{{ usuarioSeleccionado?.persona?.nombre_completo }}</strong>
-            </div>
-            <div class="col-md-3">
-              <span class="text-muted small d-block">C.I. N°:</span>
-              <strong>{{ usuarioSeleccionado?.persona?.carnet_identidad }}</strong>
-            </div>
-            <div class="col-md-4">
-              <span class="text-muted small d-block">Fecha de Ingreso:</span>
-              <strong>{{ usuarioSeleccionado?.persona?.fecha_ingreso_institucion | date:'dd/MM/yyyy' }}</strong>
-            </div>
-            <div class="col-md-5">
-              <span class="text-muted small d-block">Cargo / Profesión:</span>
-              <strong class="text-uppercase">{{ usuarioSeleccionado?.persona?.cargo || 'PERSONAL DE SALUD' }}</strong>
-            </div>
-            <div class="col-md-3">
-              <span class="text-muted small d-block">Fecha Nacimiento:</span>
-              <strong>{{ usuarioSeleccionado?.persona?.fecha_nacimiento | date:'dd/MM/yyyy' }}</strong>
-            </div>
-            <div class="col-md-4">
-              <span class="text-muted small d-block">Item No:</span>
-              <span class="badge bg-dark fs-6">{{ usuarioSeleccionado?.persona?.item_no || 'S/I' }}</span>
-            </div>
-          </div>
-        </div>
+  <div class="row g-3">
+    
+    <div class="col-md-5">
+      <span class="text-muted small d-block">Nombre y Apellidos:</span>
+      <strong class="text-uppercase text-primary">
+        {{ usuarioSeleccionado?.persona?.nombre_completo || usuarioSeleccionado?.nombre_completo || 'Sin Nombre' }}
+      </strong>
+    </div>
+    
+    <div class="col-md-3">
+      <span class="text-muted small d-block">C.I. N°:</span>
+      <strong>
+        {{usuarioSeleccionado?.persona?.carnet_identidad || '---' }}
+      </strong>
+    </div>
+    
+    <div class="col-md-4">
+      <span class="text-muted small d-block">Fecha de Ingreso:</span>
+      <strong>
+        {{ (usuarioSeleccionado?.persona?.fecha_ingreso_institucion | date:'dd/MM/yyyy') || (usuarioSeleccionado?.fecha_ingreso_institucion | date:'dd/MM/yyyy') || '---' }}
+      </strong>
+    </div>
+    
+    <div class="col-md-5">
+      <span class="text-muted small d-block">Cargo / Profesión:</span>
+      <strong class="text-uppercase text-secondary">
+        {{ usuarioSeleccionado?.persona?.tipo_trabajador || usuarioSeleccionado?.tipo_trabajador || 'PERSONAL DE SALUD' }}
+      </strong>
+    </div>
+    
+    <div class="col-md-3">
+      <span class="text-muted small d-block">Fecha Nacimiento:</span>
+      <strong>
+        {{ (usuarioSeleccionado?.persona?.fecha_nacimiento | date:'dd/MM/yyyy') || (usuarioSeleccionado?.fecha_nacimiento | date:'dd/MM/yyyy') || '---' }}
+      </strong>
+    </div>
+    
+    <div class="col-md-4">
+      <span class="text-muted small d-block">Item / N° Contrato:</span>
+      <span class="badge bg-dark fs-6 mt-1">
+        {{ usuarioSeleccionado?.persona?.numero_tipo_salario || usuarioSeleccionado?.numero_tipo_salario || 'S/I' }}
+      </span>
+    </div>
 
+  </div>
+</div>
 
         
 
