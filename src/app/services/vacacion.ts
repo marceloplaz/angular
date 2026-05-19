@@ -41,10 +41,11 @@ actualizarEstado(
   });
 }
 
-  /**
+/**
    * Obtiene el historial de vacaciones de un usuario específico.
    * @param id ID del usuario (de la tabla users)
    */
+
   getHistorialByUsuario(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/usuario/${id}`);
   }

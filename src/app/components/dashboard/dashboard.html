@@ -7,7 +7,7 @@
             </div>
             <span class="fw-bold text-success text-uppercase" style="font-size: 0.8rem;">Hospital San Juan de Dios</span>
         </a>
-
+        
         <nav class="mt-3">
             <a routerLink="/dashboard" class="nav-item" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">
                 <i class="bi bi-house-door"></i> Inicio / Dashboard
@@ -22,6 +22,8 @@
     <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
         <i class="bi bi-calendar-check"></i> Gestión de Turnos
     </a>
+
+    
     
     <!-- Este es el submenú que ahora tiene coordenadas absolutas -->
    <ul class="submenu-vertical">
@@ -80,6 +82,7 @@
             </div>
         </header>
 
+        
         <!-- CONTENEDOR DINÁMICO -->
         <div class="p-4">
             @if (esInicio()) {
@@ -94,7 +97,16 @@
                         </span>
                     </div>
 
-                    <!-- Indicadores y Buscador -->
+      <div *ngIf="alertaPermisoActivo().activo" 
+                         class="alert alert-warning border-warning shadow-sm d-flex align-items-center mb-4 animate__animated animate__headShake" 
+                         role="alert" 
+                         style="border-radius: 12px;">
+                      <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
+                      <div>
+                        <strong class="d-block text-dark">¡ATENCIÓN! REQUERIMIENTO DE PERSONAL EN PROCESO</strong>
+                        <span class="small text-secondary">{{ alertaPermisoActivo().detalle }}</span>
+                      </div>
+                    </div>
                     
                    
 
@@ -113,25 +125,38 @@
   </div>
 
   <div class="col-md-3">
-    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
-      <div class="card-body p-2 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-          <span class="text-muted fw-bold" style="font-size: 0.65rem;">VACACIÓN</span>
-          <i class="fas fa-calendar-check text-success" style="font-size: 0.8rem;"></i>
-        </div>
-        <h4 class="mb-2 fw-bold" style="color: #0ba044;">{{ saldoRestante }} <small class="fs-6 fw-normal">Días</small></h4>
-        
-        <div class="mt-auto">
-          <button (click)="irAFormulario('vacacion')" class="btn btn-sm w-100 mb-1 text-white fw-bold py-1" style="background-color: #166534; font-size: 0.6rem; border-radius: 6px;">
-            <i class="fas fa-plane-departure me-1"></i> FORM.  VACACION
-          </button>
-          <button (click)="irAFormulario('permiso')" class="btn btn-sm w-100 btn-outline-success fw-bold py-1" style="font-size: 0.6rem; border-radius: 6px; border: 1.5px solid #22c55e; color: #166534;">
-            <i class="fas fa-file-alt me-1"></i> FORM. PERMISO A CUENTA VACACION
-          </button>
-        </div>
+  <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
+    <div class="card-body p-2 d-flex flex-column">
+      
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="text-muted fw-bold" style="font-size: 0.65rem;">VACACIÓN</span>
+        <i class="fas fa-calendar-check text-success" style="font-size: 0.8rem;"></i>
       </div>
+      
+      <h4 class="mb-2 fw-bold" style="color: #0ba044;">
+        {{ saldoRestante }} <small class="fs-6 fw-normal">Días</small>
+      </h4>
+      
+      <div class="mt-auto">
+        <button type="button" 
+                (click)="irAFormulario('vacacion')" 
+                class="btn btn-sm w-100 mb-2 text-white fw-bold py-1" 
+                style="background-color: #166534; font-size: 0.6rem; border-radius: 6px;">
+          <i class="fas fa-plane-departure me-1"></i> FORM. VACACION
+        </button>
+        
+        <button type="button" 
+                class="btn btn-sm btn-outline-success w-100 fw-bold py-1 shadow-sm"
+                style="font-size: 0.55rem; border-radius: 6px;"
+                data-bs-toggle="modal" 
+                data-bs-target="#modalPermisoCuenta">
+          <i class="bi bi-file-earmark-plus me-1"></i> FORM. PERMISO A CUENTA
+        </button>
+      </div>
+
     </div>
   </div>
+</div>
 
   <div class="col-md-2">
     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
@@ -322,4 +347,109 @@
             </div>
         </div>
     </main>
+</div>
+<div class="modal fade" id="modalPermisoCuenta" data-bs-backdrop="static" tabindex="-1" aria-labelledby="modalPermisoCuentaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      
+      <div class="modal-header bg-success text-white py-3">
+        <h5 class="modal-title fw-bold id=modalPermisoCuentaLabel">
+          <i class="bi bi-file-earmark-text-fill me-2"></i>FORMATO "6" PERMISO A CUENTA DE VACACIÓN
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-light">
+        <form [formGroup]="permisoCuentaForm" *ngIf="permisoCuentaForm">
+          
+          <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
+            <div class="text-secondary small">
+              <span class="fw-bold d-block text-dark mb-1">Señor(a):</span>
+              <span class="d-block text-uppercase fw-bold text-success" style="letter-spacing: 0.5px;">
+                Encargado(a) / Jefe de Recursos Humanos
+              </span>
+              <span class="text-muted fw-semibold">Hospital Regional San Juan de Dios - Presente.-</span>
+            </div>
+          </div>
+
+          <div class="mb-4">
+  <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+    Nombre y Apellido del Solicitante
+  </label>
+  <div class="input-group shadow-sm">
+    <span class="input-group-text bg-white border-end-0">
+      <i class="bi bi-person-fill text-success"></i>
+    </span>
+    <input type="text" 
+           class="form-control border-start-0 bg-white fw-bold text-dark" 
+           formControlName="nombre_solicitante" 
+           placeholder="Seleccione un profesional desde el buscador..."
+           readonly>
+  </div>
+</div>
+
+
+
+          <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
+            <span class="text-success fw-bold small mb-3 d-block text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+              Detalle del Período Solicitado
+            </span>
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label small text-muted fw-semibold">De Fecha:</label>
+                <input type="date" 
+                       class="form-control border-success-subtle shadow-sm" 
+                       formControlName="fecha_inicio" 
+                       (change)="calcularDiasPermiso()">
+              </div>
+              
+              <div class="col-md-5">
+                <label class="form-label small text-muted fw-semibold">Hasta la Fecha:</label>
+                <input type="date" 
+                       class="form-control border-success-subtle shadow-sm" 
+                       formControlName="fecha_fin" 
+                       (change)="calcularDiasPermiso()">
+              </div>
+              
+              <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">Total Días:</label>
+                <input type="number" 
+                       class="form-control fw-bold text-center border-success bg-light text-success shadow-sm fs-5" 
+                       formControlName="total_dias" 
+                       readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+              Por el siguiente Motivo / Justificación:
+            </label>
+            <textarea class="form-control shadow-sm border-success-subtle" 
+                      rows="4" 
+                      formControlName="motivo"
+                      placeholder="Escriba de forma clara y detallada la justificación del uso de días a cuenta de vacación..."></textarea>
+            <div class="form-text text-end small text-muted">
+              Máximo 600 caracteres.
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer bg-white border-top-0 px-4 pb-3">
+        <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" 
+                class="btn btn-success px-4 shadow-sm fw-bold" 
+                [disabled]="permisoCuentaForm?.invalid" 
+                (click)="guardarPermisoCuenta()"
+                data-bs-dismiss="modal">
+          <i class="bi bi-cloud-arrow-up-fill me-1"></i> Registrar Solicitud
+        </button>
+      </div>
+
+    </div>
+  </div>
 </div>
