@@ -12,7 +12,9 @@ export class VacacionService {
   private apiUrl = `${environment.apiUrl}/vacaciones`;
 private rootApiUrl = environment.apiUrl;
   
-
+getTodosLosSaldosMasivos(): Observable<any> {
+  return this.http.get(`${this.apiUrl}saldos-masivos`);
+}
 programarFechas(id: number, datos: { fecha_inicio: string, fecha_fin: string }): Observable<any> {
         return this.http.put(`${this.apiUrl}/programar/${id}`, datos);
   }
@@ -65,6 +67,7 @@ actualizarEstado(
    * @param observaciones Motivo del rechazo o nota adicional
    */
  
+  
  
   getGestiones(): Observable<any[]> {
   

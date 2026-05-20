@@ -3,7 +3,6 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } fro
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
-// 🌟 Importación esencial para controlar el Formato "6"
 import { ReactiveFormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 import { ServicioService } from '../../services/servicios'; 
@@ -17,7 +16,6 @@ import { VacacionService } from '../../services/vacacion';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  // 🌟 Se añade ReactiveFormsModule aquí para que reconozca [formGroup]
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ReactiveFormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
@@ -26,19 +24,20 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   private servicioService = inject(ServicioService);
   private vacacionService = inject(VacacionService);
-  private nombreOriginal = signal<string>('');
   private authService = inject(AuthService);
-  private fb = inject(FormBuilder); // 🌟 Inyección del constructor de formularios
+  private fb = inject(FormBuilder); 
+  private _reporteMensualService = inject(ReporteMensualService);
 
-  // 🌟 Variable del Formulario Reactivo para el Formato 6
+  private nombreOriginal = signal<string>('');
+
   public permisoCuentaForm!: FormGroup;
   public alertaPermisoActivo = signal<{ activo: boolean, detalle: string | null }>({ activo: false, detalle: null });
+  
   public saldoRestante: number = 0;
   public diasConsumidos: number = 0;
   public totalDerecho: number = 15; 
   public porcentajeUso: number = 0;
 
-  
   public usuario = signal(''); 
   public sidebarVisible = signal(true);
   public listaPersonas = signal<any[]>([]); 
@@ -48,7 +47,9 @@ export class DashboardComponent implements OnInit {
   public usuarioBuscadoId = signal<number | null>(null);
   public mesVisualizado = signal<number>(new Date().getMonth() + 1); 
   public anioVisualizado = signal<number>(new Date().getFullYear()); 
-  
+  public vacacionForm!: FormGroup;  
+  public usuarioSeleccionado: any = null;
+
   private urlSignal = toSignal(
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
@@ -57,7 +58,7 @@ export class DashboardComponent implements OnInit {
     { initialValue: this.router.url }
   );
 
-  constructor(private _reporteMensualService: ReporteMensualService) {
+  constructor() {
     effect(() => {
       const servicio = this.servicioService.servicioSeleccionado();
       if (servicio) {
@@ -75,9 +76,8 @@ export class DashboardComponent implements OnInit {
       this.nombreOriginal.set(this.usuario());
     }
     
-    // Inicializaciones base
+    this.initPermisoForm(); 
     this.cargarResumenVacaciones();
-    this.initPermisoForm(); // 🌟 Inicializa el Formulario Dinámico
 
     this.servicioService.getServiciosInicio().subscribe({
       next: (response) => {
@@ -90,146 +90,222 @@ export class DashboardComponent implements OnInit {
       },
       error: (err: any) => console.error('Error al cargar servicios asignados:', err)
     });
+
+this.vacacionForm = this.fb.group({
+  es_solo_reemplazo: [false],
+  nombre_solicitante: ['', Validators.required],
+  servicio_nombre: ['', Validators.required],
+  fecha_inicio: ['', Validators.required],
+  fecha_fin: ['', Validators.required],
+  funcionario_reemplazo: [''],
+  
+  // 🌟 Campos exclusivos para el análisis manual del Administrador (RR.HH.)
+  gestion_vacacion: ['', Validators.required], // Texto libre analizado por el admin
+  dias_concedidos: [0, Validators.required],
+  dias_descuento: [0, Validators.required],
+  saldo_restante: [0, Validators.required]
+});
+    this.vacacionForm.get('fecha_inicio')?.valueChanges.subscribe(() => this.calcularDiasVacacion());
+    this.vacacionForm.get('fecha_fin')?.valueChanges.subscribe(() => this.calcularDiasVacacion());
+    this.vacacionForm.get('dias_derecho')?.valueChanges.subscribe(() => this.calcularDiasVacacion());
+    
+    this.vacacionForm.get('es_solo_reemplazo')?.valueChanges.subscribe((esReemplazo) => {
+      const reemplazoCtrl = this.vacacionForm.get('funcionario_reemplazo');
+      if (esReemplazo) {
+        reemplazoCtrl?.setValidators([Validators.required]);
+      } else {
+        reemplazoCtrl?.clearValidators();
+      }
+      reemplazoCtrl?.updateValueAndValidity();
+    });
+  
+   
   }
+
+
+  
+
 
   restablecerVistaPropia() {
-  this.turnosDelMes.set([]); 
-  this.misServicios.set([]); 
-  this.usuarioBuscadoId.set(null);
-  this.usuario.set(this.nombreOriginal()); 
-  this.cargarMisServicios(); 
-  
-  // 🌟 Reseteamos la alerta y el formulario al volver a la vista propia
-  this.alertaPermisoActivo.set({ activo: false, detalle: null });
-  this.permisoCuentaForm.reset();
-  this.initPermisoForm();
-}
-  usuarioSeleccionado: any = null;
-  // 🌟 1. ESTRUCTURA DEL FORMULARIO DIGITAL (Obvia nombres rígidos de RRHH)
- initPermisoForm() {
-  this.permisoCuentaForm = this.fb.group({
-    usuario_id: [null, Validators.required], // 🌟 Obligatorio para asegurar que se seleccionó del buscador
-    nombre_solicitante: ['', Validators.required],
-    fecha_inicio: ['', Validators.required],
-    fecha_fin: ['', Validators.required],
-    total_dias: [0, [Validators.required, Validators.min(1)]],
-    motivo: ['', [Validators.required, Validators.maxLength(600)]]
-  });
-}
-seleccionarUsuario(usuario: any) {
-  // 🌟 Guardamos el JSON completo con 'tipo_salario' y 'numero_tipo_salario'
-  this.usuarioSeleccionado = usuario; 
-  
-  this.usuarioBuscadoId.set(usuario.id);
-  
-  const nombreCompleto = usuario.persona?.nombre_completo || usuario.name;
-  this.usuario.set(nombreCompleto);
-  this.listaPersonas.set([]);
-
-  // 🌟 Forzamos la actualización de controles reactivos para romper el 'disabled'
-  this.permisoCuentaForm.patchValue({
-    usuario_id: usuario.id,
-    nombre_solicitante: nombreCompleto.trim().toUpperCase()
-  });
-
-  // Forzamos a Angular a revaluar el estado de validez del formulario
-  this.permisoCuentaForm.updateValueAndValidity();
-
-  this.servicioService.getServiciosPorUsuario(usuario.id).subscribe(res => {
-    const servicios = res.data || res.servicios || res;
-    this.misServicios.set(servicios);
+    this.turnosDelMes.set([]); 
+    this.misServicios.set([]); 
+    this.usuarioBuscadoId.set(null);
+    this.usuario.set(this.nombreOriginal()); 
+    this.cargarMisServicios(); 
     
-    if (servicios.length > 0) {
-      this.servicioService.seleccionarServicio(servicios[0]);
-    } else {
-      this.turnosDelMes.set([]);
-    }
-  });
-}
-  // 🌟 3. CÁLCULO AUTOMÁTICO DE DÍAS (Al cambiar las fechas en el HTML)
-  calcularDiasPermiso() {
-    const inicio = this.permisoCuentaForm.get('fecha_inicio')?.value;
-    const fin = this.permisoCuentaForm.get('fecha_fin')?.value;
-
-    if (inicio && fin) {
-      const dateInicio = new Date(inicio);
-      const dateFin = new Date(fin);
-      
-      // Diferencia en milisegundos y conversión a días base
-      const diferenciaTiempo = dateFin.getTime() - dateInicio.getTime();
-      let diasCalculados = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24)) + 1;
-
-      if (diasCalculados < 0) diasCalculados = 0;
-
-      this.permisoCuentaForm.patchValue({
-        total_dias: diasCalculados
-      });
-    }
-  }
-guardarPermisoCuenta() {
-  // Si el formulario sigue inválido por fechas o motivo, abortamos la ejecución
-  if (this.permisoCuentaForm.invalid) {
-    console.warn('Formulario inválido. Verifica los campos requeridos.');
-    return;
-  }
-
-  const datosFormulario = this.permisoCuentaForm.getRawValue();
-
-  // Extraemos las propiedades mapeadas de tu tabla 'personas' en HeidiSQL
-  const personaExtraida = this.usuarioSeleccionado?.persona || {};
-
-  const datosEnvio = {
-    fecha_inicio: datosFormulario.fecha_inicio,
-    fecha_fin: datosFormulario.fecha_fin,
-    total_dias: datosFormulario.total_dias,
-    motivo: datosFormulario.motivo,
-    nombre_solicitante: datosFormulario.nombre_solicitante,
-    persona: {
-      nombre_completo: personaExtraida.nombre_completo || datosFormulario.nombre_solicitante,
-      tipo_salario: personaExtraida.tipo_salario || 'TGN', // Resguardo por defecto según tu DB
-      numero_tipo_salario: personaExtraida.numero_tipo_salario || '..........'
-    }
-  };
-
-  console.log('Enviando y renderizando Formato 6:', datosEnvio);
-
-  try {
-    // Alerta visual mediante Signals
-    const nombreParaAlerta = datosEnvio.persona.nombre_completo || 'TRABAJADOR';
-    this.alertaPermisoActivo.set({
-      activo: true,
-      detalle: `Requerimiento en proceso: Permiso a Cuenta de Vacación para ${nombreParaAlerta} desde el ${datosEnvio.fecha_inicio} hasta el ${datosEnvio.fecha_fin} (${datosEnvio.total_dias} Días).`
-    });
-
-    // Ejecutamos el motor de jsPDF pasándole el objeto armado
-    this.generarFormato6PDF(datosEnvio);
-
-    // Reseteamos el modal de forma limpia
+    this.alertaPermisoActivo.set({ activo: false, detalle: null });
     this.permisoCuentaForm.reset();
     this.initPermisoForm();
-    this.usuarioSeleccionado = null; 
+    this.usuarioSeleccionado = null;
+  }
 
-  } catch (error) {
-    console.error('Error crítico al procesar la solicitud:', error);
+  initPermisoForm() {
+    this.permisoCuentaForm = this.fb.group({
+      usuario_id: [null, Validators.required], 
+      nombre_solicitante: ['', Validators.required],
+      fecha_inicio: ['', Validators.required],
+      fecha_fin: ['', Validators.required],
+      total_dias: [0, [Validators.required, Validators.min(1)]],
+      motivo: ['', [Validators.required, Validators.maxLength(600)]]
+    });
+  }
+
+
+calcularDiasVacacion() {
+  const inicio = this.vacacionForm.get('fecha_inicio')?.value;
+  const fin = this.vacacionForm.get('fecha_fin')?.value;
+  const derechoTotal = Number(this.vacacionForm.get('dias_derecho')?.value) || 0;
+
+  if (inicio && fin) {
+    const pInicio = inicio.split('-');
+    const pFin = fin.split('-');
+
+    const dateInicio = new Date(Number(pInicio[0]), Number(pInicio[1]) - 1, Number(pInicio[2]));
+    const dateFin = new Date(Number(pFin[0]), Number(pFin[1]) - 1, Number(pFin[2]));
+    
+    const diferenciaTiempo = dateFin.getTime() - dateInicio.getTime();
+    let diasCalculados = Math.round(diferenciaTiempo / (1000 * 60 * 60 * 24)) + 1;
+
+    if (diasCalculados < 0) diasCalculados = 0;
+
+    const saldo = derechoTotal - diasCalculados;
+
+    this.vacacionForm.patchValue({
+      dias_concedidos: diasCalculados,
+      saldo_restante: saldo < 0 ? 0 : saldo
+    }, { emitEvent: false }); // 👈 Seguridad total contra bucles infinitos
   }
 }
-// 📄 Función constructora del documento institucional optimizada contra desbordamientos
-private generarFormato6PDF(datos: any) {
+
+seleccionarUsuario(usuario: any) {
+    this.usuarioSeleccionado = usuario; 
+    this.usuarioBuscadoId.set(usuario.id);
+    
+    const nombreCompleto = (usuario.persona?.nombre_completo || usuario.name || '').trim().toUpperCase();
+    this.usuario.set(nombreCompleto);
+    this.listaPersonas.set([]);
+
+    // 1. Llenado para Formulario de Permisos
+    this.permisoCuentaForm.patchValue({
+      usuario_id: usuario.id,
+      nombre_solicitante: nombreCompleto
+    });
+    this.permisoCuentaForm.updateValueAndValidity();
+
+    // 2. Llenado para Formulario de Vacación / Reemplazo (Heredado del Dashboard)
+    const servicioAsignado = usuario.persona?.servicio_nombre || 'HEMODIALISIS';
+    this.vacacionForm.patchValue({
+      nombre_solicitante: nombreCompleto,
+      servicio_nombre: servicioAsignado.toUpperCase()
+    });
+
+    // Intentamos extraer los días de derecho reales si el backend los provee en el modelo
+    if (usuario.persona?.dias_derecho) {
+      this.vacacionForm.patchValue({ dias_derecho: usuario.persona.dias_derecho });
+    }
+
+    this.servicioService.getServiciosPorUsuario(usuario.id).subscribe(res => {
+      const servicios = res.data || res.servicios || res;
+      this.misServicios.set(servicios);
+      
+      if (servicios.length > 0) {
+        this.servicioService.seleccionarServicio(servicios[0]);
+        // Si el servicio cambia, actualizamos el campo del formulario de vacaciones
+        this.vacacionForm.patchValue({ servicio_nombre: servicios[0].nombre.toUpperCase() });
+      } else {
+        this.turnosDelMes.set([]);
+      }
+    });
+  }
+
+
+
+
+  calcularDiasPermiso() {
+  const inicio = this.permisoCuentaForm.get('fecha_inicio')?.value;
+  const fin = this.permisoCuentaForm.get('fecha_fin')?.value;
+
+  if (inicio && fin) {
+    // Forzamos la interpretación usando partes locales (año, mes indexado base 0, día)
+    const pInicio = inicio.split('-');
+    const pFin = fin.split('-');
+
+    const dateInicio = new Date(Number(pInicio[0]), Number(pInicio[1]) - 1, Number(pInicio[2]));
+    const dateFin = new Date(Number(pFin[0]), Number(pFin[1]) - 1, Number(pFin[2]));
+    
+    const diferenciaTiempo = dateFin.getTime() - dateInicio.getTime();
+    let diasCalculados = Math.round(diferenciaTiempo / (1000 * 60 * 60 * 24)) + 1;
+
+    if (diasCalculados < 0) diasCalculados = 0;
+
+    this.permisoCuentaForm.patchValue({
+      total_dias: diasCalculados
+    });
+  }
+}
+
+  guardarPermisoCuenta() {
+    if (this.permisoCuentaForm.invalid) {
+      console.warn('Formulario inválido. Verifica los campos requeridos.');
+      return;
+    }
+
+    const datosFormulario = this.permisoCuentaForm.getRawValue();
+    const personaExtraida = this.usuarioSeleccionado?.persona || {};
+
+    const datosEnvio = {
+      fecha_inicio: datosFormulario.fecha_inicio,
+      fecha_fin: datosFormulario.fecha_fin,
+      total_dias: datosFormulario.total_dias,
+      motivo: datosFormulario.motivo,
+      nombre_solicitante: datosFormulario.nombre_solicitante,
+      persona: {
+        nombre_completo: personaExtraida.nombre_completo || datosFormulario.nombre_solicitante,
+        tipo_salario: personaExtraida.tipo_salario || 'TGN', 
+        numero_tipo_salario: personaExtraida.numero_tipo_salario || '..........'
+      }
+    };
+
+    try {
+      const nombreParaAlerta = datosEnvio.persona.nombre_completo || 'TRABAJADOR';
+      this.alertaPermisoActivo.set({
+        activo: true,
+        detalle: `Requerimiento en proceso: Permiso a Cuenta de Vacación para ${nombreParaAlerta} desde el ${datosEnvio.fecha_inicio} hasta el ${datosEnvio.fecha_fin} (${datosEnvio.total_dias} Días).`
+      });
+
+      this.generarFormato6PDF(datosEnvio);
+
+      this.permisoCuentaForm.reset();
+      this.initPermisoForm();
+      this.usuarioSeleccionado = null; 
+
+    } catch (error) {
+      console.error('Error crítico al procesar la solicitud:', error);
+    }
+  }
+
+  private generarFormato6PDF(datos: any) {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   });
 
-  // 1. EXTRAER INFORMACIÓN DESDE TU ESTRUCTURA REAL DEL BACKEND
+  // 🌟 FUNCIÓN INTERNA: Formatea de YYYY-MM-DD a DD/MM/YYYY de forma segura
+  const formatearFechaLocal = (fechaString: string): string => {
+    if (!fechaString) return '.................';
+    const partes = fechaString.split('-'); // Divide por guiones del input nativo
+    if (partes.length === 3) {
+      return `${partes[2]}/${partes[1]}/${partes[0]}`; // Retorna DD/MM/YYYY
+    }
+    return fechaString;
+  };
+
   const persona = datos.persona || {};
-  
   const itemVal = persona.tipo_salario ? persona.tipo_salario.toUpperCase() : '..........';
   const nroItemVal = persona.numero_tipo_salario ? persona.numero_tipo_salario : '..........';
-  
   const nombreTrabajador = (persona.nombre_completo || datos.nombre_solicitante || 'TRABAJADOR').trim().toUpperCase();
 
-  // --- ENCABEZADO INSTITUCIONAL ---
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('G.A.D.T.', 15, 20);
@@ -241,26 +317,22 @@ private generarFormato6PDF(datos: any) {
   doc.text('Unidad de Recursos Humanos', 105, 25, { align: 'center' });
   doc.text('Hospital Regional San Juan de Dios', 105, 30, { align: 'center' });
 
-  // --- RECUADRO DE ÍTEM (Esquina Superior Derecha) ---
   doc.rect(148, 15, 47, 18); 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.text(`ITEM: ${itemVal}`, 151, 21);
   doc.text(`N° ITEM: ${nroItemVal}`, 151, 28);
 
-  // --- TÍTULO DEL FORMATO ---
   doc.line(15, 38, 195, 38);
   doc.setFontSize(12);
   doc.text('FORMATO "6" PERMISO A CUENTA DE VACACIÓN', 105, 44, { align: 'center' });
   doc.line(15, 48, 195, 48);
 
-  // --- FECHA DE EMISIÓN ---
   const fechaHoy = new Date();
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.text(`Tarija, .....${fechaHoy.getDate()}..... de .....${fechaHoy.toLocaleString('es-ES', { month: 'long' })}..... del .....${fechaHoy.getFullYear()}.....`, 15, 58);
 
-  // --- DESTINATARIO ---
   doc.setFont('helvetica', 'bold');
   doc.text('Señor:', 15, 70);
   doc.setFont('helvetica', 'normal');
@@ -269,7 +341,6 @@ private generarFormato6PDF(datos: any) {
   doc.text('Jefe Recursos Humanos Hospital Regional San Juan de Dios', 15, 82);
   doc.text('Presente.-', 15, 88);
 
-  // --- REFERENCIA Y CUERPO ---
   doc.text('REFERENCIA.- PERMISO A CUENTA DE VACACION', 15, 102);
   doc.line(15, 103, 106, 103); 
 
@@ -277,17 +348,17 @@ private generarFormato6PDF(datos: any) {
   doc.text('A través de la presente, me dirijo a su autoridad para solicitar permiso a cuenta de Vacación', 15, 114);
   doc.text('según el siguiente detalle:', 15, 120);
 
-  // --- DETALLE DE FECHAS Y DÍAS ---
+  // --- DETALLE DE FECHAS CON REFORMATEO EN TIEMPO DE RENDERIZADO ---
   doc.setFont('helvetica', 'bold');
   doc.text('DE FECHA:', 15, 135);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${datos.fecha_inicio || '.................'}`, 38, 135);
+  doc.text(`${formatearFechaLocal(datos.fecha_inicio)}`, 38, 135); // 🌟 Aplicado
   doc.line(36, 136, 65, 136); 
 
   doc.setFont('helvetica', 'bold');
   doc.text('HASTA LA FECHA:', 72, 135);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${datos.fecha_fin || '.................'}`, 110, 135);
+  doc.text(`${formatearFechaLocal(datos.fecha_fin)}`, 110, 135); // 🌟 Aplicado
   doc.line(108, 136, 138, 136); 
 
   doc.setFont('helvetica', 'bold');
@@ -296,7 +367,6 @@ private generarFormato6PDF(datos: any) {
   doc.setFontSize(14);
   doc.text(`${datos.total_dias || '0'}`, 179, 135, { align: 'center' });
 
-  // --- MOTIVO DINÁMICO ---
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('Por el siguiente Motivo / Justificación:', 15, 155);
@@ -305,17 +375,13 @@ private generarFormato6PDF(datos: any) {
   const lineasMotivo = doc.splitTextToSize(datos.motivo || 'Sin observaciones.', 175);
   doc.text(lineasMotivo, 15, 163);
 
-  // 🚀 CÁLCULO DINÁMICO DE ALTURA OBLIGATORIO:
-  // Cada línea de texto a tamaño 11 toma aprox 5mm de interlineado básico
   const alturaMotivoOcupado = lineasMotivo.length * 5; 
-  let puntoYActual = 163 + alturaMotivoOcupado + 12; // Dejamos un margen controlado para la despedida
+  let puntoYActual = 163 + alturaMotivoOcupado + 12; 
 
-  // --- DESPEDIDA (Empujada dinámicamente) ---
   doc.setFont('helvetica', 'normal');
   doc.text('Sin otro particular me despido con las consideraciones más distinguidas.', 15, puntoYActual);
 
-  // --- SECCIÓN DE FIRMAS (Empujada dinámicamente) ---
-  const lineaFirmaY = puntoYActual + 30; // 30mm abajo de la despedida
+  const lineaFirmaY = puntoYActual + 30; 
   
   doc.line(20, lineaFirmaY, 90, lineaFirmaY);
   doc.setFont('helvetica', 'bold');
@@ -328,21 +394,21 @@ private generarFormato6PDF(datos: any) {
   doc.setFont('helvetica', 'bold');
   doc.text('Firma y Sello del Jefe Servicio/Unidad', 155, lineaFirmaY + 5, { align: 'center' });
 
-  const lineaSubdirectorY = lineaFirmaY + 30; // 30mm abajo del bloque anterior de firmas
+  const lineaSubdirectorY = lineaFirmaY + 30; 
   doc.line(70, lineaSubdirectorY, 140, lineaSubdirectorY);
   doc.text('Firma y Sello del Sub Director del Servicio o Unidad', 105, lineaSubdirectorY + 5, { align: 'center' });
 
-  // --- NOTA LEGAL INFERIOR (Fija abajo para no flotar feo) ---
   doc.line(15, 275, 195, 275);
   doc.setFontSize(7.5);
   const notaLegal = 'NOTA.- Toda nota de solicitud de permiso debe ser presentada 48 horas antes del permiso, en caso de emergencia la misma debe ser autorizada con su jefe inmediato superior ANTES del permiso y ser entregada el día hábil siguiente al permiso realizado.';
   const lineasNota = doc.splitTextToSize(notaLegal, 180);
   doc.text(lineasNota, 15, 280);
 
-  // Descarga del PDF con el nombre real
   doc.save(`Formato_6_Permiso_${nombreTrabajador.replace(/\s+/g, '_')}.pdf`);
 }
-  // --- MÉTODOS MANTENIDOS SIN ALTERACIÓN ---
+
+
+
   private obtenerIdDesdeToken(): number | null {
     const token = this.authService.getToken();
     if (!token || token.split('.').length !== 3) return null;
@@ -412,6 +478,7 @@ private generarFormato6PDF(datos: any) {
 
   buscarUsuario(valor: string) {
     if (!valor || valor.trim() === '') {
+      this.listaPersonas.set([]);
       this.restablecerVistaPropia();
       return;
     }
@@ -420,10 +487,10 @@ private generarFormato6PDF(datos: any) {
         next: (res: any) => this.listaPersonas.set(res),
         error: (err: any) => console.error(err)
       });
+    } else {
+      this.listaPersonas.set([]);
     }
   }
-
-  
 
   cargarMisServicios() {
     this.servicioService.getServiciosInicio().subscribe({
@@ -496,8 +563,10 @@ private generarFormato6PDF(datos: any) {
     doc.setTextColor(...PDF_COLORS['TEXTO_SUAVE']);
     doc.text(`PROFESIONAL: ${this.nombreOriginal()}`, 14, 42); 
     doc.text(`SERVICIO: ${servicioActivo}`, 14, 47);
-    doc.text(`FECHA EMISIÓN: ${this.fechaActual()}`, 280, 42, { align: 'right' });
-    doc.text(`GESTIÓN: 2026`, 280, 47, { align: 'right' }); 
+    
+    // 🌟 CORRECCIÓN DE COORDENADAS ACÁ (Cambiado de 280 a 195 para que entre en la hoja)
+    doc.text(`FECHA EMISIÓN: ${this.fechaActual()}`, 195, 42, { align: 'right' });
+    doc.text(`GESTIÓN: 2026`, 195, 47, { align: 'right' }); 
 
     autoTable(doc, {
       startY: 55,
@@ -514,4 +583,183 @@ private generarFormato6PDF(datos: any) {
 
     doc.save(`Rol_Guardias_${user.replace(/\s+/g, '_')}.pdf`);
   }
+guardarSolicitudVacacion(): void {
+  if (this.vacacionForm.invalid) {
+    return;
+  }
+
+  // 1. Extraemos todos los valores (incluyendo los deshabilitados de RR.HH.)
+  const formularioRaw = this.vacacionForm.getRawValue(); 
+
+  // 2. Forzamos que use la gestión analizada por el Admin
+  const datosSolicitud = {
+    ...formularioRaw,
+    // 🌟 RECUERDA: Si tu campo del cuadro de abajo se llama 'gestion_vacacion', pon formularioRaw.gestion_vacacion
+    gestion_vacacion: formularioRaw.gestion_vacacion 
+  };
+
+  try {
+    // 3. Obtenemos el Blob generado localmente por jsPDF
+    const blobPdf = this.generarPDFSolicitudVacacionAnual(datosSolicitud);
+    
+    // 4. Creamos la URL temporal segura del archivo
+    const urlVistaPrevia = window.URL.createObjectURL(blobPdf);
+    
+    // 5. Mandamos directamente a la vista previa / pestaña de impresión
+    const ventanaImpresion = window.open(urlVistaPrevia);
+    if (ventanaImpresion) {
+      ventanaImpresion.focus();
+    } else {
+      // Plan de respaldo si el navegador bloquea las ventanas emergentes (Pop-ups)
+      const enlaceTemporal = document.createElement('a');
+      enlaceTemporal.href = urlVistaPrevia;
+      enlaceTemporal.download = `Solicitud_Vacacion_${datosSolicitud.nombre_solicitante.replace(/\s+/g, '_')}.pdf`;
+      enlaceTemporal.click();
+    }
+    
+    console.log('Vista previa del PDF desplegada con éxito.');
+  } catch (error) {
+    console.error('Error al generar la vista previa del PDF:', error);
+  }
+}
+
+private generarPDFSolicitudVacacionAnual(datos: any): Blob {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const formatearFechaLocal = (fechaString: string): string => {
+    if (!fechaString) return '.................';
+    const partes = fechaString.split('-');
+    return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fechaString;
+  };
+
+  const nombreTrabajador = (datos.nombre_solicitante || 'TRABAJADOR').trim().toUpperCase();
+  const servicio = (datos.servicio_nombre || 'NUTRICION').trim().toUpperCase();
+  const esSoloReemplazo = datos.es_solo_reemplazo;
+
+  // --- ENCABEZADO INSTITUCIONAL ---
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('MINISTERIO DE SALUD Y DEPORTES', 15, 15);
+  doc.text('HOSPITAL REGIONAL SAN JUAN DE DIOS', 15, 19);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.text('Unidad de Recursos Humanos - Tarija Bolivia', 15, 23);
+
+  // Título Adaptativo
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  const tituloDoc = esSoloReemplazo ? 'REGISTRO DE REEMPLAZO DE PERSONAL' : 'SOLICITUD DE VACACIÓN';
+  doc.text(tituloDoc, 105, 33, { align: 'center' });
+  doc.line(15, 36, 195, 36);
+
+  // --- SECCIÓN 1: SOLICITUD DEL INTERESADO ---
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('El Servidor Público Señor (a):  ___________________________________________________________', 15, 47);
+  doc.setFont('helvetica', 'bold');
+  doc.text(nombreTrabajador, 63, 46);
+
+  doc.setFont('helvetica', 'normal');
+  doc.text('de la Unidad o Servicio de:  _____________________________________________________________', 15, 56);
+  doc.setFont('helvetica', 'bold');
+  doc.text(servicio, 63, 55);
+
+  if (!esSoloReemplazo) {
+    doc.setFont('helvetica', 'normal');
+    doc.text('me corresponde por ley, solicito mi Vacación correspondiente de la Gestión:  ___________________', 15, 65);
+    doc.setFont('helvetica', 'bold');
+    doc.text(datos.gestion_vacacion ? datos.gestion_vacacion.toUpperCase() : '.................', 142, 64);
+  } else {
+    doc.setFont('helvetica', 'italic');
+    doc.text('Se registra la presente boleta exclusivamente para la cobertura y relevo de funciones.', 15, 65);
+  }
+
+  doc.setFont('helvetica', 'normal');
+  doc.text('Sin otro particular estaré a la espera de su respuesta.', 15, 74);
+  doc.text('Atentamente,', 15, 83);
+
+  doc.line(65, 103, 145, 103);
+  doc.setFontSize(8.5);
+  doc.text('FIRMA SOLICITANTE', 105, 107, { align: 'center' });
+
+  // --- SECCIÓN 2: DETERMINACIONES DE LA JEFATURA ---
+  doc.line(15, 113, 195, 113);
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Concedo la vacación solicitada por el servidor público, para tal efecto se tomará las siguientes determinaciones:', 15, 121);
+  
+  doc.text('EMPIEZA el:  __________________   |   HASTA el:  __________________', 15, 131);
+  doc.setFont('helvetica', 'bold');
+  doc.text(formatearFechaLocal(datos.fecha_inicio), 38, 130);
+  doc.text(formatearFechaLocal(datos.fecha_fin), 108, 130);
+
+  doc.setFont('helvetica', 'normal');
+  doc.text('En su REMPLAZO queda el Funcionario (a):  _________________________________________________', 15, 141);
+  doc.setFont('helvetica', 'bold');
+  doc.text(datos.funcionario_reemplazo ? datos.funcionario_reemplazo.toUpperCase() : 'NO ESPECIFICADO / TURNOS ASIGNADOS', 92, 140);
+
+  doc.line(20, 170, 90, 170);
+  doc.setFontSize(8.5);
+  doc.text('FIRMA JEFE DE UNIDAD O DIVISIÓN', 55, 174, { align: 'center' });
+
+  doc.line(120, 170, 190, 170);
+  doc.text('FIRMA SUBDIRECTOR UNIDAD / DIVISIÓN', 155, 174, { align: 'center' });
+
+  // --- SECCIÓN 3: CONTROL INTERNO DE RECURSOS HUMANOS ---
+  doc.line(15, 181, 195, 181);
+  
+  if (!esSoloReemplazo) {
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CUADRO DE VERIFICACIÓN INTERNA (RR.HH.)', 15, 188);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10.5);
+    doc.text('Vacación Anual de la Gestión:  __________________________________________________________', 15, 197);
+    doc.setFont('helvetica', 'bold');
+    doc.text(datos.gestion_vacacion ? datos.gestion_vacacion.toUpperCase() : '.................', 68, 196);
+
+    doc.rect(15, 203, 180, 24);
+    doc.line(15, 211, 195, 211);
+    doc.line(75, 203, 75, 227);
+    doc.line(135, 203, 135, 227);
+
+    doc.setFontSize(8.5);
+    doc.text('DÍAS CONCEDIDOS', 45, 208, { align: 'center' });
+    doc.text('DÍAS DE DESCUENTO', 105, 208, { align: 'center' });
+    doc.text('DÍAS DE SALDO', 165, 208, { align: 'center' });
+
+    doc.setFontSize(13);
+    doc.text(`${datos.dias_concedidos || 0}`, 45, 221, { align: 'center' });
+    
+    doc.setTextColor(180, 0, 0);
+    doc.text(`${datos.dias_descuento || 0}`, 105, 221, { align: 'center' });
+    
+    doc.setTextColor(16, 128, 64);
+    doc.text(`${datos.saldo_restante || 0}`, 165, 221, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+  } else {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.text('NOTA DE CONTROL: Boleta emitida exclusivamente como registro de relevos de guardia.', 15, 190);
+    doc.text('Este movimiento no ejerce alteraciones sobre el saldo computable de vacaciones anuales.', 15, 196);
+  }
+
+  const yFirmaBaja = 258;
+  doc.line(20, yFirmaBaja, 90, yFirmaBaja);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TÉCNICO RESPONSABLE VACACIONES', 55, yFirmaBaja + 4, { align: 'center' });
+
+  doc.line(120, yFirmaBaja, 190, yFirmaBaja);
+  doc.text('JEFE DE RECURSOS HUMANOS', 155, yFirmaBaja + 4, { align: 'center' });
+
+  // 🌟 RETORNAMOS EL BLOB LOCAL
+  return doc.output('blob');
+}
+  
 }
