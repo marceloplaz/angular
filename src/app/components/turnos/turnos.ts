@@ -712,48 +712,89 @@ calcularTotalHoras(p: any): number {
   }, 0);
 }
 
-  onRotarMensual() {
+// 1. Esta función reemplaza el inicio del flujo.
+// Se ejecuta al hacer clic en el menú desplegable "ROTAR PERSONAL".
+// 1. Se ejecuta al hacer clic en el menú desplegable "ROTAR PERSONAL".
+onRotarMensual() {
+  // Apuntamos a tu variable real de la grilla: personalAgrupado
+  if (this.personalAgrupado && this.personalAgrupado.length > 0) {
+    this.personalAgrupado.forEach((p: any) => p.seleccionadoParaRotar = true);
+  }
+}
+
+// 2. Helper para saber si todos en la lista están marcados
+todosSeleccionados(): boolean {
+  if (!this.personalAgrupado || this.personalAgrupado.length === 0) return false;
+  return this.personalAgrupado.every((p: any) => p.seleccionadoParaRotar);
+}
+
+// 3. Permite marcar/desmarcar todos con el checkbox principal
+toggleTodos(event: any) {
+  const checked = event.target.checked;
+  this.personalAgrupado.forEach((p: any) => p.seleccionadoParaRotar = checked);
+}
+
+// 4. Extrae únicamente los IDs de los usuarios que se quedaron marcados
+obtenerIdsARotar(): number[] {
+  if (!this.personalAgrupado) return [];
+  return this.personalAgrupado
+    .filter((p: any) => p.seleccionadoParaRotar)
+    .map((p: any) => p.usuario_id); // Usa tu propiedad usuario_id estándar
+}
+
+// 5. Procesa la lógica final y envía el objeto Payload al Backend.
+onRotarMensualSeleccionado() {
   const servicioId = this.filters.servicio_id;
   const mesActualId = this.filters.mes_id;
-  const gestionActual = this.filters.gestion; // 2026
+  const gestionActual = this.filters.gestion; 
+  const usuariosARotar = this.obtenerIdsARotar(); // [3, 4, 6] (Excluye correctamente a los desmarcardos)
 
   let mesDestinoId: number;
-  let gestionDestino: number = gestionActual;
+  let gestionDestino: number = Number(gestionActual);
 
   // Lógica de salto de mes y año
-  if (mesActualId === 12) {
-    mesDestinoId = 1; // De Diciembre saltamos a Enero
-    gestionDestino = Number(gestionActual) + 1; // Saltamos a 2027
+  if (Number(mesActualId) === 12) {
+    mesDestinoId = 1; 
+    gestionDestino = Number(gestionActual) + 1; 
   } else {
     mesDestinoId = Number(mesActualId) + 1;
   }
 
-  // Confirmación al usuario
-  if (confirm(`¿Deseas rotar circularmente el personal al mes ${mesDestinoId} de ${gestionDestino}?`)) {
-    this.cargando = true;
+  this.cargando = true;
+  
+  // Agrupamos todo en un único objeto Payload para enviar al backend
+  const payload = {
+    servicio_id: servicioId,
+    mes_id: mesActualId,
+    mes_destino: mesDestinoId,
+    gestion_destino_id: gestionDestino, // <-- Agregado para que Laravel sepa si cambió de año
+    usuarios_ids: usuariosARotar
+  };
+
+  this.turnoService.rotarPersonalMensual(payload).subscribe({
+  next: (res: any) => {
+    alert(`¡Éxito! El personal seleccionado ha sido rotado correctamente.`);
+
+    // Actualizamos los filtros para "viajar" al nuevo mes de forma segura
+    this.filters.mes_id = mesDestinoId;
     
-    this.turnoService.rotarPersonalMensual(servicioId, mesActualId, mesDestinoId).subscribe({
-      next: (res: any) => {
-        alert(`¡Éxito! Personal rotado correctamente.`);
+    // CORRECCIÓN: Asignamos el número directamente sin convertirlo a String
+    this.filters.gestion = gestionDestino; 
 
-        // Actualizamos los filtros para "viajar" al nuevo mes
-        this.filters.mes_id = mesDestinoId;
-        this.filters.gestion = gestionDestino;
-
-        // Forzamos la actualización de semanas disponibles para el nuevo mes
-        this.onCambioMes(mesDestinoId); 
-        
-        this.cargando = false;
-      },
-      error: (err: any) => {
-        this.cargando = false;
-        console.error("Error en la rotación:", err);
-        alert("No se pudo rotar: " + (err.error?.message || 'Error del servidor'));
-      }
-    });
+    // Forzamos la actualización de semanas disponibles para el nuevo mes
+    this.onCambioMes(mesDestinoId); 
+    
+    this.cargando = false;
+  },
+  error: (err: any) => {
+    // ... resto de tu código de error
   }
+});
 }
-  // Se renombra para que coincida con el (click)="vaciarCalendario()" de tu HTML
+
+
+// Se renombra para que coincida con el (click)="vaciarCalendario()" de tu HTML
+ 
   vaciarCalendario() {
     if (confirm("¿Estás seguro de vaciar todos los turnos del mes?")) {
       this.turnoService.vaciarMes(this.filters.servicio_id, this.filters.mes_id)

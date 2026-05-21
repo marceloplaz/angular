@@ -87,14 +87,18 @@ export class TurnoService {
   /**
    * Rota al personal del mes actual al mes siguiente
    */
-  rotarPersonalMensual(servicioId: number, mesId: number, mesDestinoId: number): Observable<any> {
+ // rotarPersonalMensual(servicioId: number, mesId: number, mesDestinoId: number): Observable<any> {
     // Ya no inyectamos headers aquí porque el authInterceptor lo hace automáticamente
-    return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
-      servicio_id: servicioId,
-      mes_id: mesId,
-      mes_destino: mesDestinoId
-    });
-  }
+   // return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
+     // servicio_id: servicioId,
+      //mes_id: mesId,
+     // mes_destino: mesDestinoId
+   // });
+  //}
+
+  rotarPersonalMensual(payload: any): Observable<any> {
+  return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, payload);
+}
   
   getResumenMensual(servicioId: number, mesId: number): Observable<any> {
   return this.http.get(`${this.apiUrl}/reportes/turnos/resumen-mensual`, {
