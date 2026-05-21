@@ -107,12 +107,14 @@
                                             {{ item.estado == 1 ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
+                                   
                                     <td class="text-end pe-3">
                                         <button class="btn btn-sm btn-outline-danger border-0" 
-                                                (click)="desvincular(item.id)" title="Desvincular profesional">
+                                                (click)="desvincular(item.usuario_id)" title="Desvincular profesional">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>
+
                                 </tr>
 
                                 <tr *ngIf="nomina.length === 0">

@@ -137,6 +137,18 @@
       <input pInputText [(ngModel)]="nuevoTurno().nombre_turno" placeholder="Ej: Mañana (07:00 - 13:00)" />
     </div>
 
+    <div class="flex flex-column gap-2 mb-3">
+  <label style="font-weight: bold;">Categoría a la que pertenece</label>
+  <p-select 
+    [options]="categoriasDisponibles()" 
+    [(ngModel)]="nuevoTurno().categoria_id"
+    optionLabel="nombre" 
+    optionValue="id" 
+    placeholder="Seleccione una Categoría"
+    [style]="{'width':'100%'}">
+  </p-select>
+</div>
+
     <div class="flex gap-3">
       <div class="field flex-1">
         <label class="font-bold text-sm text-600">Hora Inicio</label>

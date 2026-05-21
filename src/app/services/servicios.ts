@@ -102,8 +102,7 @@ vincularUsuario(data: any): Observable<any> {
   vincularProfesional(datos: any): Observable<any> {
   return this.http.post(`${this.url}/usuario-servicio`, datos);
 }
-
-  desvincularProfesional(id: number): Observable<any> {
-    return this.http.delete(`${this.url}/usuario-servicio/${id}`);
+desvincularProfesional(servicioId: number, usuarioId: number): Observable<any> {
+    return this.http.delete(`${this.url}/usuario-servicio/servicio/${servicioId}/usuario/${usuarioId}`);
   }
 }

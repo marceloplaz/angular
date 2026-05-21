@@ -35,17 +35,19 @@ export class ConfiguracionSistemaComponent implements OnInit {
   private toastr = inject(ToastrService);
 
   servicios = signal<any[]>([]);
+categoriasDisponibles = signal<any[]>([]);
   turnosDisponibles = signal<any[]>([]);
   turnosSeleccionadosIds = signal<number[]>([]); // Este array controla los checks
   servicioIdSeleccionado = signal<number | null>(null);
   cargando = signal<boolean>(false);
   objetosSeleccionados: any[] = [];
   mostrarModalCrear = signal<boolean>(false);
+  
   nuevoTurno = signal({
     nombre_turno: '',
     hora_inicio: '',
     hora_fin: '',
-    
+  categoria_id: null as number | null,  
     duracion_horas: 0
   });
 
@@ -99,6 +101,9 @@ onHoraChange() {
       this.servicios.set(res.data || res);
       this.servicioIdSeleccionado.set(null); // Iniciamos en nulo
       this.turnosSeleccionadosIds.set([]);   // Garantizamos tabla limpia
+    });
+    this.turnoService.getCategorias().subscribe((res: any) => {
+      this.categoriasDisponibles.set(res.data || res);
     });
   }
 
@@ -155,6 +160,7 @@ abrirModalNuevoTurno() {
       nombre_turno: '',
       hora_inicio: '',
       hora_fin: '',
+      categoria_id: null,
       duracion_horas: 0
     });
     this.mostrarModalCrear.set(true);
@@ -178,11 +184,18 @@ abrirModalNuevoTurno() {
   return Math.round(diferenciaMinutos / 60);
 }
 
+onCategoriaChange(id: number) {
+    this.nuevoTurno.update(state => ({
+      ...state,
+      categoria_id: id
+    }));
+  }
+
   guardarNuevoTurno() {
     const data = this.nuevoTurno();
     
-    if (!data.nombre_turno || !data.hora_inicio || !data.hora_fin) {
-      this.toastr.warning("Complete todos los campos obligatorios");
+   if (!data.nombre_turno || !data.hora_inicio || !data.hora_fin || !data.categoria_id) {
+      this.toastr.warning("Complete todos los campos obligatorios, incluyendo la categoría");
       return;
     }
 

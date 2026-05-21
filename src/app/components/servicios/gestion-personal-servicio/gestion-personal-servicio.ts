@@ -95,25 +95,40 @@ export class GestionPersonalServicioComponent implements OnInit {
     });
   }
 
-  // <--- ESTA ES LA FUNCIÓN QUE TE FALTABA (Arregla error TS2339)
-  desvincular(id: number): void {
+ // 🌟 ACTUALIZADO: Ahora maneja la desvinculación por relación exacta (Servicio + Usuario)
+  desvincular(usuarioId: number): void {
+    const servicioId = this.servicioId; // Recuperamos el ID del servicio actual
+
+    if (!servicioId || !usuarioId) {
+      Swal.fire('Error', 'No se pudieron identificar los parámetros para dar de baja.', 'error');
+      return;
+    }
+
     Swal.fire({
       title: '¿Estás seguro?',
-      text: "Se quitará al profesional de este servicio",
+      text: "Se quitará al profesional de la nómina de este servicio",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar'
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this._servicioService.desvincularProfesional(id).subscribe({
-          next: () => {
-            this.obtenerDatosIniciales();
-            Swal.fire('Eliminado', 'Personal quitado del servicio', 'success');
+        // 🌟 Pasamos ambos IDs al método del servicio
+        this._servicioService.desvincularProfesional(servicioId, usuarioId).subscribe({
+          next: (res: any) => {
+            this.obtenerDatosIniciales(); // Recargar la tabla SPA de inmediato
+            Swal.fire('Eliminado', res.message || 'Personal quitado del servicio', 'success');
           },
-          error: (err: any) => console.error(err)
+          error: (err: any) => {
+            console.error('Error al desvincular:', err);
+            const msgError = err.error?.message || 'No se pudo quitar al profesional';
+            Swal.fire('Error', msgError, 'error');
+          }
         });
       }
     });
   }
+ 
 }
