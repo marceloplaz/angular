@@ -7,11 +7,12 @@ export interface TurnoDetalle {
   color: string;
 }
 
-// 2. Representa a una persona (Enfermera/Médico) con sus turnos agrupados
+// 2. Representa a una persona (Enfermera/Médico/manual) con sus turnos agrupados
 export interface MiembroEquipo {
   usuario_id: number;
   usuario_nombre: string;
   categoria_nombre: string;
+  tipo_salario: string;
   turnos: TurnoDetalle[];
 }
 

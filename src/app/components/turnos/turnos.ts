@@ -586,7 +586,7 @@ async capturarPantalla() {
   
   // 1. CONFIGURACIÓN DE ENCABEZADO (Estilo profesional)
   doc.setFontSize(16);
-  doc.setTextColor(40, 167, 69); // Verde médico
+  doc.setTextColor(40, 167, 69); // Verde médico / institucional
   doc.setFont("helvetica", "bold");
   
   const nombreServicio = this.servicios.find(s => s.id == this.filters.servicio_id)?.nombre || 'SERVICIO';
@@ -605,59 +605,54 @@ async capturarPantalla() {
   doc.setDrawColor(40, 167, 69);
   doc.setLineWidth(1);
   doc.line(15, 25, pageWidth - 15, 25);
-// 2. PREPARACIÓN DE DATOS PARA LA TABLA DEL PDF
 
+  // 2. PREPARACIÓN DE DATOS PARA LA TABLA DEL PDF
+  const bodyData = this.personalAgrupado.map((p: any) => {
+      // MODIFICACIÓN CLAVE: Agregamos el Tipo de Salario debajo del Nombre con un salto de línea
+      const nombreYSalario = `${p.usuario_nombre.toUpperCase()}\n[${p.tipo_salario || 'No definido'}]`;
+      const fila = [nombreYSalario];
+      
+      this.diasSemana.forEach(dia => {
+          const fechaBuscada = this.obtenerFechaReal(dia);
+          const turnosDelDia = p.turnos?.filter((t: any) => t.fecha === fechaBuscada) || [];
 
-// 2. PREPARACIÓN DE DATOS PARA LA TABLA DEL PDF
-// Usamos solo personalAgrupado para evitar el error de propiedad inexistente
-const bodyData = this.personalAgrupado.map((p: any) => {
-    // Iniciamos la fila con el nombre
-    const fila = [p.usuario_nombre.toUpperCase()];
-    
-    this.diasSemana.forEach(dia => {
-        const fechaBuscada = this.obtenerFechaReal(dia);
-        
-        // Buscamos TODOS los turnos del usuario para esta fecha
-        // Importante: No filtramos por servicio aquí para que salgan todos en el PDF
-        const turnosDelDia = p.turnos?.filter((t: any) => t.fecha === fechaBuscada) || [];
+          if (turnosDelDia.length > 0) {
+              const textoCeldas = turnosDelDia.map((t: any) => {
+                  let horarioStr = '';
+                  if (t.horario && !t.horario.includes('2026')) {
+                      horarioStr = t.horario;
+                  } else {
+                      const inicio = t.hora_inicio?.length > 10 ? t.hora_inicio.slice(11, 16) : t.hora_inicio?.slice(0, 5);
+                      const fin = t.hora_fin?.length > 10 ? t.hora_fin.slice(11, 16) : t.hora_fin?.slice(0, 5);
+                      horarioStr = `${inicio || '--:--'} - ${fin || '--:--'}`;
+                  }
 
-        if (turnosDelDia.length > 0) {
-            // Mapeamos los múltiples turnos (esto arregla lo de Doña Acebo)
-            const textoCeldas = turnosDelDia.map((t: any) => {
-                let horarioStr = '';
-                if (t.horario && !t.horario.includes('2026')) {
-                    horarioStr = t.horario;
-                } else {
-                    const inicio = t.hora_inicio?.length > 10 ? t.hora_inicio.slice(11, 16) : t.hora_inicio?.slice(0, 5);
-                    const fin = t.hora_fin?.length > 10 ? t.hora_fin.slice(11, 16) : t.hora_fin?.slice(0, 5);
-                    horarioStr = `${inicio || '--:--'} - ${fin || '--:--'}`;
-                }
+                  const nombreServicioStr = t.area_nombre || t.servicio_nombre || 'GENERAL';
+                  return `${t.nombre_turno.toUpperCase()}\n(${nombreServicioStr.toUpperCase()})\n${horarioStr}`;
+              }).join('\n\n');
 
-                // Agregamos el nombre del servicio/área (esto identifica si es Ginecología o Cirugía)
-                const nombreServicio = t.area_nombre || t.servicio_nombre || 'GENERAL';
-                
-                return `${t.nombre_turno.toUpperCase()}\n(${nombreServicio.toUpperCase()})\n${horarioStr}`;
-            }).join('\n\n'); // Doble salto para separar los dos turnos
+              fila.push(textoCeldas);
+          } else {
+              fila.push('-');
+          }
+      });
 
-            fila.push(textoCeldas);
-        } else {
-            fila.push('-');
-        }
-    });
+      // Se calculan los totales semanales
+      const diasTrabajados = this.calcularDiasTrabajados(p);
+      const horasTotales = this.calcularTotalHoras(p);
 
-    // Agregamos los totales de Días y Horas
-    fila.push(`${this.calcularDiasTrabajados(p)}`);
-    fila.push(`${this.calcularTotalHoras(p)}h`);
-    
-    return fila;
-});
-
-
+      // Insertamos los totales en sus respectivas celdas
+      fila.push(`${diasTrabajados}`);
+      fila.push(`${horasTotales}h`);
+      
+      return fila;
+  });
 
   // 3. GENERACIÓN DE TABLA AUTOMÁTICA
   autoTable(doc, {
     startY: 30,
-    head: [['PERSONAL', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM', 'TOTAL']],
+    // MODIFICACIÓN CLAVE: Añadidas las cabeceras de DÍAS y HORAS para que coincidan con los datos de las columnas
+    head: [['PERSONAL / SALARIO', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM', 'DÍAS', 'HORAS']],
     body: bodyData,
     theme: 'grid',
     headStyles: { 
@@ -667,8 +662,9 @@ const bodyData = this.personalAgrupado.map((p: any) => {
       cellPadding: 3
     },
     columnStyles: {
-      0: { cellWidth: 45, fontStyle: 'bold' }, // Columna de nombres
-      8: { halign: 'center', fontStyle: 'bold', textColor: [0, 123, 255] } // Columna de horas
+      0: { cellWidth: 42, fontStyle: 'bold', halign: 'left' }, // Ajuste para el nombre y tipo de salario
+      8: { cellWidth: 14, halign: 'center', fontStyle: 'bold' }, // Columna DÍAS
+      9: { cellWidth: 16, halign: 'center', fontStyle: 'bold', textColor: [0, 123, 255] } // Columna HORAS en azul
     },
     styles: { 
       fontSize: 8, 
@@ -683,15 +679,13 @@ const bodyData = this.personalAgrupado.map((p: any) => {
   // 4. PIE DE PÁGINA Y FIRMAS
   const finalY = (doc as any).lastAutoTable.finalY + 25;
 
-  // Línea para firma del responsable
   doc.setDrawColor(180);
   doc.line(15, finalY, 75, finalY);
   doc.setFontSize(9);
   doc.setTextColor(50);
-doc.text(`Generado por: ${this.alias}`, 15, finalY + 5); // DEBE SER EL NOMBRE
-doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10); // DEBE SER EL ROL
+  doc.text(`Generado por: ${this.alias}`, 15, finalY + 5);
+  doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10);
 
-  // Fecha y hora de impresión (esquina inferior derecha)
   doc.setFontSize(8);
   doc.setTextColor(150);
   const fechaGeneracion = `Impreso el: ${new Date().toLocaleString()}`;
@@ -700,6 +694,7 @@ doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10); // DEBE SER EL ROL
   // 5. DESCARGA DEL ARCHIVO
   doc.save(`Reporte_Turnos_${nombreServicio.replace(/\s+/g, '_')}.pdf`);
 }
+
 
 calcularTotalHoras(p: any): number {
   if (!p.turnos || p.turnos.length === 0) return 0;

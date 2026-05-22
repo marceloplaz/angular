@@ -105,10 +105,17 @@
         <tbody>
           <tr *ngFor="let p of personalAgrupado" class="row-hover border-bottom">
             
-            <td class="col-personal text-start p-2">
-              <div class="fw-bold text-dark small">{{ p.usuario_nombre | uppercase }}</div>
-              <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
-            </td>
+          <td class="col-personal text-start p-2">
+  <div class="fw-bold text-dark small">{{ p.usuario_nombre | uppercase }}</div>
+  
+  <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
+  
+  <div class="mt-1">
+  <span class="badge bg-light text-dark border extra-small px-1.5 py-0.5">
+    {{ p.tipo_salario }}
+  </span>
+</div>
+</td>
             
             <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
               
