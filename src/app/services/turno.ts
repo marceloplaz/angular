@@ -178,5 +178,20 @@ return this.http.get(`${this.apiUrl}/reportes/semanal/${semanaId}`, {
       params: params,
       responseType: 'blob' 
     });
+
+  }
+
+  
+// En tu TurnoService reemplaza este método:
+getSemanasPorMes(mesId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/calendario/configuracion`);
+  }
+
+  /**
+   * Obtiene las asignaciones y cálculo de horas semanales desde el controlador
+   */
+getReporteHorasSemana(semanaId: number): Observable<any> {
+  return this.http.get<any>(`${this.apiUrl}/reportes/reporte-semanal/${semanaId}`);
 }
+
 }

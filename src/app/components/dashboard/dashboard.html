@@ -115,14 +115,24 @@
 
 
                         <div class="row g-2 align-items-stretch">
-  <div class="col-md-2">
-    <div class="card shadow-sm border-0 h-100 bg-primary text-white" style="border-radius: 12px;">
-      <div class="card-body p-2 d-flex flex-column justify-content-center">
-        <p class="mb-1 fw-bold" style="font-size: 0.65rem; text-transform: uppercase;">Servicios</p>
-        <h2 class="mb-0 fw-bold">3</h2>
-      </div>
+<div class="card bg-primary text-white mb-4">
+  <div class="card-body">
+    <h6 class="text-uppercase" style="font-size: 11px;">Servicios Asignados</h6>
+    
+    <div *ngIf="misServicios().length > 0; else sinServicios" class="mt-2">
+      <ul class="list-unstyled p-0 m-0">
+        <li *ngFor="let serv of misServicios()" class="font-weight-bold text-uppercase" style="font-size: 13px; margin-bottom: 3px;">
+          <i class="fas fa-hospital-user mr-1"></i> {{ serv.nombre }}
+        </li>
+      </ul>
     </div>
+    
+    <ng-template #sinServicios>
+      <div class="h3 font-weight-bold mt-2">0</div>
+      <small style="font-size: 10px; opacity: 0.8;">Sin áreas vinculadas</small>
+    </ng-template>
   </div>
+</div>
 
   <div class="col-md-3">
   <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
@@ -159,14 +169,46 @@
   </div>
 </div>
 
-  <div class="col-md-2">
-    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
-      <div class="card-body p-2 d-flex flex-column justify-content-center">
-        <p class="text-muted mb-1 fw-bold" style="font-size: 0.65rem;">HORAS SEMANALES</p>
-        <h4 class="mb-0 fw-bold text-success">36h <span class="text-muted" style="font-size: 0.7rem;">/ 40h</span></h4>
-      </div>
+
+<div class="card mb-4" style="border-left: 5px solid #28a745; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+  <div class="card-body">
+    
+    <h6 class="text-uppercase text-muted mb-2" style="font-size: 11px; letter-spacing: 0.5px; font-weight: 600;">
+      Horas Semanales
+    </h6>
+    
+    <div class="mb-3">
+      <select class="form-select form-select-sm w-100" 
+              style="font-size: 13px; cursor: pointer; background-color: #f8f9fa; border-color: #ced4da;"
+              [value]="semanaSeleccionadaId()" 
+              (change)="cambiarSemanaDashboard(+$any($event.target).value)">
+        
+        @if (semanasDelMesActual().length === 0) {
+          <option value="">⏳ Sincronizando periodos del hospital...</option>
+        }
+        
+        @for (sem of semanasDelMesActual(); track sem.id) {
+          <option [value]="sem.id">
+            {{ sem.label }}
+          </option>
+        }
+      </select>
     </div>
+
+    <div class="d-flex align-items-baseline mt-2">
+      <span class="text-success font-weight-bold" style="font-size: 32px; line-height: 1; font-family: system-ui, sans-serif;">
+        {{ horasSemanalesTrabajadas() }}h
+      </span>
+      <span class="text-muted ms-2" style="font-size: 14px; font-weight: 500;">/ 40h</span>
+    </div>
+
+    <small class="text-muted d-block mt-1" style="font-size: 11px; line-height: 1.2;">
+      Total acumulado del mes: <strong>{{ horasTotalesMes() }}h</strong>
+    </small>
+
   </div>
+</div>
+
 <div class="col-md-5">
   <div class="card shadow-sm border-0 h-100" style="border-radius: 12px; background-color: #f8fafc;">
     <div class="card-body p-2 d-flex flex-column justify-content-center position-relative">

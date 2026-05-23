@@ -12,7 +12,7 @@ import autoTable from 'jspdf-autotable';
 import { PDF_COLORS } from '../../constants/pdf-colors';
 import { ReporteMensualService } from '../../services/reporte-mensual';
 import { VacacionService } from '../../services/vacacion';
-
+import { TurnoService } from '../../services/turno';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -27,7 +27,7 @@ export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder); 
   private _reporteMensualService = inject(ReporteMensualService);
-
+  private turnoService = inject(TurnoService);  
   private nombreOriginal = signal<string>('');
 
   public permisoCuentaForm!: FormGroup;
@@ -49,6 +49,41 @@ export class DashboardComponent implements OnInit {
   public anioVisualizado = signal<number>(new Date().getFullYear()); 
   public vacacionForm!: FormGroup;  
   public usuarioSeleccionado: any = null;
+  public semanasDelMesActual = signal<any[]>([]); 
+  public semanaSeleccionadaId = signal<number | null>(null);
+
+
+public horasTotalesMes = computed(() => {
+    const turnos = this.turnosDelMes();
+    if (!turnos || turnos.length === 0) return 0;
+    return turnos.reduce((acc, t) => acc + (Number(t.duracion_horas) || 0), 0);
+  });
+
+  // 🌟 NAVEGACIÓN QUIRÚRGICA: Sumador Automático filtrado por los límites de la Semana activa
+  public horasSemanalesTrabajadas = computed(() => {
+    const turnos = this.turnosDelMes();
+    const semanaId = this.semanaSeleccionadaId();
+    const semanas = this.semanasDelMesActual();
+
+    if (!turnos || turnos.length === 0 || !semanaId || semanas.length === 0) return 0;
+
+    // Encontramos los rangos de la semana seleccionada en el select
+    const semanaActiva = semanas.find(s => Number(s.id) === Number(semanaId));
+    if (!semanaActiva || !semanaActiva.fecha_inicio || !semanaActiva.fecha_fin) return 0;
+
+    const inicio = new Date(semanaActiva.fecha_inicio).getTime();
+    const fin = new Date(semanaActiva.fecha_fin).getTime();
+
+    // Filtramos y sumamos únicamente los turnos que caigan dentro de ese rango de fechas
+    return turnos.reduce((acc, t) => {
+      if (!t.fecha) return acc;
+      const fechaTurno = new Date(t.fecha).getTime();
+      if (fechaTurno >= inicio && fechaTurno <= fin) {
+        return acc + (Number(t.duracion_horas) || 0);
+      }
+      return acc;
+    }, 0);
+  });
 
   private urlSignal = toSignal(
     this.router.events.pipe(
@@ -67,6 +102,7 @@ export class DashboardComponent implements OnInit {
     }, { allowSignalWrites: true });
   }
 
+
   ngOnInit() {
     const nombreSesion = localStorage.getItem('usuario_nombre');
     if (nombreSesion) {
@@ -78,6 +114,16 @@ export class DashboardComponent implements OnInit {
     
     this.initPermisoForm(); 
     this.cargarResumenVacaciones();
+
+    if (!this.mesVisualizado() || this.mesVisualizado() === 0) {
+    this.mesVisualizado.set(new Date().getMonth() + 1); // Mes actual (1-12)
+  }
+  if (!this.anioVisualizado() || this.anioVisualizado() === 0) {
+    this.anioVisualizado.set(new Date().getFullYear()); // Año actual
+  }
+
+  // 2. 🚀 DISPARO CLAVE: Llamamos a la función para que consulte las semanas a la BD e inicialice la barra
+  this.generarSemanasDelMes();
 
     this.servicioService.getServiciosInicio().subscribe({
       next: (response) => {
@@ -204,9 +250,10 @@ seleccionarUsuario(usuario: any) {
       this.vacacionForm.patchValue({ dias_derecho: usuario.persona.dias_derecho });
     }
 
-    this.servicioService.getServiciosPorUsuario(usuario.id).subscribe(res => {
-      const servicios = res.data || res.servicios || res;
-      this.misServicios.set(servicios);
+this.servicioService.getServiciosPorUsuario(usuario.id).subscribe(res => {
+    const servicios = res.data || res.servicios || res;
+    // Esto actualizará automáticamente la tarjeta "Servicios Asignados" en el HTML
+    this.misServicios.set(servicios);
       
       if (servicios.length > 0) {
         this.servicioService.seleccionarServicio(servicios[0]);
@@ -215,9 +262,83 @@ seleccionarUsuario(usuario: any) {
       } else {
         this.turnosDelMes.set([]);
       }
+      this.generarSemanasDelMes();
     });
   }
 
+  // 🌟 Genera rangos de fechas (Semana 1, Semana 2...) para el mes seleccionado
+// 🔄 1. MANTENEMOS EL NOMBRE ORIGINAL: generarSemanasDelMes
+
+
+generarSemanasDelMes() {
+  const mesId = this.mesVisualizado(); // Ej: 5 para Mayo
+
+  this.turnoService.getSemanasPorMes(mesId).subscribe({
+    next: (res: any) => {
+      let todasLasSemanas: any[] = [];
+
+      // Recorremos la estructura anidada de Gestiones -> Meses -> Semanas de la BD
+      if (res && res.gestiones) {
+        res.gestiones.forEach((gestion: any) => {
+          if (gestion.meses) {
+            gestion.meses.forEach((mes: any) => {
+              // Recopilamos las semanas si coincide con el mes visualizado
+              if (Number(mes.id) === Number(mesId) && mes.semanas) {
+                todasLasSemanas = [...todasLasSemanas, ...mes.semanas];
+              }
+            });
+          }
+        });
+      }
+
+      // Si no encuentra por ID de mes, intentamos recolectar por el campo mes_id en la semana
+      if (todasLasSemanas.length === 0 && res.gestiones) {
+        res.gestiones.forEach((g: any) => {
+          if (g.meses) {
+            g.meses.forEach((m: any) => {
+              if (m.semanas) {
+                const filtradas = m.semanas.filter((s: any) => Number(s.mes_id) === Number(mesId));
+                todasLasSemanas = [...todasLasSemanas, ...filtradas];
+              }
+            });
+          }
+        });
+      }
+
+      // Mapeamos los periodos para renderizar las opciones del select
+      const semanasMapped = todasLasSemanas.map((sem: any) => {
+        const inicio = sem.fecha_inicio || '';
+        const fin = sem.fecha_fin || '';
+
+        return {
+          id: sem.id, // ID único de la semana (Ej: 463)
+          label: `Semana ${sem.numero_semana} (${inicio} al ${fin})`,
+          fecha_inicio: inicio,
+          fecha_fin: fin
+        };
+      });
+
+      // Insertamos los datos en tu Signal de control para el select del HTML
+      this.semanasDelMesActual.set(semanasMapped);
+      
+      // Inicializamos la primera semana encontrada automáticamente
+      if (semanasMapped.length > 0) {
+        this.cambiarSemanaDashboard(semanasMapped[0].id);
+      }
+    },
+    error: (err: any) => { 
+      console.error('Error al mapear la configuración del calendario:', err);
+      this.semanasDelMesActual.set([]);
+      // 🌟 SOLUCIÓN: Quitamos el .set() de horasSemanalesTrabajadas de aquí.
+      // Al vaciar las semanas o los turnos, el computed de horas calculará automáticamente 0.
+    }
+  });
+}
+cambiarSemanaDashboard(semanaId: number) {
+  if (!semanaId) return;
+  // Al setear esto, la Signal computada 'horasSemanalesTrabajadas' volverá a sumar solita en caliente
+  this.semanaSeleccionadaId.set(semanaId);
+}
 
 
 

@@ -5,6 +5,7 @@ export interface TurnoDetalle {
   horario: string;
   fecha: string;      
   color: string;
+  duracion_horas?: number;
 }
 
 // 2. Representa a una persona (Enfermera/Médico/manual) con sus turnos agrupados
