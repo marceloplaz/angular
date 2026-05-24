@@ -218,3 +218,25 @@
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
+/* Corrección de Fuentes y Alturas de la Fila Superior */
+.card h6, .card span {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Evita que los botones de vacación se deformen o hagan wrapping de texto */
+.card .btn-sm {
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.card .btn-sm:active {
+    transform: scale(0.98);
+}
+
+/* Sobreescribir el focus por defecto azul de los inputs para mantener la línea verde */
+.form-control:focus, .form-select:focus {
+    border-color: #27ae60 !important;
+    box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.15) !important;
+}

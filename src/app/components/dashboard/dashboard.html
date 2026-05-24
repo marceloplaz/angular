@@ -1,5 +1,4 @@
 <div class="main-wrapper">
-    <!-- BARRA LATERAL (SIDEBAR) -->
     <aside class="sidebar" [class.d-none]="!sidebarVisible()">
         <a routerLink="/dashboard" class="brand-logo d-flex align-items-center text-decoration-none">
             <div class="logo-box me-3">
@@ -18,24 +17,20 @@
                 <i class="bi bi-person-badge"></i> Gestión de Personal
             </a>
             
-        <div class="nav-item-wrapper has-submenu">
-    <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
-        <i class="bi bi-calendar-check"></i> Gestión de Turnos
-    </a>
+            <div class="nav-item-wrapper has-submenu">
+                <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
+                    <i class="bi bi-calendar-check"></i> Gestión de Turnos
+                </a>
 
-    
-    
-    <!-- Este es el submenú que ahora tiene coordenadas absolutas -->
-   <ul class="submenu-vertical">
-    <li>
-        <!-- Añadimos cursor pointer para que parezca un botón real -->
-        <a (click)="generarPDFMensualGeneral()" class="submenu-link" style="cursor: pointer;">
-            <i class="bi bi-file-earmark-pdf-fill text-danger"></i> 
-            <span>Reporte Mensual PDF</span>
-        </a>
-    </li>
-</ul>
-</div>
+                <ul class="submenu-vertical">
+                    <li>
+                        <a (click)="generarPDFMensualGeneral()" class="submenu-link" style="cursor: pointer;">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger"></i> 
+                            <span>Reporte Mensual PDF</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
             <a routerLink="/dashboard/servicios" class="nav-item" routerLinkActive="active">
                 <i class="bi bi-clipboard-pulse"></i> Servicios
@@ -62,9 +57,7 @@
         </nav>
     </aside>
 
-    <!-- ÁREA DE CONTENIDO PRINCIPAL -->
     <main class="content-area">
-        <!-- BARRA SUPERIOR -->
         <header class="top-bar d-flex justify-content-between align-items-center px-4">
             <div class="search-box d-flex align-items-center">
                 <i (click)="toggleSidebar()" class="bi bi-list fs-4 me-3 cursor-pointer"></i>
@@ -82,8 +75,6 @@
             </div>
         </header>
 
-        
-        <!-- CONTENEDOR DINÁMICO -->
         <div class="p-4">
             @if (esInicio()) {
                 <div class="animate__animated animate__fadeIn">
@@ -97,555 +88,330 @@
                         </span>
                     </div>
 
-      <div *ngIf="alertaPermisoActivo().activo" 
+                    <div *ngIf="alertaPermisoActivo().activo" 
                          class="alert alert-warning border-warning shadow-sm d-flex align-items-center mb-4 animate__animated animate__headShake" 
                          role="alert" 
                          style="border-radius: 12px;">
-                      <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
-                      <div>
-                        <strong class="d-block text-dark">¡ATENCIÓN! REQUERIMIENTO DE PERSONAL EN PROCESO</strong>
-                        <span class="small text-secondary">{{ alertaPermisoActivo().detalle }}</span>
-                      </div>
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
+                        <div>
+                            <strong class="d-block text-dark">¡ATENCIÓN! REQUERIMIENTO DE PERSONAL EN PROCESO</strong>
+                            <span class="small text-secondary">{{ alertaPermisoActivo().detalle }}</span>
+                        </div>
                     </div>
                     
-                   
+                    <div class="row g-3 mb-4 align-items-stretch animate__animated animate__fadeIn">
+                        <div class="col-md-3">
+                            <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px; background-color: #e8f5ee;">
+                                <div class="card-body p-3 d-flex flex-column justify-content-center">
+                                    <h6 class="text-uppercase fw-bold m-0" style="color: #1e8449; font-size: 0.7rem; letter-spacing: 0.5px;">
+                                        <i class="bi bi-hospital me-1"></i> Servicios Asignados
+                                    </h6>
+                                    
+                                    <div *ngIf="misServicios().length > 0; else sinServicios" class="mt-2 overflow-auto" style="max-height: 52px;">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <button *ngFor="let serv of misServicios()" 
+                                                    (click)="seleccionar(serv)"
+                                                    [ngClass]="{'btn-success': servicioActivo()?.id === serv.id, 'btn-outline-success bg-white': servicioActivo()?.id !== serv.id}"
+                                                    class="btn btn-sm rounded-pill fw-bold text-uppercase py-0 px-2 d-flex align-items-center gap-1" 
+                                                    style="font-size: 0.65rem; border-color: #27ae60;">
+                                                <span class="badge rounded-circle p-1" [style.background-color]="servicioActivo()?.id === serv.id ? '#white' : '#27ae60'"> </span>
+                                                {{ serv.nombre }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <ng-template #sinServicios>
+                                        <div class="fw-bold mt-1" style="color: #2d5a42; font-size: 1.1rem;">0</div>
+                                        <small class="text-muted" style="font-size: 0.65rem;">Sin áreas vinculadas</small>
+                                    </ng-template>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #27ae60 !important; border-radius: 12px; background: white;">
+                                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">VACACIÓN</span>
+                                        <h4 class="m-0 fw-bold" style="color: #27ae60; font-size: 1.2rem; line-height: 1;">
+                                            {{ saldoRestante }} <small class="fw-normal text-muted" style="font-size: 0.7rem;">Días</small>
+                                        </h4>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitudVacacion" class="btn btn-sm text-white fw-bold py-1 px-2 flex-grow-1" style="background-color: #27ae60; font-size: 0.65rem; border-radius: 6px; border: none;">
+                                            FORM. VACACION
+                                        </button>
+                                        <button type="button" data-bs-toggle="modal" data-bs-target="#modalPermisoCuenta" class="btn btn-sm btn-outline-success fw-bold py-1 px-2 flex-grow-1" style="font-size: 0.65rem; border-radius: 6px; border-color: #27ae60; color: #27ae60;">
+                                            A CUENTA
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #27ae60; border-radius: 12px; background: white;">
+                                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                                    <div class="d-flex flex-column">
+                                        <h6 class="text-uppercase text-muted m-0" style="font-size: 0.7rem; letter-spacing: 0.5px; font-weight: 700;">
+                                            HORAS DE TRABAJO 
+                                        </h6>
+                                        <small class="text-muted" style="font-size: 0.6rem; margin-top: 2px;">Control mensual</small>
+                                    </div>
+                                    
+                                    <div class="px-2 py-1 text-center" style="background-color: #e8f5ee; border-radius: 8px; min-width: 65px;">
+                                        <span class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.55rem; letter-spacing: 0.3px;">Mes</span>
+                                        <span class="fw-bold" style="color: #27ae60; font-size: 0.95rem; font-family: system-ui, sans-serif;">
+                                            {{ horasTotalesMes() }}h
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 h-100" style="border-radius: 12px; background-color: #f8f9fa; border: 1px solid #e1e9e5;">
+                                <div class="card-body p-3 d-flex flex-column justify-content-center position-relative">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <div style="font-size: 0.7rem;">
+                                            <i class="fas fa-search text-success me-1" style="color: #27ae60 !important;"></i>
+                                            <span class="text-muted fw-bold">Buscar Profesional</span>
+                                        </div>
+                                        @if (usuarioBuscadoId()) {
+                                            <button (click)="restablecerVistaPropia()" class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold" style="font-size: 0.65rem;">
+                                                <i class="fas fa-arrow-left"></i> Mi Vista
+                                            </button>
+                                        }
+                                    </div>
+                                    
+                                    <div class="input-group input-group-sm mt-1">
+                                        <input type="text" #txtBuscar (keyup)="buscarUsuario(txtBuscar.value)" class="form-control shadow-none bg-white" placeholder="Escriba apellido..." style="border-radius: 6px; font-size: 0.75rem; border: 1px solid #e1e9e5;">
+                                    </div>
 
-
-                        <div class="row g-2 align-items-stretch">
-<div class="card bg-primary text-white mb-4">
-  <div class="card-body">
-    <h6 class="text-uppercase" style="font-size: 11px;">Servicios Asignados</h6>
-    
-    <div *ngIf="misServicios().length > 0; else sinServicios" class="mt-2">
-      <ul class="list-unstyled p-0 m-0">
-        <li *ngFor="let serv of misServicios()" class="font-weight-bold text-uppercase" style="font-size: 13px; margin-bottom: 3px;">
-          <i class="fas fa-hospital-user mr-1"></i> {{ serv.nombre }}
-        </li>
-      </ul>
-    </div>
-    
-    <ng-template #sinServicios>
-      <div class="h3 font-weight-bold mt-2">0</div>
-      <small style="font-size: 10px; opacity: 0.8;">Sin áreas vinculadas</small>
-    </ng-template>
-  </div>
-</div>
-
-  <div class="col-md-3">
-  <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #166534 !important; border-radius: 12px;">
-    <div class="card-body p-2 d-flex flex-column">
-      
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="text-muted fw-bold" style="font-size: 0.65rem;">VACACIÓN</span>
-        <i class="fas fa-calendar-check text-success" style="font-size: 0.8rem;"></i>
-      </div>
-      
-      <h4 class="mb-2 fw-bold" style="color: #0ba044;">
-        {{ saldoRestante }} <small class="fs-6 fw-normal">Días</small>
-      </h4>
-      
-      <div class="mt-auto">
-       <button type="button" 
-        data-bs-toggle="modal" 
-        data-bs-target="#modalSolicitudVacacion" 
-        class="btn btn-sm w-100 mb-2 text-white fw-bold py-1" 
-        style="background-color: #166534; font-size: 0.6rem; border-radius: 6px;">
-  <i class="fas fa-plane-departure me-1"></i> FORM. VACACION
-</button>
-        
-        <button type="button" 
-                class="btn btn-sm btn-outline-success w-100 fw-bold py-1 shadow-sm"
-                style="font-size: 0.55rem; border-radius: 6px;"
-                data-bs-toggle="modal" 
-                data-bs-target="#modalPermisoCuenta">
-          <i class="bi bi-file-earmark-plus me-1"></i> FORM. PERMISO A CUENTA
-        </button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-
-<div class="card mb-4" style="border-left: 5px solid #28a745; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-  <div class="card-body">
-    
-    <h6 class="text-uppercase text-muted mb-2" style="font-size: 11px; letter-spacing: 0.5px; font-weight: 600;">
-      Horas Semanales
-    </h6>
-    
-    <div class="mb-3">
-      <select class="form-select form-select-sm w-100" 
-              style="font-size: 13px; cursor: pointer; background-color: #f8f9fa; border-color: #ced4da;"
-              [value]="semanaSeleccionadaId()" 
-              (change)="cambiarSemanaDashboard(+$any($event.target).value)">
-        
-        @if (semanasDelMesActual().length === 0) {
-          <option value="">⏳ Sincronizando periodos del hospital...</option>
-        }
-        
-        @for (sem of semanasDelMesActual(); track sem.id) {
-          <option [value]="sem.id">
-            {{ sem.label }}
-          </option>
-        }
-      </select>
-    </div>
-
-    <div class="d-flex align-items-baseline mt-2">
-      <span class="text-success font-weight-bold" style="font-size: 32px; line-height: 1; font-family: system-ui, sans-serif;">
-        {{ horasSemanalesTrabajadas() }}h
-      </span>
-      <span class="text-muted ms-2" style="font-size: 14px; font-weight: 500;">/ 40h</span>
-    </div>
-
-    <small class="text-muted d-block mt-1" style="font-size: 11px; line-height: 1.2;">
-      Total acumulado del mes: <strong>{{ horasTotalesMes() }}h</strong>
-    </small>
-
-  </div>
-</div>
-
-<div class="col-md-5">
-  <div class="card shadow-sm border-0 h-100" style="border-radius: 12px; background-color: #f8fafc;">
-    <div class="card-body p-2 d-flex flex-column justify-content-center position-relative">
-      
-      <div class="d-flex align-items-center justify-content-between mb-1">
-        <div style="font-size: 0.7rem;">
-          <i class="fas fa-search text-primary me-1"></i>
-          <span class="text-muted fw-bold">Buscar Profesional</span>
-        </div>
-        @if (usuarioBuscadoId()) {
-          <button (click)="restablecerVistaPropia()" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" style="font-size: 0.65rem;">
-            <i class="fas fa-arrow-left"></i> Mi Vista
-          </button>
-        }
-      </div>
-      
-      <div class="input-group input-group-sm">
-        <input type="text" 
-               #txtBuscar
-               (keyup)="buscarUsuario(txtBuscar.value)" 
-               class="form-control border-2 shadow-none" 
-               placeholder="Escriba apellido..."
-               style="border-radius: 8px; border-color: #e2e8f0;">
-      </div>
-
-
-@if (listaPersonas().length > 0) {
-  <div class="list-group position-absolute shadow-lg w-100" 
-       style="top: 100%; left: 0; z-index: 1050; max-height: 250px; overflow-y: auto; border-radius: 8px; margin-top: 5px; border: 1px solid #dee2e6; background: white;">
-    
-    @for (u of listaPersonas(); track u.id) {
-      <button type="button" 
-              (click)="seleccionarUsuario(u); txtBuscar.value = ''"
-              class="list-group-item list-group-item-action border-0 py-2 px-3 d-flex align-items-center result-item">
-        
-        <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-          <i class="fas fa-user-md text-primary"></i>
-        </div>
-
-        <div class="d-flex flex-column text-start">
-          <span class="fw-bold text-dark" style="font-size: 0.95rem; line-height: 1.2;">
-            {{ u.persona?.nombre_completo | uppercase }}
-          </span>
-          <small class="text-muted" style="font-size: 0.7rem;">
-            {{ u.categoria?.nombre || 'Personal del Hospital' }}
-          </small>
-        </div>
-
-        <i class="fas fa-chevron-right ms-auto text-muted small"></i>
-      </button>
-    
-    }
-        </div>
-      }
-        </div>
-      </div>
-    </div>
-  </div>
-
-                                
-
-
-
-
-
-
-
-
-                                
-      
+                                    @if (listaPersonas().length > 0) {
+                                        <div class="list-group position-absolute shadow-lg w-100" style="top: 100%; left: 0; z-index: 1060; max-height: 180px; overflow-y: auto; border-radius: 8px; margin-top: 5px; border: 1px solid #e1e9e5; background: white;">
+                                            @for (u of listaPersonas(); track u.id) {
+                                                <button type="button" (click)="seleccionarUsuario(u); txtBuscar.value = ''" class="list-group-item list-group-item-action border-0 py-2 px-3 d-flex align-items-center" style="font-size: 0.8rem;">
+                                                    <div class="rounded-circle bg-success bg-opacity-10 p-1 me-2 d-flex align-items-center justify-content-center" style="width: 25px; height: 25px;">
+                                                        <i class="fas fa-user-md" style="font-size: 0.7rem; color: #27ae60;"></i>
+                                                    </div>
+                                                    <div class="d-flex flex-column text-start">
+                                                        <span class="fw-bold text-dark text-uppercase" style="font-size: 0.75rem; line-height: 1.1;">
+                                                            {{ u.persona?.nombre_completo }}
+                                                        </span>
+                                                        <small class="text-muted" style="font-size: 0.65rem;">
+                                                            {{ u.categoria?.nombre || 'Personal' }}
+                                                        </small>
+                                                    </div>
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row g-4">
-                        <!-- CALENDARIO -->
-                        <div class="col-md-8">
+                        <div class="col-md-12">
                             <div class="card border-0 shadow-sm p-4 h-100">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <h5 class="fw-bold m-0 text-uppercase" style="font-size: 0.9rem;">
                                         <i class="bi bi-calendar3 text-warning me-2"></i>
                                         Guardias: {{ servicioActivo()?.nombre || 'Sin servicio seleccionado' }}
                                     </h5>
+                                    
+                                    <button (click)="generarPDF()" class="btn btn-sm btn-outline-danger border-0 d-flex align-items-center gap-2 px-3" style="font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
+                                        <i class="bi bi-file-earmark-pdf-fill fs-6"></i>
+                                        <span>PDF-TURNOS-MES</span>
+                                    </button>
                                 </div>
                                 
-                                <button (click)="generarPDF()" 
-                    class="btn btn-sm btn-outline-danger border-0 d-flex align-items-center gap-2 px-3"
-                    style="font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
-                <i class="bi bi-file-earmark-pdf-fill fs-6"></i>
-                <span>PDF-TURNOS-MES</span>
-            </button>
                                 <div class="calendar-grid">
-                                    <!-- Cabecera Días -->
-                                    <div class="d-grid text-center text-muted fw-bold mb-2" style="grid-template-columns: repeat(7, 1fr); font-size: 0.7rem;">
+                                    <div class="d-grid text-center text-muted fw-bold mb-2" style="grid-template-columns: repeat(8, 1fr); font-size: 0.7rem; letter-spacing: 0.5px;">
                                         <div>LUN</div><div>MAR</div><div>MIE</div><div>JUE</div><div>VIE</div><div>SAB</div><div>DOM</div>
+                                        <div class="text-success p-1 rounded-1" style="background-color: #e8f5ee; font-weight: 800;">TOTAL</div>
                                     </div>
 
-                                    <!-- Cuerpo del calendario -->
-                                    <div class="d-grid" style="grid-template-columns: repeat(7, 1fr); gap: 8px;">
-                                        @for (dia of diasDelMes(); track $index) {
-                                            <div class="text-center p-1 rounded-2 border position-relative" 
-                                                 [ngClass]="{'bg-light border-0': !dia, 'bg-white shadow-xs': dia}"
-                                                 style="min-height: 80px;">
-                                                
+                                    <div class="d-grid" style="grid-template-columns: repeat(8, 1fr); gap: 8px;">
+                                        @for (dia of diasDelMes(); track $index; let idx = $index) {
+                                            <div class="text-center p-1 rounded-2 border position-relative d-flex flex-column justify-content-start" [ngClass]="{'bg-light border-0 opacity-25': !dia, 'bg-white shadow-xs': dia}" style="min-height: 105px; border-color: #e1e9e5 !important; padding-bottom: 6px !important;">
                                                 @if (dia) {
-                                                    <span class="position-absolute top-0 end-0 me-1 mt-1 text-muted fw-bold" style="font-size: 0.65rem;">
+                                                    <span class="position-absolute top-0 end-0 me-1 mt-1 text-muted fw-bold" style="font-size: 0.65rem; z-index: 10;">
                                                         {{ dia }}
                                                     </span>
-                                                }
 
-                                                @if (tieneTurno(dia); as turno) {
-                                                    <div class="mt-3 p-1 border-start border-4 text-start" [style.border-color]="turno.color">
-                                                        <div class="text-uppercase fw-bold text-muted mb-1" style="font-size: 0.5rem; line-height: 1;">
-                                                            {{ turno.area_nombre || 'Guardia' }}
-                                                        </div>
-                                                        <div class="fw-bold" [style.color]="turno.color" style="font-size: 0.6rem; line-height: 1.1;">
-                                                            {{ turno.nombre_turno }}
-                                                        </div>
-                                                        <div class="text-dark fw-bold mt-1" style="font-size: 0.55rem;">
-                                                            <i class="bi bi-clock"></i> {{ extraerHora(turno.horario) }}
-                                                        </div>
+                                                    <div class="mt-3 d-flex flex-column gap-1 w-100">
+                                                        @for (turno of obtenerTurnosDelDia(dia); track turno.id) {
+                                                            <div class="p-1 border-start border-4 text-start bg-light bg-opacity-50 rounded-end" [style.border-color]="turno.color" style="margin-bottom: 1px;">
+                                                                <div class="text-uppercase fw-bold text-muted" style="font-size: 0.48rem; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                                    {{ turno.area_nombre || 'Guardia' }}
+                                                                </div>
+                                                                <div class="fw-bold text-truncate" [style.color]="turno.color" style="font-size: 0.58rem; line-height: 1.1; max-width: 100%;">
+                                                                    {{ turno.nombre_turno }}
+                                                                </div>
+                                                                <div class="text-dark fw-bold mt-0.5" style="font-size: 0.52rem; line-height: 1;">
+                                                                    <i class="bi bi-clock" style="font-size: 0.5rem;"></i> {{ extraerHora(turno.horario) }}
+                                                                </div>
+                                                            </div>
+                                                        }
                                                     </div>
                                                 }
                                             </div>
+
+                                            @if ((idx + 1) % 7 === 0) {
+                                                <div class="card border-0 p-1 d-flex flex-column justify-content-center align-items-center text-center shadow-xs" style="background-color: #f8fbf9; border-right: 3px solid #27ae60 !important; border-radius: 8px; min-height: 105px;">
+                                                    <div class="mb-1">
+                                                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.5rem; letter-spacing: 0.2px;">Días</span>
+                                                        <span class="fw-bold text-dark" style="font-size: 0.75rem;">
+                                                            {{ obtenerResumenSemana(idx - 6, idx).dias }} <small class="text-muted" style="font-size: 0.55rem;">d</small>
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.5rem; letter-spacing: 0.2px;">Horas</span>
+                                                        <span class="fw-bold text-success" style="font-size: 0.85rem; font-family: system-ui, sans-serif;">
+                                                            {{ obtenerResumenSemana(idx - 6, idx).horas }}h
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            }
                                         }
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- LISTA DE SERVICIOS -->
-                        <div class="col-md-4">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h5 class="fw-bold mb-4" style="font-size: 0.9rem;">
-                                    <i class="bi bi-hospital text-success me-2"></i>Servicios Disponibles
-                                </h5>
-                                
-                                <div class="services-list">
-                                    @for (item of misServicios(); track item.id) {
-                                        <div (click)="seleccionar(item)" 
-                                             class="d-flex align-items-center justify-content-between p-3 mb-3 rounded border-start border-4 cursor-pointer transition-all"
-                                             [ngClass]="{
-                                                'bg-white shadow border-primary': servicioActivo()?.id === item.id,
-                                                'bg-light border-transparent': servicioActivo()?.id !== item.id
-                                             }">
-                                            <div class="d-flex align-items-center">
-                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                                     style="width: 35px; height: 35px; font-weight: bold; font-size: 0.8rem;">
-                                                    {{ item.nombre.substring(0,1) }}
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold small">{{ item.nombre }}</h6>
-                                                    <small class="text-muted" style="font-size: 0.7rem;">Click para ver turnos</small>
-                                                </div>
-                                            </div>
-                                            @if (servicioActivo()?.id === item.id) {
-                                                <i class="bi bi-check-circle-fill text-primary"></i>
-                                            }
-                                        </div>
-                                    } @empty {
-                                        <div class="text-center py-4 text-muted">
-                                            <i class="bi bi-info-circle d-block fs-2 mb-2"></i>
-                                            <p class="small">No hay servicios para mostrar</p>
-                                        </div>
-                                    }
-                                </div>
-
-                                <div class="mt-auto text-center border-top pt-3">
-                                    <button routerLink="/dashboard/servicios" class="btn btn-link btn-sm text-decoration-none small">
-                                        Gestionar catálogos
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             }
-
-            <!-- RENDERIZADO DE RUTAS HIJAS -->
-            <div class="router-container">
-                <router-outlet></router-outlet>
-            </div>
+        </div>
+        
+        <div class="router-container">
+            <router-outlet></router-outlet>
         </div>
     </main>
 </div>
+
 <div class="modal fade" id="modalPermisoCuenta" data-bs-backdrop="static" tabindex="-1" aria-labelledby="modalPermisoCuentaLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow">
-      
-      <div class="modal-header bg-success text-white py-3">
-        <h5 class="modal-title fw-bold id=modalPermisoCuentaLabel">
-          <i class="bi bi-file-earmark-text-fill me-2"></i>FORMATO "6" PERMISO A CUENTA DE VACACIÓN
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body p-4 bg-light">
-        <form [formGroup]="permisoCuentaForm" *ngIf="permisoCuentaForm">
-          
-          <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
-            <div class="text-secondary small">
-              <span class="fw-bold d-block text-dark mb-1">Señor(a):</span>
-              <span class="d-block text-uppercase fw-bold text-success" style="letter-spacing: 0.5px;">
-                Encargado(a) / Jefe de Recursos Humanos
-              </span>
-              <span class="text-muted fw-semibold">Hospital Regional San Juan de Dios - Presente.-</span>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fw-bold" id="modalPermisoCuentaLabel">
+                    <i class="bi bi-file-earmark-text-fill me-2"></i>FORMATO "6" PERMISO A CUENTA DE VACACIÓN
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
 
-          <div class="mb-4">
-  <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
-    Nombre y Apellido del Solicitante
-  </label>
-  <div class="input-group shadow-sm">
-    <span class="input-group-text bg-white border-end-0">
-      <i class="bi bi-person-fill text-success"></i>
-    </span>
-    <input type="text" 
-           class="form-control border-start-0 bg-white fw-bold text-dark" 
-           formControlName="nombre_solicitante" 
-           placeholder="Seleccione un profesional desde el buscador..."
-           readonly>
-  </div>
-</div>
+            <div class="modal-body p-4 bg-light">
+                <form [formGroup]="permisoCuentaForm" *ngIf="permisoCuentaForm">
+                    <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
+                        <div class="text-secondary small">
+                            <span class="fw-bold d-block text-dark mb-1">Señor(a):</span>
+                            <span class="d-block text-uppercase fw-bold text-success" style="letter-spacing: 0.5px;">
+                                Encargado(a) / Jefe de Recursos Humanos
+                            </span>
+                            <span class="text-muted fw-semibold">Hospital Regional San Juan de Dios - Presente.-</span>
+                        </div>
+                    </div>
 
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+                            Nombre y Apellido del Solicitante
+                        </label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-person-fill text-success"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 bg-white fw-bold text-dark" formControlName="nombre_solicitante" placeholder="Seleccione un profesional desde el buscador..." readonly>
+                        </div>
+                    </div>
 
+                    <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
+                        <span class="text-success fw-bold small mb-3 d-block text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                            Detalle del Período Solicitado
+                        </span>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label small text-muted fw-semibold">De Fecha:</label>
+                                <input type="date" class="form-control border-success-subtle shadow-sm" formControlName="fecha_inicio" (change)="calcularDiasPermiso()">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small text-muted fw-semibold">Hasta la Fecha:</label>
+                                <input type="date" class="form-control border-success-subtle shadow-sm" formControlName="fecha_fin" (change)="calcularDiasPermiso()">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted fw-semibold">Total Días:</label>
+                                <input type="number" class="form-control fw-bold text-center border-success bg-light text-success shadow-sm fs-5" formControlName="total_dias" readonly>
+                            </div>
+                        </div>
+                    </div>
 
-          <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
-            <span class="text-success fw-bold small mb-3 d-block text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-              Detalle del Período Solicitado
-            </span>
-            <div class="row g-3">
-              <div class="col-md-5">
-                <label class="form-label small text-muted fw-semibold">De Fecha:</label>
-                <input type="date" 
-                       class="form-control border-success-subtle shadow-sm" 
-                       formControlName="fecha_inicio" 
-                       (change)="calcularDiasPermiso()">
-              </div>
-              
-              <div class="col-md-5">
-                <label class="form-label small text-muted fw-semibold">Hasta la Fecha:</label>
-                <input type="date" 
-                       class="form-control border-success-subtle shadow-sm" 
-                       formControlName="fecha_fin" 
-                       (change)="calcularDiasPermiso()">
-              </div>
-              
-              <div class="col-md-2">
-                <label class="form-label small text-muted fw-semibold">Total Días:</label>
-                <input type="number" 
-                       class="form-control fw-bold text-center border-success bg-light text-success shadow-sm fs-5" 
-                       formControlName="total_dias" 
-                       readonly>
-              </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+                            Por el siguiente Motivo / Justificación:
+                        </label>
+                        <textarea class="form-control shadow-sm border-success-subtle" rows="4" formControlName="motivo" placeholder="Escriba de forma clara y detallada la justificación del uso de días a cuenta de vacación..."></textarea>
+                        <div class="form-text text-end small text-muted">
+                            Máximo 600 caracteres.
+                        </div>
+                    </div>
+                </form>
             </div>
-          </div>
 
-          <div class="mb-3">
-            <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
-              Por el siguiente Motivo / Justificación:
-            </label>
-            <textarea class="form-control shadow-sm border-success-subtle" 
-                      rows="4" 
-                      formControlName="motivo"
-                      placeholder="Escriba de forma clara y detallada la justificación del uso de días a cuenta de vacación..."></textarea>
-            <div class="form-text text-end small text-muted">
-              Máximo 600 caracteres.
+            <div class="modal-footer bg-white border-top-0 px-4 pb-3">
+                <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success px-4 shadow-sm fw-bold" [disabled]="permisoCuentaForm?.invalid" data-bs-dismiss="modal">
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> Registrar Permiso
+                </button>
             </div>
-          </div>
-
-        </form>
-      </div>
-
-      <div class="modal-footer bg-white border-top-0 px-4 pb-3">
-        <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
-          Cancelar
-        </button>
-        <button type="button" 
-                class="btn btn-success px-4 shadow-sm fw-bold" 
-                [disabled]="permisoCuentaForm?.invalid" 
-                (click)="guardarPermisoCuenta()"
-                data-bs-dismiss="modal">
-          <i class="bi bi-cloud-arrow-up-fill me-1"></i> Registrar Solicitud
-        </button>
-      </div>
-
+        </div>
     </div>
-  </div>
 </div>
 
 <div class="modal fade" id="modalSolicitudVacacion" data-bs-backdrop="static" tabindex="-1" aria-labelledby="modalSolicitudVacacionLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow">
-      
-      <div class="modal-header bg-primary text-white py-3">
-        <h5 class="modal-title fw-bold" id="modalSolicitudVacacionLabel">
-          <i class="bi bi-file-earmark-person-fill me-2"></i>SOLICITUD DE VACACIÓN / REGISTRO DE REEMPLAZO
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body p-4 bg-light">
-        <form [formGroup]="vacacionForm" *ngIf="vacacionForm">
-          
-          <div class="card p-3 border-0 shadow-sm mb-4 bg-white text-center">
-            <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-              <span class="d-block text-dark fw-bold">Ministerio de Salud y Deportes</span>
-              <span class="d-block text-success fw-bold">Hospital Regional San Juan de Dios</span>
-              <span class="text-muted">Unidad de Recursos Humanos - Tarija Bolivia</span>
-            </div>
-          </div>
-
-          <div class="card p-3 mb-4 border-0 shadow-sm bg-white" style="border-left: 4px solid #ffc107 !important;">
-            <div class="form-check form-switch m-0 d-flex align-items-center">
-              <input class="form-check-input me-3" type="checkbox" id="switchSoloReemplazo" formControlName="es_solo_reemplazo" style="width: 2.5em; height: 1.25em; cursor: pointer;">
-              <label class="form-check-label fw-bold text-secondary" for="switchSoloReemplazo" style="cursor: pointer; font-size: 0.85rem;">
-                ¿Es ÚNICAMENTE un registro de Reemplazo / Devolución de Turno? <span class="text-muted fw-normal">(Oculta el control de saldos anuales)</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-7">
-              <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
-                Servidor Público Señor(a)
-              </label>
-              <div class="input-group shadow-sm">
-                <span class="input-group-text bg-white"><i class="bi bi-person-fill text-primary"></i></span>
-                <input type="text" class="form-control bg-white fw-bold text-dark" formControlName="nombre_solicitante" readonly placeholder="Busque un profesional...">
-              </div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold" id="modalSolicitudVacacionLabel">
+                    <i class="bi bi-file-earmark-person-fill me-2"></i>SOLICITUD DE VACACIÓN / REGISTRO DE REEMPLAZO
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="col-md-5">
-              <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
-                Unidad o Servicio
-              </label>
-              <div class="input-group shadow-sm">
-                <span class="input-group-text bg-white"><i class="bi bi-hospital-fill text-primary"></i></span>
-                <input type="text" class="form-control bg-white fw-bold text-dark" formControlName="servicio_nombre" readonly>
-              </div>
+            <div class="modal-body p-4 bg-light">
+                <form [formGroup]="vacacionForm" *ngIf="vacacionForm">
+                    <div class="card p-3 border-0 shadow-sm mb-4 bg-white text-center">
+                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.7 Director-rem; letter-spacing: 0.5px;">
+                            <span class="d-block text-dark fw-bold">Ministerio de Salud y Deportes</span>
+                            <span class="d-block text-success fw-bold">Hospital Regional San Juan de Dios</span>
+                            <span class="text-muted">Unidad de Recursos Humanos - Tarija Bolivia</span>
+                        </div>
+                    </div>
+
+                    <div class="card p-3 mb-4 border-0 shadow-sm bg-white" style="border-left: 4px solid #ffc107 !important;">
+                        <div class="form-check form-switch m-0 d-flex align-items-center">
+                            <input class="form-check-input me-3" type="checkbox" id="switchSoloReemplazo" formControlName="es_solo_reemplazo" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                            <label class="form-check-label fw-bold text-secondary" for="switchSoloReemplazo" style="cursor: pointer; font-size: 0.85rem;">
+                                ¿Es ÚNICAMENTE un registro de Reemplazo / Devolución de Turno? <span class="text-muted fw-normal">(Oculta el control de saldos anuales)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+                                Servidor Público Señor(a)
+                            </label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white"><i class="bi bi-person-fill text-primary"></i></span>
+                                <input type="text" class="form-control bg-white fw-bold text-dark" formControlName="nombre_solicitante" readonly placeholder="Busque un profesional...">
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-          </div>
-
-          <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
-            <span class="text-primary fw-bold small mb-3 d-block text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-              Determinaciones del Período de Descanso / Relevo
-            </span>
-            
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <label class="form-label small text-muted fw-semibold">Empieza el:</label>
-                <input type="date" class="form-control border-primary-subtle shadow-sm" formControlName="fecha_inicio">
-              </div>
-              
-              <div class="col-md-4">
-                <label class="form-label small text-muted fw-semibold">Hasta el:</label>
-                <input type="date" class="form-control border-primary-subtle shadow-sm" formControlName="fecha_fin">
-              </div>
-
-              <div class="col-md-4">
-                <label class="form-label small text-muted fw-semibold">Gestión Correspondiente:</label>
-                <select class="form-select border-primary-subtle shadow-sm fw-bold" formControlName="gestion_vacacion">
-                  <option value="2025">Gestión 2025</option>
-                  <option value="2026" selected>Gestión 2026</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row g-3">
-              <div class="col-md-12">
-                <label class="form-label small fw-semibold text-muted">En su REMPLAZO queda el Funcionario (a):</label>
-                <div class="input-group shadow-sm">
-                  <span class="input-group-text bg-white"><i class="bi bi-person-workspace text-warning"></i></span>
-                  <input type="text" class="form-control border-primary-subtle" formControlName="funcionario_reemplazo" placeholder="Escriba el nombre completo del reemplazo autorizado...">
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          <div class="card p-4 border-0 shadow-sm bg-white" style="border-left: 5px solid #0d6efd !important; border-radius: 12px;" *ngIf="!vacacionForm.get('es_solo_reemplazo')?.value">
-  
-  <span class="text-dark fw-bold small mb-3 d-block text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-    <i class="bi bi-shield-check text-primary me-1"></i> Cuadro de Verificación Interna (RR.HH.)
-  </span>
-
-  <div class="mb-4">
-    <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
-      Vacación Anual de la Gestión (Definido por Admin)
-    </label>
-    <div class="input-group shadow-sm">
-      <span class="input-group-text bg-light text-secondary"><i class="bi bi-calendar-check"></i></span>
-      <input type="text" 
-             class="form-control fw-bold border-primary-subtle" 
-             formControlName="gestion_vacacion" 
-             placeholder="Ej. 2024-2025 o 2025-2026 (Según análisis)">
+        </div>
     </div>
-  </div>
-
-  <div class="row g-3 text-center">
-    <div class="col-md-4">
-      <div class="p-2 bg-light rounded border">
-        <label class="form-label small text-muted d-block mb-1 fw-semibold">Días Concedidos</label>
-        <input type="number" class="form-control form-control-sm fw-bold text-center border-0 bg-transparent text-primary fs-5 p-0" formControlName="dias_concedidos">
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="p-2 bg-light rounded border">
-        <label class="form-label small text-muted d-block mb-1 fw-semibold">Días de Descuento</label>
-        <input type="number" class="form-control form-control-sm fw-bold text-center border-0 bg-transparent text-danger fs-5 p-0" formControlName="dias_descuento">
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="p-2 bg-success-subtle rounded border border-success-subtle">
-        <label class="form-label small text-success d-block mb-1 fw-bold">Días de Saldo Restante</label>
-        <input type="number" class="form-control form-control-sm fw-bold text-center border-0 bg-transparent text-success fs-5 p-0" formControlName="saldo_restante">
-      </div>
-    </div>
-  </div>
-
-</div>
-        </form>
-      </div>
-
-      <div class="modal-footer bg-white border-top-0 px-4 pb-3">
-        <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
-          Cancelar
-        </button>
-        <button type="button" 
-                class="btn btn-primary px-4 shadow-sm fw-bold" 
-                [disabled]="vacacionForm?.invalid" 
-                (click)="guardarSolicitudVacacion()"
-                data-bs-dismiss="modal">
-          <i class="bi bi-printer-fill me-1"></i> Generar e Imprimir Solicitud
-        </button>
-      </div>
-
-    </div>
-  </div>
 </div>
