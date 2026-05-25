@@ -27,6 +27,7 @@ export class DashboardComponent implements OnInit {
   private vacacionService = inject(VacacionService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder); 
+  
   private _reporteMensualService = inject(ReporteMensualService);
   private turnoService = inject(TurnoService);  
   private nombreOriginal = signal<string>('');
@@ -660,31 +661,38 @@ export class DashboardComponent implements OnInit {
 
   generarPDF() {
     const doc = new jsPDF('p', 'mm', 'a4');
-    const user = this.usuario().toUpperCase();
+    
+    // 🔍 'this.usuario()' ya contiene "ANA MARIA CORAITE" tras haberla buscado
+    const nombreProfesional = this.usuario(); 
     const servicioActivo = this.servicioActivo()?.nombre || 'Sin Servicio';
 
-    doc.setFillColor(...PDF_COLORS['VERDE_HOSPITAL']);
+    // Encabezado principal institucional
+    doc.setFillColor(...PDF_COLORS['BLANCO']);
     doc.rect(0, 0, 210, 20, 'F');
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PDF_COLORS['BLANCO']);
-    doc.text('HOSPITAL SAN JUAN DE DIOS', 15, 13);
+    doc.setTextColor(...PDF_COLORS['VERDE_OSCURO']);
+    doc.text('HOSPITAL REGIONAL  SAN JUAN DE DIOS', 15, 13);
     
     doc.setTextColor(...PDF_COLORS['VERDE_OSCURO']);
     doc.setFontSize(10);
-    doc.text('REPORTE MENSUAL DE GUARDIAS', 15, 28);
+    doc.text('REPORTE MENSUAL DE TURNO DE FUNCIONARIO', 15, 28);
 
+    // Contenedor Menta de Información
     doc.setFillColor(...PDF_COLORS['FONDO_MENTA']);
     doc.setDrawColor(225, 233, 229); 
     doc.roundedRect(15, 33, 180, 18, 2, 2, 'FD');
 
     doc.setFontSize(9); 
     doc.setTextColor(...PDF_COLORS['TEXTO_SUAVE']);
-    doc.text(`PROFESIONAL: ${this.nombreOriginal()}`, 14, 42); 
-    doc.text(`SERVICIO: ${servicioActivo}`, 14, 47);
     
-    doc.text(`FECHA EMISIÓN: ${this.fechaActual()}`, 195, 42, { align: 'right' });
-    doc.text(`GESTIÓN: 2026`, 195, 47, { align: 'right' }); 
+    // 🎨 CORRECCIÓN: Alineación a X=18 para padding perfecto dentro del recuadro
+    doc.text(`FUNCIONARIO: ${nombreProfesional}`, 18, 42); 
+    doc.text(`SERVICIO: ${servicioActivo}`, 18, 47);
+    
+    doc.text(`FECHA EMISIÓN: ${this.fechaActual()}`, 192, 42, { align: 'right' });
+    doc.text(`GESTIÓN: 2026`, 192, 47, { align: 'right' }); 
 
+    // Tabla de Turnos Asignados
     autoTable(doc, {
       startY: 55,
       head: [['FECHA', 'ÁREA / UNIDAD', 'TURNO', 'HORARIO']],
@@ -698,8 +706,9 @@ export class DashboardComponent implements OnInit {
       columnStyles: { 0: { halign: 'center', fontStyle: 'bold' }, 2: { halign: 'center' }, 3: { halign: 'center' } }
     });
 
-    doc.save(`Rol_Guardias_${user.replace(/\s+/g, '_')}.pdf`);
-  }
+    // Guardará el archivo como: Rol_Guardias_ANA_MARIA_CORAITE.pdf
+    doc.save(`Rol_Guardias_${nombreProfesional.replace(/\s+/g, '_')}.pdf`);
+}
 
   guardarSolicitudVacacion(): void {
     if (this.vacacionForm.invalid) {

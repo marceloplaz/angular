@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
 import { NovedadComponent } from '../novedad/novedad';
 import { DragDropModule, CdkDragDrop,  CdkDropListGroup,  CdkDropList,  CdkDrag,   } from '@angular/cdk/drag-drop';
-import { CdkDragPlaceholder } from '@angular/cdk/drag-drop'; //relativo para pdf
+
 import { jsPDF } from 'jspdf';// imagen de pdf
 import autoTable from 'jspdf-autotable';
 import { formatDate } from '@angular/common';

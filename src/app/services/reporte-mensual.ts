@@ -49,8 +49,9 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
 
     doc.setFontSize(20);
     doc.setTextColor(...PDF_COLORS['BLANCO']);
-    doc.text('HOSPITAL SAN JUAN DE DIOS', 14, 15);
+    doc.text('HOSPITAL REGIONAL SAN JUAN DE DIOS', 14, 15);
     
+
     doc.setFontSize(10);
     doc.text(`ROL MENSUAL DE TURNOS - ${filtros.servicio}`, 14, 22);
     doc.text(`Mes: ${filtros.mes} | Gestión: ${filtros.gestion} | Categoría: ${filtros.categoria}`, 14, 28);
@@ -89,7 +90,7 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
     //          Nombre
     //          (Horas)
     return `• ${tipo} | ${area}\n  ${nombre}\n  ${horario}`;
-                                                        }).join('\n──────────\n');
+                                                        }).join('\n\n');
 
         semana[indexColumna] = {
     content: `${diaActual}\n\n${textoTurnos}`,
