@@ -256,10 +256,26 @@ actualizarNombresDeFiltros() {
 onMesChange(mesId: any) {
   this.filters.mes_id = mesId; // Asegurar el ID
   const mesSeleccionado = this.mesesDisponibles.find(m => m.id == mesId);
+  
   if (mesSeleccionado) {
     this.filters.mes_nombre = mesSeleccionado.nombre.toUpperCase();
+    
+    // 🌟 ENFOQUE SEMANA: Actualizamos el listado de semanas del mes seleccionado
+    this.semanasDisponibles = mesSeleccionado.semanas || [];
+    
+    if (this.semanasDisponibles.length > 0) {
+      // Seleccionamos la primera semana del nuevo mes por defecto
+      this.filters.semana_id = this.semanasDisponibles[0].id;
+      
+      // Ejecutamos tu método de recálculo con la fecha de inicio de esta primera semana
+      if (this.semanasDisponibles[0].fecha_inicio) {
+        this.generarFechasDeLaSemana(this.semanasDisponibles[0].fecha_inicio);
+      }
+    }
   }
-  // Tu lógica de negocio...
+  
+  // Al final llamamos a cargarTurnos para actualizar los datos del backend
+  this.cargarTurnos();
 }
 
 // En el cambio de Filtros (Servicio y Categoría)
@@ -434,6 +450,11 @@ cargarConfiguracionInicial() {
         this.filters.mes_id = mesActual.id;
         this.semanasDisponibles = mesActual.semanas;
         this.filters.semana_id = this.semanasDisponibles[0]?.id;
+        //carga la semana inicial de las fechas 
+        if (this.semanasDisponibles[0]?.fecha_inicio) {
+         this.generarFechasDeLaSemana(this.semanasDisponibles[0].fecha_inicio);
+  }
+
       }
     }
     this.cargarTurnos();
@@ -456,11 +477,23 @@ onCambioGestion() {
 
   
 
-  cargarTurnos() {
+cargarTurnos() {
+
+  // 1. Validación de seguridad existente
     if (!this.filters.servicio_id || !this.filters.semana_id) return;
     this.cargando = true;
     this.cdRef.detectChanges();
 
+    // =========================================================================
+    // 🌟 ENFOQUE SEMANA: Buscamos la semana activa para actualizar los números
+    // =========================================================================
+    const semanaSeleccionada = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
+    if (semanaSeleccionada && semanaSeleccionada.fecha_inicio) {
+      this.generarFechasDeLaSemana(semanaSeleccionada.fecha_inicio);
+    }
+    // =========================================================================
+
+    // 2. Tu petición HTTP al servicio se mantiene exactamente igual
     this.turnoService.getEquipoPorFiltros(this.filters.servicio_id, this.filters.categoria_id, this.filters.semana_id)
       .subscribe({
         next: (res: any) => {
@@ -473,7 +506,7 @@ onCambioGestion() {
           this.cdRef.detectChanges(); 
         }
       });
-  }
+}
 
   // --- LÓGICA DE MOVIMIENTO (DRAG & DROP) ---
 
@@ -838,14 +871,22 @@ onRotarMensualSeleccionado() {
     
     return `${año}-${mes}-${dia}`;
   }
-
 generarFechasDeLaSemana(fechaInicio: string) {
     this.fechasRealesDeLaSemana = [];
     for (let i = 0; i < 7; i++) {
-        const fecha = new Date(fechaInicio);
+        // Usamos la estrategia de separar por '-' para evitar problemas de zonas horarias locales
+        const partes = fechaInicio.split('-');
+        const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
         fecha.setDate(fecha.getDate() + i);
         this.fechasRealesDeLaSemana.push(fecha.toISOString().split('T')[0]);
     }
+}
+
+// 🌟 Función auxiliar para extraer el número del día (ej: de "2026-05-04" saca "4")
+obtenerNumeroDia(fechaStr: string): string {
+    if (!fechaStr) return '';
+    const partes = fechaStr.split('-'); // [año, mes, dia]
+    return parseInt(partes[2], 10).toString(); // Remueve el cero inicial (ej: "04" -> "4")
 }
 
 cerrarTodosLosModales() {

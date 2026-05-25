@@ -96,7 +96,18 @@
         <thead>
           <tr>
             <th class="col-personal">PERSONAL</th>
-            <th *ngFor="let dia of diasSemana" class="text-uppercase">{{ dia }}</th>
+          
+            <th *ngFor="let dia of diasSemana; let i = index">
+  {{ dia | uppercase }} <br>
+  <span class="badge bg-light text-success p-1 border border-success-subtle rounded small">
+    @if (fechasRealesDeLaSemana?.[i]) {
+      {{ obtenerNumeroDia(fechasRealesDeLaSemana[i]) }}
+    } @else {
+      --
+    }
+  </span>
+</th>
+
             <th class="col-total">DÍAS</th>
             <th class="col-total">HORAS</th>
           </tr>
