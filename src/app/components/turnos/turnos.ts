@@ -1151,14 +1151,13 @@ exportarPDFSemanal() {
   }
 
   // 3. Construimos la URL usando el environment que ya importaste
- const url = `${environment.apiUrl}/reportes/semanal/${semanaId!}?servicio_id=${servicioId!}&categoria_id=${categoriaId!}`;
+  const url = `${environment.apiUrl}/reportes/semanal/${semanaId!}?servicio_id=${servicioId!}&categoria_id=${categoriaId!}`;
 
   // 4. Petición HTTP para obtener el Blob
   this.http.get(url, { responseType: 'blob' }).subscribe({
     next: (res: Blob) => {
       const fileURL = URL.createObjectURL(res);
       window.open(fileURL, '_blank');
-      // Opcional: revokeObjectURL después de un tiempo para liberar memoria
     },
     error: (err: any) => {
       console.error('Error al generar la vista previa', err);
@@ -1166,54 +1165,10 @@ exportarPDFSemanal() {
     }
   });
 }
-  // Switch para cambiar de vista
-exportarReporteMensual() {
-  // 1. Usamos 'loading' (debes declararlo arriba) o 'cargando' si ya existía
-  this.loading = true; 
-
-  // 2. Usamos los IDs que vienen de tus selects (vinculados a filters)
-  const idServicio = this.filters.servicio_id;
-  const idMes = this.filters.mes_id;
-
-  this.turnoService.getResumenMensual(idServicio, idMes).subscribe({
-    next: (res) => {
-      const doc = new jsPDF();
-      const data = res.data;
-
-      doc.setFontSize(18);
-      doc.text('Resumen Mensual de Asistencia', 14, 20);
-      
-      const rows = data.map((item: any) => [
-        item.usuario_nombre,
-        item.categoria_nombre,
-        `${item.dias_trabajados} días`,
-        `${item.total_horas} hrs`
-      ]);
-
-      autoTable(doc, {
-        startY: 30,
-        head: [['Personal', 'Categoría', 'Días', 'Total Horas']],
-        body: rows,
-        theme: 'grid',
-        headStyles: { fillColor: [40, 167, 69] }
-      });
-
-      // 3. Corregimos la referencia a mesId
-      doc.save(`Reporte_Mensual_Mes_${idMes}.pdf`);
-      this.loading = false;
-    },
-    error: (err) => {
-      console.error('Error al descargar reporte', err);
-      this.loading = false;
-    }
-  });
-}
-
-
 
 exportarPDFMensual() {
   if (!this.filters.servicio_id || !this.filters.mes_id) {
-    alert('Seleccione servicio y mes antes de exportar');
+    this.toastr.warning('Seleccione servicio y mes antes de exportar', 'Atención');
     return;
   }
 
@@ -1221,44 +1176,79 @@ exportarPDFMensual() {
 
   this.turnoService.getResumenMensual(this.filters.servicio_id, this.filters.mes_id).subscribe({
     next: (response) => {
-      // IMPORTANTE: Accedemos a response.data porque tu JSON viene envuelto así
       const listaPersonal = response.data;
 
       if (!listaPersonal || listaPersonal.length === 0) {
-        alert('No hay datos disponibles para este mes/servicio');
+        this.toastr.info('No hay datos disponibles para este mes/servicio', 'Información');
         this.loading = false;
         return;
       }
 
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
       
-      // Título y Estilo
-      doc.setFontSize(16);
-      doc.setTextColor(26, 188, 156); // El verde/teal de tu sistema
-      doc.text('REPORTE MENSUAL DE ASISTENCIA', 14, 20);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
+      // =========================================================================
+      // ENCABEZADO INSTITUCIONAL
+      // =========================================================================
+      doc.setFillColor(6, 80, 34); // #065022 (Verde Oscuro Hospital)
+      doc.rect(0, 0, 210, 4, 'F');
 
-      // Mapeo de datos para la tabla
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(6, 80, 34); 
+      doc.text('REPORTE MENSUAL DE ASISTENCIA Y HORAS', 14, 18);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Institución: Hospital San Juan de Dios`, 14, 25);
+      doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 14, 30);
+
       const rows = listaPersonal.map((p: any) => [
         p.usuario_nombre.toUpperCase(),
-        p.categoria_nombre,
+        p.categoria_nombre.toUpperCase(),
         `${p.dias_trabajados} días`,
         `${p.total_horas} hrs`
       ]);
 
+      // =========================================================================
+      // GENERACIÓN DE TABLA CON DISTRIBUCIÓN HORIZONTAL AGRESIVA
+      // =========================================================================
       autoTable(doc, {
-        startY: 35,
-        head: [['PERSONAL', 'CATEGORÍA', 'DÍAS TRAB.', 'TOTAL HORAS']],
+        startY: 36,
+        head: [['PERSONAL', 'CATEGORÍA', 'DÍAS\nTRAB.', 'TOTAL\nHORAS']], // Usamos \n para forzar el quiebre en la cabecera
         body: rows,
         theme: 'grid',
-        headStyles: { fillColor: [26, 188, 156] }, // Color verde-agua
-        styles: { fontSize: 9 },
+        
+        styles: { 
+          fontSize: 9, 
+          cellPadding: 3.5,             // Ajuste sutil de colchón para ganar espacio
+          valign: 'middle',             
+          font: 'helvetica',
+          overflow: 'linebreak'         // Permite quiebre limpio si fuera necesario
+        },
+
+        headStyles: { 
+          fillColor: [6, 80, 34], 
+          textColor: [255, 255, 255],
+          fontSize: 9,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+
+        // 💎 CONFIGURACIÓN DE ANCHOS SUPREMA PARA EVITAR APRETAR NOMBRES 💎
         columnStyles: {
-          2: { halign: 'center' },
-          3: { halign: 'center' }
+          0: { cellWidth: 105, halign: 'left' },   // ¡Máximo espacio para el Nombre Completo!
+          1: { cellWidth: 37, halign: 'center' },  // Categoría compacta y prolija
+          2: { cellWidth: 20, halign: 'center' },  // Reducido al mínimo para los días
+          3: { cellWidth: 20, halign: 'center' }   // Reducido al mínimo para las horas
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 249, 246]
         }
       });
 
@@ -1267,11 +1257,15 @@ exportarPDFMensual() {
     },
     error: (err) => {
       console.error('Error en el reporte:', err);
-      alert('Error al conectar con el servidor');
+      this.toastr.error('Error al conectar con el servidor', 'Error');
       this.loading = false;
     }
   });
 }
+
+
+
+
 alGuardarNovedad() {
   // 1. Cambiamos el nombre al que realmente existe en tu componente
   console.log('Refrescando datos para la semana:', this.filters.semana_id);

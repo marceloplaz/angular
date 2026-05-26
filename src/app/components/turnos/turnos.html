@@ -1,4 +1,4 @@
-<div class="p-3 page-container" style="background-color: #f0f4f3; min-height: 100vh;">
+<div class="p-3 page-container" style="background-color: #edf1f1; min-height: 100vh;">
 
   <div class="card shadow-sm border-0 mb-3 p-3 bg-white" style="border-radius: 12px;">
     <div class="row g-2 align-items-end">
@@ -90,24 +90,25 @@
         </div>
       </div>
 
-    </div> </div> <div class="card shadow-sm border-0 p-3 bg-white" style="border-radius: 12px;">
+    </div> 
+  </div> 
+
+  <div class="card shadow-sm border-0 p-3 bg-white" style="border-radius: 12px;">
     <div class="table-responsive">
       <table class="table mb-0 text-center align-middle">
         <thead>
           <tr>
             <th class="col-personal">PERSONAL</th>
-          
             <th *ngFor="let dia of diasSemana; let i = index">
-  {{ dia | uppercase }} <br>
-  <span class="badge bg-light text-success p-1 border border-success-subtle rounded small">
-    @if (fechasRealesDeLaSemana?.[i]) {
-      {{ obtenerNumeroDia(fechasRealesDeLaSemana[i]) }}
-    } @else {
-      --
-    }
-  </span>
-</th>
-
+              {{ dia | uppercase }} <br>
+              <span class="badge bg-light text-success p-1 border border-success-subtle rounded small">
+                @if (fechasRealesDeLaSemana?.[i]) {
+                  {{ obtenerNumeroDia(fechasRealesDeLaSemana[i]) }}
+                } @else {
+                  --
+                }
+              </span>
+            </th>
             <th class="col-total">DÍAS</th>
             <th class="col-total">HORAS</th>
           </tr>
@@ -116,20 +117,17 @@
         <tbody>
           <tr *ngFor="let p of personalAgrupado" class="row-hover border-bottom">
             
-          <td class="col-personal text-start p-2">
-  <div class="fw-bold text-dark small">{{ p.usuario_nombre | uppercase }}</div>
-  
-  <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
-  
-  <div class="mt-1">
-  <span class="badge bg-light text-dark border extra-small px-1.5 py-0.5">
-    {{ p.tipo_salario }}
-  </span>
-</div>
-</td>
+            <td class="col-personal text-start p-2">
+              <div class="fw-bold text-dark small">{{ p.usuario_nombre | uppercase }}</div>
+              <div class="text-muted extra-small">{{ p.categoria_nombre }}</div>
+              <div class="mt-1">
+                <span class="badge bg-light text-dark border extra-small px-1.5 py-0.5">
+                  {{ p.tipo_salario }}
+                </span>
+              </div>
+            </td>
             
             <td *ngFor="let dia of diasSemana" class="cell-drop p-1">
-              
               <ng-container *ngFor="let turno of obtenerTurnosAsignados(p, dia)">
                 <div class="badge-turno shadow-sm mb-1" 
                      [style.backgroundColor]="turno.color"
@@ -163,7 +161,6 @@
                       <ng-container *ngIf="turno.horario && !turno.horario.includes('2026'); else usarHoras">
                         {{ turno.horario }}
                       </ng-container>
-                      
                       <ng-template #usarHoras>
                         {{ turno.hora_inicio?.length > 10 ? (turno.hora_inicio | slice:11:16) : (turno.hora_inicio | slice:0:5) }}
                         {{ turno.hora_fin ? ' - ' : '' }}
@@ -192,75 +189,108 @@
     </div>
   </div>
 
-  <p-dialog [(visible)]="mostrarModal" [modal]="true" header="ASIGNAR TURNO" styleClass="custom-modal-verde" [draggable]="false" appendTo="body">
-    <div class="p-3" style="width: 380px;">
+  <p-dialog [(visible)]="mostrarModal" [modal]="true" header="ASIGNAR TURNO" styleClass="custom-modal-verde" [draggable]="false" [closable]="true" appendTo="body">
+    <div class="p-2" style="width: 380px;">
+      
       <div class="p-3 bg-light rounded-3 mb-4 text-center border">
-        <div class="fw-bold text-teal">{{ personalSeleccionado?.usuario_nombre }}</div>
-        <div class="extra-small text-muted text-uppercase">{{ obtenerFechaReal(diaSeleccionado) | date:'fullDate' }}</div>
+        <div class="fw-bold fs-6">{{ personalSeleccionado?.usuario_nombre | uppercase }}</div>
+        <div class="extra-small text-muted text-uppercase mt-1">
+          <i class="pi pi-calendar-plus me-1"></i>{{ obtenerFechaReal(diaSeleccionado) | date:'fullDate' }}
+        </div>
       </div>
+      
       <div class="mb-3">
-        <label class="extra-small fw-bold text-secondary">ÁREA DE TRABAJO</label>
-        <select class="form-select form-select-sm" [(ngModel)]="areaIdSeleccionado">
+        <label class="extra-small fw-bold text-secondary mb-1">ÁREA DE TRABAJO</label>
+        <select class="form-select shadow-none" [(ngModel)]="areaIdSeleccionado">
           <option [ngValue]="null">Seleccione un área...</option>
           <option *ngFor="let a of listaAreas" [value]="a.id">{{ a.nombre }}</option>
         </select>
       </div>
+      
       <div class="mb-3">
-        <label class="extra-small fw-bold text-secondary">TURNO / HORARIO</label>
-        <select class="form-select form-select-sm" [(ngModel)]="turnoIdSeleccionado">
+        <label class="extra-small fw-bold text-secondary mb-1">TURNO / HORARIO</label>
+        <select class="form-select shadow-none" [(ngModel)]="turnoIdSeleccionado">
           <option [ngValue]="null">Seleccione un horario...</option>
           <option *ngFor="let t of listaTurnos" [value]="t.id">{{ t.nombre_turno }} ({{ t.hora_inicio }} - {{ t.hora_fin }})</option>
         </select>
       </div>
-      <div class="form-check mb-4">
-        <input class="form-check-input" type="checkbox" id="esMensual" [(ngModel)]="esMensual">
-        <label class="form-check-label small fw-bold" for="esMensual">Asignar a múltiples días</label>
+      
+      <div class="form-check form-switch mb-4 ps-5">
+        <input class="form-check-input ms-4" type="checkbox" id="esMensual" [(ngModel)]="esMensual">
+        <label class="form-check-label small fw-bold text-dark" for="esMensual">Asignar a múltiples días</label>
       </div>
+      
       <div class="mb-4" *ngIf="esMensual">
-        <button class="btn btn-outline-teal btn-sm w-100" (click)="mostrarModalCalendario = true">
+        <button class="btn btn-outline-teal btn-sm w-100 fw-bold py-2 border-2" (click)="mostrarModalCalendario = true">
           <i class="pi pi-calendar me-2"></i> {{ fechasSeleccionadas.length }} días elegidos
         </button>
       </div>
-      <button class="btn btn-teal-actions w-100 py-2 fw-bold" [disabled]="!turnoIdSeleccionado" (click)="guardarAsignacion()">
-        CONFIRMAR ASIGNACIÓN
-      </button>
+      
+      <div class="d-flex gap-2 mt-2">
+        <button type="button" class="btn btn-secondary w-50 fw-bold py-2 shadow-sm text-uppercase" (click)="mostrarModal = false">
+          <i class="pi pi-times me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-teal-actions w-50 fw-bold py-2 shadow-sm text-uppercase" [disabled]="!turnoIdSeleccionado" (click)="guardarAsignacion()">
+          <i class="pi pi-check me-1"></i> Confirmar
+        </button>
+      </div>
     </div>
   </p-dialog>
 
-  <p-dialog [(visible)]="mostrarModalCRUD" [modal]="true" header="GESTIONAR ASIGNACIÓN" styleClass="custom-modal-gestion" [draggable]="false" appendTo="body">
-    <div class="p-3" style="width: 350px;">
-      <div class="p-3 bg-light rounded mb-4 text-center">
-        <div class="fw-bold text-uppercase small">{{ turnoSeleccionado?.usuario_nombre }}</div>
-        <div class="extra-small text-muted">{{ turnoSeleccionado?.nombre_turno }} | {{ turnoSeleccionado?.horario }}</div>
+  <p-dialog [(visible)]="mostrarModalCRUD" [modal]="true" header="GESTIONAR ASIGNACIÓN" styleClass="custom-modal-verde" [draggable]="false" [closable]="true" appendTo="body">
+    <div class="p-2" style="width: 360px;">
+      
+      <div class="p-3 bg-light rounded-3 mb-4 text-center border">
+        <div class="fw-bold text-uppercase fs-6">{{ turnoSeleccionado?.usuario_nombre | uppercase }}</div>
+        <div class="badge bg-teal mt-2 px-2.5 py-1.5 font-monospace text-uppercase" style="font-size: 0.75rem; color: #ffffff !important;">
+          {{ turnoSeleccionado?.nombre_turno }} | {{ turnoSeleccionado?.horario }}
+        </div>
       </div>
-      <div class="d-grid gap-2">
-        <button class="btn btn-warning btn-sm fw-bold" (click)="abrirRegistroNovedad(turnoSeleccionado)">
+      
+      <div class="d-grid gap-2 mb-4">
+        <button class="btn btn-warning btn-sm fw-bold py-2 shadow-sm text-white" (click)="abrirRegistroNovedad(turnoSeleccionado)">
           <i class="pi pi-exclamation-triangle me-2"></i> REGISTRAR NOVEDAD
         </button>
-        <button class="btn btn-danger btn-sm fw-bold" (click)="eliminarTurno()">
+        <button class="btn btn-danger btn-sm fw-bold py-2 shadow-sm text-white" (click)="eliminarTurno()">
           <i class="pi pi-trash me-2"></i> ELIMINAR ASIGNACIÓN
         </button>
       </div>
-      <hr class="my-4">
+      
+      <hr class="my-4 text-muted opacity-25">
+      
       <div class="mb-3">
-        <label class="extra-small fw-bold text-secondary">CAMBIAR TIPO DE TURNO</label>
-        <select class="form-select form-select-sm" [(ngModel)]="turnoSeleccionado.turno_id" *ngIf="turnoSeleccionado">
+        <label class="extra-small fw-bold text-secondary mb-1">CAMBIAR TIPO DE TURNO</label>
+        <select class="form-select shadow-none" [(ngModel)]="turnoSeleccionado.turno_id" *ngIf="turnoSeleccionado">
           <option *ngFor="let t of listaTurnos" [value]="t.id">
             {{ t.nombre_turno }} ({{ t.hora_inicio | slice:0:5 }} - {{ t.hora_fin | slice:0:5 }})
           </option>
         </select>
       </div>
-      <button class="btn btn-teal-actions btn-sm w-100 fw-bold" (click)="confirmarActualizacion()">
+      
+      <button class="btn btn-teal-actions w-100 fw-bold py-2 shadow-sm mt-2" (click)="confirmarActualizacion()">
         <i class="pi pi-save me-2"></i> GUARDAR CAMBIOS
       </button>
     </div>
   </p-dialog>
 
-  <p-dialog [(visible)]="mostrarModalCalendario" [modal]="true" header="Seleccionar días" [closable]="false" appendTo="body">
-    <div class="p-4 text-center">
-      <p-datepicker [(ngModel)]="fechasSeleccionadas" selectionMode="multiple" [inline]="true"></p-datepicker>
-      <div class="mt-3">
-        <button class="btn btn-primary w-100 fw-bold" (click)="aceptarDias()">ACEPTAR</button>
+  <p-dialog [(visible)]="mostrarModalCalendario" [modal]="true" header="SELECCIONAR DÍAS" styleClass="custom-modal-verde" [draggable]="false" [closable]="true" appendTo="body">
+    <div class="p-2 text-center" style="width: 380px;">
+      
+      <p class="small mb-3 text-selector-label">
+        Seleccionar el Dia
+      </p>
+
+      <div class="d-inline-block shadow-sm p-2 bg-white rounded-3 border mb-4">
+        <p-datepicker [(ngModel)]="fechasSeleccionadas" selectionMode="multiple" [inline]="true"></p-datepicker>
+      </div>
+      
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary w-50 fw-bold py-2 shadow-sm text-uppercase" (click)="mostrarModalCalendario = false">
+          <i class="pi pi-times me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-teal-actions w-50 fw-bold py-2 shadow-sm text-uppercase" (click)="aceptarDias()">
+          <i class="pi pi-check me-1"></i> Aceptar
+        </button>
       </div>
     </div>
   </p-dialog>

@@ -1,115 +1,397 @@
-:host {
-    --verde-agua: #1abc9c;
-    --verde-hover: #16a085;
-    --borde-color: #e2e8f0;
-}
+// ==========================================
+// VARIABLES DE PALETA: VERDE AGUA HOSPITALARIO PREMIUM
+// ==========================================
+$hospital-primary: #065022;      // Verde agua hospitalario principal
+$hospital-hover: #0a6016;        // Verde agua hover
+$hospital-light-bg: #e6f4f4;     // Fondo verde agua hospitalario pastel
+$hospital-border-light: #bce2e2; // Borde suave para los contenedores claros
 
-/* Columna de nombre médico fija */
-.col-personal {
-    width: 220px;
-    position: sticky;
-    left: 0;
-    background: white;
-    z-index: 5;
-    border-right: 2px solid var(--borde-color);
-}
+// Botón de Acciones superiores (Sincronizado con el Badge Semana de tu HTML)
+$semana-green: #5a9009;          // Verde manzana/limón de los números
+$semana-green-hover: #09861a;
 
-/* Estilo de los turnos (Badge) */
-.badge-turno {
-    border-radius: 6px;
-    padding: 6px;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.2s;
-    &:hover { transform: scale(1.03); filter: brightness(1.1); }
-}
+// Botones de Acción Internos (Más oscuros y elegantes)
+$btn-confirm-dark: #758d17;      // Verde pino oscuro corporativo
+$btn-confirm-hover: #3eb70e;
+$btn-cancel-dark: #b02a37;       // Rojo carmín/ladrillo elegante
+$btn-cancel-hover: #8a2029;
 
-.turno-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-.turno-time-box { background: rgba(255, 255, 255, 0.2); font-size: 0.6rem; border-radius: 3px; margin-top: 3px; }
+// Textos e Interfaces
+$text-dark-pure: #111111;        // Negro puro para legibilidad absoluta
+$text-muted-gray: #495057;       // Gris oscuro para subtítulos
+$border-color: #dee2e6;          // Bordes generales del sistema
 
-/* Botón "+" discreto */
-.btn-add-soft {
-    border: 2px dashed #cbd5e0;
-    background: transparent;
-    color: #cbd5e0;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    &:hover { border-color: var(--verde-agua); color: var(--verde-agua); background: #f0fdfa; }
-}
-
-/* OVERRIDES DE PRIMENG */
-::v-deep {
-    .custom-modal-verde .p-dialog-header {
-        background-color: var(--verde-agua) !important;
-        color: white !important;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        .p-dialog-header-icon { color: white !important; }
-    }
-    
-    .custom-modal-verde .p-dialog-content {
-        padding: 0 !important;
-        border-bottom-left-radius: 12px;
-        border-bottom-right-radius: 12px;
-    }
-
-    .p-datepicker table td > span.p-highlight {
-        background-color: var(--verde-agua) !important;
-        color: white !important;
-    }
-}
-
-.dropdown-item {
-  cursor: pointer;
-  &:hover {
-    background-color: #f8f9fa;
+// ==========================================
+// ESTILOS GENERALES
+// ==========================================
+.page-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  .extra-small {
+    font-size: 0.7rem;
+    color: $text-muted-gray;
   }
 }
-/* Botones personalizados */
+
+// ==========================================
+// BOTÓN DE ACCIONES SUPERIOR (Verde Semana)
+// ==========================================
+.btn-teal {
+  background-color: $semana-green !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: background-color 0.2s ease;
+
+  &:hover, &:focus, &:active {
+    background-color: $semana-green-hover !important;
+    color: #ffffff !important;
+  }
+}
+
+// ==========================================
+// BOTONES DE MODALES (Confirmar / Cancelar oscuros)
+// ==========================================
 .btn-teal-actions {
-    background-color: var(--verde-agua);
-    color: white;
-    border: none;
-    &:hover { background-color: var(--verde-hover); color: white; }
-    &:disabled { background-color: #a5d6a7; opacity: 0.7; }
+  background-color: $btn-confirm-dark !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
+  
+  &:hover:not([disabled]) {
+    background-color: $btn-confirm-hover !important;
+  }
+  
+  &:disabled {
+    background-color: lighten($btn-confirm-dark, 30%) !important;
+    cursor: not-allowed;
+  }
 }
 
-.text-teal { color: var(--verde-agua); }
-.extra-small { font-size: 0.7rem; }
-.bg-light-orange {
-  background-color: rgba(253, 126, 20, 0.1);
+.btn-secondary {
+  background-color: $btn-cancel-dark !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: $btn-cancel-hover !important;
+  }
 }
 
-.badge-turno {
+// ==========================================
+// BOTÓN "+" (Cruz con círculo punteado elegante)
+// ==========================================
+.btn-add-soft {
+  background: transparent;
+  border: 1.5px dashed $semana-green; 
+  color: $semana-green;
+  
+  width: 26px;
+  height: 26px;
+  border-radius: 50% !important;
+  padding: 0;
+  
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s;
-  border-radius: 6px;
-  padding: 4px;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: rgba($semana-green, 0.1);
+    transform: scale(1.15);
+    border-style: dashed;
+  }
 }
 
-.badge-turno:hover {
-  transform: scale(1.05);
+// ==========================================
+// NUEVA CÁPSULA CORREGIDA: TEXTO NITIDO Y BRILLANTE
+// ==========================================
+.badge-turno {
+  padding: 6px 8px;
+  border-radius: 14px !important;  
+  cursor: pointer;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  
+  width: 100%;
+  min-height: 50px;               // Un poquito más de espacio para que no se sofoque el texto
+  margin: 4px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  // CORRECCIÓN TURNO MAÑANA/VERDE (Fondo pastel limpio + Texto Verde Puro e Intenso)
+  &.bg-success, &.badge-verde {
+    background-color: rgba($semana-green, 0.16) !important; // Fondo nítido pero suave
+    border: 1.5px solid rgba($semana-green, 0.4) !important; // Borde que encapsula bien
+    color: $semana-green !important;                         // COLOR PURO para que resalte
+    
+    .turno-title, .extra-small, i {
+      color: $semana-green !important;                       // Fuerza el color vivo en todo lo interno
+    }
+    &:hover { background-color: rgba($semana-green, 0.25) !important; }
+  }
+
+  // CORRECCIÓN TURNO TARDE-NOCHE/VERDE AGUA (Fondo pastel limpio + Texto Verde Agua Puro)
+  &.bg-dark, &.badge-noche {
+    background-color: rgba($hospital-primary, 0.16) !important;
+    border: 1.5px solid rgba($hospital-primary, 0.4) !important;
+    color: $hospital-primary !important;                     // COLOR PURO sin opacar
+    
+    .turno-title, .extra-small, i {
+      color: $hospital-primary !important;
+    }
+    &:hover { background-color: rgba($hospital-primary, 0.25) !important; }
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .turno-title {
+    font-size: 0.75rem;            // Un poquitito más grande para facilitar la lectura rápida
+    font-weight: 800;              // Extra negrita para que rompa el fondo claro
+    line-height: 1.1;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+    width: 100%;
+    white-space: normal;          
+    word-break: break-word;       
+  }
+
+  .extra-small {
+    font-weight: 700;              // Negrita fuerte para el horario del reloj
+    font-size: 0.68rem;
+    line-height: 1;
+    white-space: nowrap;          
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
 }
 
-/* Color naranja para reemplazos */
-.text-orange {
-  color: #fd7e14;
-}
-/* Botón bloqueado: se vuelve gris y muestra un candado */
-.btn-disabled-grayscale {
-    border-color: #d1d5db !important;
-    background-color: #f3f4f6 !important;
-    color: #9ca3af !important;
-    cursor: not-allowed !important;
-    opacity: 0.8;
+// Sincronización del número de la cabecera
+.table thead th .badge {
+  border-radius: 20px !important;
+  padding: 4px 10px !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Fila inactiva: efecto de "congelado" */
-.row-inactivo {
-    background-color: #f9fafb !important;
-    border-left: 4px solid #9ca3af;
+// ==========================================
+// DISEÑO DE MODALES (PrimeNG p-dialog)
+// ==========================================
+::ng-deep .custom-modal-verde {
+  
+  .p-dialog-header {
+    background-color: $hospital-primary;
+    color: #25d678;
+    padding: 1.1rem;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    
+    .p-dialog-title {
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    .p-dialog-header-icon {
+      color: #4d7e52;
+      &:hover { background: rgba(255, 255, 255, 0.2); color: #d6a3a3; }
+    }
+  }
+
+  .p-dialog-content {
+    background-color: #b0c5a9;
+    padding: 1.5rem 1.25rem;
+    color: $text-dark-pure !important;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    
+    .form-label, 
+    label, 
+    h5,
+    .fw-bold,
+    & {
+      color: #111111 !important; 
+    }
+    .bg-light.rounded-3 {
+      background-color: $hospital-light-bg !important; 
+      border: 1px solid $hospital-border-light !important;
+      padding: 1rem;
+      
+      .fw-bold, .fs-6 {
+        color: #111111 !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+      }
+      .text-muted { color: $text-muted-gray !important; }
+    }
+
+    .badge.bg-teal {
+      background-color: #111411 !important; /* 👈 Cambiado a blanco puro */
+      color: #111111 !important;           /* Texto negro nítido */
+      border: 1px solid $hospital-primary !important; /* Borde verde institucional */
+      font-weight: 700 !important;
+      font-size: 0.8rem;
+      display: inline-block;
+      padding: 0.5rem 0.75rem;
+      border-radius: 20px !important;
+    }
+
+    .form-select {
+      border-color: $border-color;
+      color: #111111 !important;
+      font-size: 0.9rem;
+      &:focus {
+        border-color: $hospital-primary;
+        box-shadow: 0 0 0 0.2rem rgba($hospital-primary, 0.15);
+      }
+    }
+
+    label.fw-bold { color: $text-dark-pure !important; }
+    .text-selector-label { color: $hospital-primary !important; font-weight: 700; }
+  }
+}
+// ==========================================
+// AJUSTES ADICIONALES DE LA TABLA (CON LÍNEAS VERTICALES RECONSTRUIDAS)
+// ==========================================
+.table {
+  border-collapse: collapse !important;
+
+  th {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $text-dark-pure;
+    border-bottom: 2px solid $border-color !important;
+    border-left: 1px solid rgba($border-color, 0.7) !important;  // 🧱 Línea vertical en la cabecera
+    border-right: 1px solid rgba($border-color, 0.7) !important; // 🧱 Línea vertical en la cabecera
+    background-color: #ffffff;
+    vertical-align: middle;
+    padding: 12px 6px !important;
+
+    &:first-child {
+      border-left: none !important; // Quita la línea del extremo izquierdo de la tabla
+    }
+    &:last-child {
+      border-right: none !important; // Quita la línea del extremo derecho de la tabla
+    }
+  }
+
+  td {
+    border-bottom: 1px solid $border-color !important;
+    border-left: 1px solid rgba($border-color, 0.6) !important;  // 🧱 Línea vertical divisoria en el cuerpo
+    border-right: 1px solid rgba($border-color, 0.6) !important; // 🧱 Línea vertical divisoria en el cuerpo
+    vertical-align: middle;
+    padding: 10px 6px !important;
+
+    &:first-child {
+      border-left: none !important;
+    }
+    &:last-child {
+      border-right: none !important;
+    }
+  }
 }
 
-.text-inactivo {
-    color: #9ca3af !important;
+// ==========================================
+// NUEVA CÁPSULA CORREGIDA: TEXTO NÍTIDO Y BRILLANTE
+// ==========================================
+.badge-turno {
+  padding: 6px 8px;
+  border-radius: 14px !important;  
+  cursor: pointer;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  
+  width: 100%;
+  min-height: 50px;               
+  margin: 4px 0;
+  box-shadow: 0 1px 3px rgba(141, 83, 1, 0.05) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  // 1️⃣ REGLA MAESTRA: Fuerza el fondo de TODOS los turnos asignados en la tabla
+  // (Entra acá si tu HTML usa clases como bg-success, badge-verde, success, etc.)
+  &, &.bg-success, &.badge-verde, &.bg-success-custom, &.success {
+    background-color: #e5e9e3 !important;      /* 🟢 CAMBIA ACÁ EL COLOR DE FONDO DEL TURNO */
+    border: 1.5px solid $hospital-border-light !important; 
+    color: #111111 !important;                 /* 🎨 CAMBIA ACÁ EL COLOR DE LAS LETRAS (Negro Puro) */
+    
+    // Fuerza a que los títulos, subtítulos, iconos o textos pequeños internos cambien a Negro
+    & * {
+      color: #111111 !important;               /* 🎨 FUERZA NEGRO A TODO LO QUE ESTÉ ADENTRO */
+    }
+    
+    .turno-title, .extra-small, i, span, small {
+      color: #111111 !important;
+    }
+    
+    &:hover { 
+      background-color: darken(#60b55a, 10%) !important; 
+    }
+  }
+
+  // 2️⃣ VARIANTE PARA LOS TURNOS DE LA NOCHE O SEGUNDO ESTILO (Si los separás por .bg-dark o .bg-danger-custom)
+  &.bg-dark, &.badge-noche, &.bg-danger-custom, &.dark {
+    background-color: #c0dbc3 !important;      /* 🎨 FONDO PARA NOCHE/TARDE */
+    border: 1.5px solid #aebeb1 !important;
+    color: #111111 !important;                 /* 🎨 LETRAS EN NEGRO */
+    
+    & * {
+      color: #111111 !important;
+    }
+
+    .turno-title, .extra-small, i, span, small {
+      color: #111111 !important;
+    }
+    
+    &:hover { 
+      background-color: darken(#bcddc1, 10%) !important; 
+    }
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .turno-title {
+    font-size: 0.72rem !important; 
+    font-weight: 800 !important;      // Súper negrita para legibilidad nítida
+    line-height: 1.1;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+    width: 100%;
+    white-space: normal;          
+    word-wrap: break-word;
+    word-break: break-all;       
+  }
+
+  .extra-small {
+    font-weight: 700 !important;      // El horario (07:00 - 13:00)
+    font-size: 0.68rem;
+    line-height: 1;
+    white-space: nowrap;          
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
 }
