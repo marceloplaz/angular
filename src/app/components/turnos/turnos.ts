@@ -1283,4 +1283,54 @@ alGuardarNovedad() {
     toastClass: 'ngx-toastr hospital-green-toast' 
   });
 }
+rotarPersonalEstructuraFija(): void {
+  // 1. Filtrar los usuarios seleccionados por checkbox en el modal (Los que van a rotar)
+  const elegidos = this.personalAgrupado.filter(p => p.seleccionadoParaRotar);
+
+  // Validación de seguridad básica en el cliente
+  if (elegidos.length < 2) {
+    this.toastr.warning("Selecciona al menos a 2 personas en el modal para poder rotar.");
+    return;
+  }
+
+  this.cargando = true;
+
+  // 2. Calculamos el mes destino. 
+  // NOTA: Si en tu componente ya tenés una variable "this.mesDestinoId" que viene de un select del modal, usá esa.
+  // Si no, por defecto le sumamos 1 de forma segura al mes actual de tus filtros:
+  const mesDestinoCalculado = Number(this.filters.mes_id) + 1;
+
+  // 3. Preparamos el Payload mapeando correctamente lo que procesará Laravel
+  const payload = {
+    servicio_id: this.filters.servicio_id,
+    mes_id: this.filters.mes_id,                 // Mes Origen (Junio)
+    mes_destino: mesDestinoCalculado,            // Mes Destino (Julio) -> Enviado explícitamente
+    gestion: this.filters.gestion,               // Año (Ej: 2026)
+    
+    // Mapeamos todo el personal, pero indicando con un flag quién se mueve y quién no
+    distribucion: this.personalAgrupado.map(p => ({
+      usuario_id: p.usuario_id,
+      seleccionado: p.seleccionadoParaRotar ? true : false, // El backend leerá esto para separar Bloque A y B
+      turnos_asignados_ids: p.turnos ? p.turnos.map((t: any) => t.id_asignacion || t.id) : []
+    }))
+  };
+
+  // 4. ¡EJECUTAMOS LA PETICIÓN AL BACKEND CORRECTAMENTE! 🚀
+  this.turnoService.rotarPersonalMensual(payload).subscribe({
+    next: (res: any) => {
+      this.toastr.success("¡Personal rotado con éxito!");
+      this.cerrarTodosLosModales();
+      
+      // Viaja al backend a buscar el nuevo mes cargado con los datos listos para pintar
+      this.cargarTurnos(); 
+      this.cargando = false;
+    },
+    error: (err: any) => {
+      this.cargando = false;
+      // Mostramos el mensaje exacto que devuelva el catch de Laravel si algo falla (ej: falta de semanas)
+      this.toastr.error(err.error?.message || "No se pudo procesar la rotación.");
+    }
+  });
+}
+
  }

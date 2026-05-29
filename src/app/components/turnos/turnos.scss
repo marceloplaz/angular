@@ -328,16 +328,16 @@ $border-color: #dee2e6;          // Bordes generales del sistema
   box-shadow: 0 1px 3px rgba(141, 83, 1, 0.05) !important;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
-  // 1️⃣ REGLA MAESTRA: Fuerza el fondo de TODOS los turnos asignados en la tabla
-  // (Entra acá si tu HTML usa clases como bg-success, badge-verde, success, etc.)
+  // Fuerza el fondo de TODOS los turnos asignados en la tabla
+  
   &, &.bg-success, &.badge-verde, &.bg-success-custom, &.success {
-    background-color: #e5e9e3 !important;      /* 🟢 CAMBIA ACÁ EL COLOR DE FONDO DEL TURNO */
+    background-color: #e5e9e3 !important;      /* CAMBIA ACÁ EL COLOR DE FONDO DEL TURNO  */
     border: 1.5px solid $hospital-border-light !important; 
-    color: #111111 !important;                 /* 🎨 CAMBIA ACÁ EL COLOR DE LAS LETRAS (Negro Puro) */
+    color: #111111 !important;                 /* CAMBIA ACÁ EL COLOR DE LAS LETRAS (Negro Puro) */
     
-    // Fuerza a que los títulos, subtítulos, iconos o textos pequeños internos cambien a Negro
+    
     & * {
-      color: #111111 !important;               /* 🎨 FUERZA NEGRO A TODO LO QUE ESTÉ ADENTRO */
+      color: #111111 !important;               /* FUERZA NEGRO A TODO LO QUE ESTÉ ADENTRO */
     }
     
     .turno-title, .extra-small, i, span, small {
@@ -349,11 +349,11 @@ $border-color: #dee2e6;          // Bordes generales del sistema
     }
   }
 
-  // 2️⃣ VARIANTE PARA LOS TURNOS DE LA NOCHE O SEGUNDO ESTILO (Si los separás por .bg-dark o .bg-danger-custom)
+  // VARIANTE PARA LOS TURNOS DE LA NOCHE O SEGUNDO ESTILO (Si los separás por .bg-dark o .bg-danger-custom)
   &.bg-dark, &.badge-noche, &.bg-danger-custom, &.dark {
-    background-color: #c0dbc3 !important;      /* 🎨 FONDO PARA NOCHE/TARDE */
+    background-color: #c0dbc3 !important;      /* FONDO PARA NOCHE/TARDE */
     border: 1.5px solid #aebeb1 !important;
-    color: #111111 !important;                 /* 🎨 LETRAS EN NEGRO */
+    color: #111111 !important;                 /*  LETRAS EN NEGRO */
     
     & * {
       color: #111111 !important;
@@ -375,7 +375,7 @@ $border-color: #dee2e6;          // Bordes generales del sistema
 
   .turno-title {
     font-size: 0.72rem !important; 
-    font-weight: 800 !important;      // Súper negrita para legibilidad nítida
+    font-weight: 800 !important;      
     line-height: 1.1;
     letter-spacing: 0.3px;
     margin-bottom: 2px;

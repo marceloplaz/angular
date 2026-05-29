@@ -54,7 +54,7 @@
           <ul class="dropdown-menu dropdown-menu-end shadow border-0">
             <li>
               <a class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#modalRotarPersonal" (click)="onRotarMensual()">
-                <i class="pi pi-refresh me-2 text-primary"></i> <strong>ROTAR PERSONAL...</strong>
+                <i class="pi pi-refresh me-2 text-primary"></i> <strong>ROTAR PERSONAL PROXIMO MES</strong>
               </a>
             </li>
             <li>
@@ -340,14 +340,21 @@
           </div>
         </div>
 
-        <div class="modal-footer bg-light border-top-0">
-          <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-teal shadow-sm" data-bs-dismiss="modal"
-                  (click)="onRotarMensualSeleccionado()" [disabled]="obtenerIdsARotar().length < 2">
-            <i class="pi pi-refresh me-1"></i> Rotar Seleccionados ({{ obtenerIdsARotar().length }})
-          </button>
-        </div>
+        <div class="modal-footer bg-light border-top-0 d-flex justify-content-end gap-2">
+  <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">
+    Cancelar
+  </button>
+  
+  <button type="button" class="btn btn-teal-actions shadow-sm" data-bs-dismiss="modal"
+          (click)="rotarPersonalEstructuraFija()" [disabled]="obtenerIdsARotar().length < 2">
+    <i class="pi pi-sync me-1"></i> Rotar Personal (Fijos)
+  </button>
 
+  <button type="button" class="btn btn-teal shadow-sm" data-bs-dismiss="modal"
+          (click)="onRotarMensualSeleccionado()" [disabled]="obtenerIdsARotar().length < 2">
+    <i class="pi pi-refresh me-1"></i> Rotar Bloque Mensual ({{ obtenerIdsARotar().length }})
+  </button>
+</div>
       </div>
     </div>
   </div>
