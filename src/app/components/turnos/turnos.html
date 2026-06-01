@@ -45,53 +45,77 @@
         </select>
       </div>
 
+  <div class="col-md-2 col-sm-6 mt-md-0 mt-3"> 
+  <div class="label-placeholder d-none d-md-block" style="height: 32px;"></div>
+  
+  <button 
+    type="button" 
+    class="btn w-100 shadow-sm" 
+    [ngClass]="isPeriodoBloqueado ? 'btn-danger' : 'btn-outline-success'"
+    (click)="toggleBloqueoPeriodo()"
+    *ngIf="rolUsuario === 'super_admin' || rolUsuario === 'admin'"
+    [title]="isPeriodoBloqueado ? 'Periodo Cerrado (Click para abrir)' : 'Periodo Abierto (Click para cerrar)'">
+    <i class="pi" [ngClass]="isPeriodoBloqueado ? 'pi-lock' : 'pi-lock-open'"></i>
+    {{ isPeriodoBloqueado ? ' ROL BLOQUEADO' : ' BLOQUEAR ROL' }}
+  </button>
+
+  <span *ngIf="isPeriodoBloqueado && rolUsuario !== 'super_admin' && rolUsuario !== 'admin'" 
+        class="badge bg-danger p-2 fs-6 w-100 shadow-sm d-block text-center">
+    <i class="pi pi-lock me-1"></i> PERIODO CERRADO
+  </span>
+</div>
+
       <div class="col-md-2">
         <div class="btn-group w-100">
           <button type="button" class="btn btn-teal dropdown-toggle shadow-sm w-100" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="pi pi-cog me-1"></i> ACCIONES
           </button>
-          
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-            <li>
-              <a class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#modalRotarPersonal" (click)="onRotarMensual()">
-                <i class="pi pi-refresh me-2 text-primary"></i> <strong>ROTAR PERSONAL...</strong>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" (click)="onReplicarMes()">
-                <i class="pi pi-copy me-2 text-info"></i> REPLICAR SEMANA AL MES
-              </a>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <a class="dropdown-item py-2" (click)="limpiarSemana()">
-                <i class="pi pi-filter-slash me-2"></i> LIMPIAR SEMANA
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2 text-danger" (click)="vaciarCalendario()">
-                <i class="pi pi-trash me-2"></i> VACIAR TODO EL MES
-              </a>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <a class="dropdown-item py-2" (click)="exportarPDFMensual()">
-                <i class="pi pi-file-pdf me-2 text-danger"></i> EXPORTAR PDF MENSUAL
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" (click)="exportarPDFSemanal()" style="cursor: pointer;">
-                <i class="pi pi-file-pdf me-2 text-danger"></i> 
-                <span *ngIf="!loading">EXPORTAR REPORTE SEMANAL</span>
-                <span *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> GENERANDO...</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
+     
+<ul class="dropdown-menu dropdown-menu-end shadow border-0">
+  
+  <li *ngIf="puedeExportar()">
+  <button ... (click)="exportarPdfMensualBlade()">EXPORTAR PDF</button>
+</li>
 
-    </div> 
-  </div> 
+<li *ngIf="!puedeExportar()">
+  <span class="dropdown-item text-muted">
+     <i class="pi pi-lock"></i> PDF BLOQUEADO
+  </span>
+</li>
+
+  <li>
+    <a class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#modalRotarPersonal" (click)="onRotarMensual()">
+      <i class="pi pi-refresh me-2 text-primary"></i> <strong>ROTAR PERSONAL...</strong>
+    </a>
+  </li>
+  <li>
+    <a class="dropdown-item py-2" (click)="onReplicarMes()">
+      <i class="pi pi-copy me-2 text-info"></i> REPLICAR SEMANA AL MES
+    </a>
+  </li>
+  <li><hr class="dropdown-divider"></li>
+  <li>
+    <a class="dropdown-item py-2" (click)="limpiarSemana()">
+      <i class="pi pi-filter-slash me-2"></i> LIMPIAR SEMANA
+    </a>
+  </li>
+  <li>
+    <a class="dropdown-item py-2 text-danger" (click)="vaciarCalendario()">
+      <i class="pi pi-trash me-2"></i> VACIAR TODO EL MES
+    </a>
+  </li>
+  <li><hr class="dropdown-divider"></li>
+  
+  <li>
+    <a class="dropdown-item py-2" (click)="exportarPDFSemanal()" style="cursor: pointer;">
+      <i class="pi pi-file-pdf me-2 text-danger"></i> 
+      <span *ngIf="!loading">EXPORTAR REPORTE SEMANAL</span>
+      <span *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> GENERANDO...</span>
+    </a>
+  </li>
+</ul> 
+</div> </div>
+
 
   <div class="card shadow-sm border-0 p-3 bg-white" style="border-radius: 12px;">
     <div class="table-responsive">
@@ -351,5 +375,4 @@
       </div>
     </div>
   </div>
-
 </div>

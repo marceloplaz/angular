@@ -179,8 +179,30 @@ return this.http.get(`${this.apiUrl}/reportes/semanal/${semanaId}`, {
       responseType: 'blob' 
     });
 
-  }
+  }cambiarBloqueoRol(servicio_id: any, mes_id: any, estado: boolean) {
+  // Ahora la URL será: http://127.0.0.1:8000/api/v1/turnos-asignados/cambiar-bloqueo
+  return this.http.put(`${this.apiUrl}/turnos-asignados/cambiar-bloqueo`, {
+    servicio_id: servicio_id,
+    mes_id: mes_id,
+    bloquear: estado 
+  });
+}
 
+  /**
+   * Descargar el PDF del Rol Mensual generado desde el Blade de Laravel
+   */
+obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string): Observable<Blob> {
+  const params = new HttpParams()
+    .set('servicio_id', servicio_id.toString())
+    .set('mes_id', mes_id.toString())
+    .set('rol_usuario', usuario_rol);
+
+  // 🌟 Apuntamos al nuevo endpoint protegido contra colisiones
+  return this.http.get(`${environment.apiUrl}/acciones-reporte/mensual-pdf`, {
+    params: params,
+    responseType: 'blob'
+  });
+}
   
 // En tu TurnoService reemplaza este método:
 getSemanasPorMes(mesId: number): Observable<any> {

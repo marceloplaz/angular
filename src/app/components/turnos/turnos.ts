@@ -76,6 +76,7 @@ export class TurnosComponent implements OnInit {
   fechasSeleccionadas: Date[] = [];
   mostrarNovedades: boolean = false;
   
+  isPeriodoBloqueado: boolean = false;  
   
 
   // --- Nuevas propiedades para la lógica de turnos ---
@@ -85,6 +86,7 @@ listaAreas: any[] = [];
 mostrarModalCalendario: boolean = false; // Controla la visibilidad del modal de calendario
 diasSeleccionados: string[] = [];        // Aquí guardarás las fechas seleccionadas
 todasLasGestiones: any[] = [];
+
 
   filters = { 
     servicio_id: null as any, 
@@ -133,7 +135,7 @@ get personalParaReemplazo() {
   }));
 }
 
-
+// cambiamos la inicializacion para el BLOQUEO
 
 ngOnInit() {
   const nombreGuardado = localStorage.getItem('usuario_nombre');
@@ -141,6 +143,12 @@ ngOnInit() {
 
   if (nombreGuardado) { this.alias = nombreGuardado; }
   if (rolGuardado) { this.rolUsuario = rolGuardado; }
+ 
+  if (rolGuardado) { 
+    // Normalizamos: minúsculas, elimina espacios extra, cambia espacios internos por '_'
+    this.rolUsuario = rolGuardado.toLowerCase().trim().replace(/\s+/g, '_');
+    console.log("Rol normalizado para la vista:", this.rolUsuario); 
+  }
   
   this.cargarListasJerarquicas();
   this.cargarTiposDeTurnos();
@@ -237,6 +245,97 @@ turnosAgrupadosPorDia[t.fecha].push({
     });
   });
 }
+puedeExportar(): boolean {
+    const esAdmin = (this.rolUsuario === 'super_admin' || this.rolUsuario === 'admin');
+    return !this.isPeriodoBloqueado || esAdmin;
+  }
+
+
+
+  
+  verificarEstadoBloqueo(): void {
+    // Aquí puedes llamar a un método rápido de consulta si lo deseas al cambiar filtros
+  }
+
+ toggleBloqueoPeriodo(): void {
+  // 1. Verificación de permisos
+  if (this.rolUsuario !== 'super_admin' && this.rolUsuario !== 'admin') {
+    this.toastr.warning('¡Acceso Restringido!', 'Hospital San Juan de Dios');
+    return;
+  }
+
+  // 2. Confirmación antes de procesar
+  const estadoDestino = !this.isPeriodoBloqueado ? 'BLOQUEAR' : 'DESBLOQUEAR';
+  
+  Swal.fire({
+    title: `¿Confirmar acción: ${estadoDestino}?`,
+    text: "Esta acción afectará la disponibilidad de descarga del reporte mensual.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#004d40',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, confirmar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // 3. Ejecución si el usuario confirma
+      const nuevoEstado = !this.isPeriodoBloqueado;
+      this.turnoService.cambiarBloqueoRol(this.filters.servicio_id, this.filters.mes_id, nuevoEstado)
+        .subscribe({
+          next: (res: any) => {
+            this.isPeriodoBloqueado = res.bloqueado; 
+            this.toastr.success(res.message, 'Gestión de Cierres');
+            this.cdRef.detectChanges();
+          },
+          error: (err) => {
+            console.error(err);
+            this.toastr.error('Error al intentar procesar el bloqueo.', 'Error');
+          }
+        });
+    }
+  });
+}
+
+ exportarPdfMensualBlade(): void {
+  // 1. Verificación de seguridad: ¿Están listos los filtros?
+  if (!this.filters || !this.filters.servicio_id || !this.filters.mes_id) {
+    this.toastr.warning('Por favor, seleccione un Servicio y un Mes antes de exportar.', 'Faltan datos');
+    return;
+  }
+
+  // 2. Verificación de existencia del servicio
+  if (!this.turnoService) {
+    console.error("Error: TurnoService no está inyectado correctamente.");
+    return;
+  }
+
+  // 3. Ejecución segura
+  this.turnoService.obtenerPdfReporteMensual(
+    this.filters.servicio_id, 
+    this.filters.mes_id, 
+    this.rolUsuario
+  ).subscribe({
+    next: (blob: Blob) => {
+      if (blob) {
+        const fileURL = URL.createObjectURL(blob);
+        window.open(fileURL, '_blank');
+      }
+    },
+    error: (err) => {
+      console.error("Error capturado en la exportación:", err);
+      if (err.status === 403) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Acceso Denegado',
+          text: 'Este reporte mensual ha sido cerrado y bloqueado.',
+          confirmButtonColor: '#4B930F'
+        });
+      } else {
+        this.toastr.error('Error al generar el PDF.', 'Servidor');
+      }
+    }
+  });
+}
+
 
 actualizarNombresDeFiltros() {
   // 1. Nombre del Mes
@@ -1283,4 +1382,5 @@ alGuardarNovedad() {
     toastClass: 'ngx-toastr hospital-green-toast' 
   });
 }
+
  }
