@@ -6,22 +6,27 @@ import { ToastrService } from 'ngx-toastr';
 
 // PrimeNG Modules
 import { TableModule } from 'primeng/table';
+
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
+
 import { SelectModule } from 'primeng/select'; 
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog'; 
+import { forkJoin } from 'rxjs';
+import { AreaService } from '../../services/area';
+import { AreaForm } from '../../interfaces/area';
 
 
 @Component({
   selector: 'app-configuracion-sistema',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CardModule, 
+    CommonModule,FormsModule, TableModule, ButtonModule, CardModule, 
     CheckboxModule, DividerModule, SelectModule, InputTextModule, 
     IconFieldModule, InputIconModule, DialogModule
   ],
@@ -33,16 +38,29 @@ import { DialogModule } from 'primeng/dialog';
 export class ConfiguracionSistemaComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private toastr = inject(ToastrService);
+  private areaService = inject(AreaService);
 
   servicios = signal<any[]>([]);
-categoriasDisponibles = signal<any[]>([]);
+  categoriasDisponibles = signal<any[]>([]);
   turnosDisponibles = signal<any[]>([]);
   turnosSeleccionadosIds = signal<number[]>([]); // Este array controla los checks
   servicioIdSeleccionado = signal<number | null>(null);
   cargando = signal<boolean>(false);
   objetosSeleccionados: any[] = [];
   mostrarModalCrear = signal<boolean>(false);
+  mostrarModalArea = signal<boolean>(false);
+  // para configurar areas
+  areasDelServicio = signal<any[]>([]);
+  // En tu clase:
   
+
+  nuevaArea = signal<AreaForm>({
+  nombre: '',
+  servicio_id: null,
+  categoria_id: null
+});
+
+// para configurar turnos
   nuevoTurno = signal({
     nombre_turno: '',
     hora_inicio: '',
@@ -51,10 +69,11 @@ categoriasDisponibles = signal<any[]>([]);
     duracion_horas: 0
   });
 
+  
+
  constructor() {
   effect(() => {
-    // Extraemos los valores para que el effect sepa qué "escuchar"
-    const turnoActual = this.nuevoTurno();
+      const turnoActual = this.nuevoTurno();
     const inicio = turnoActual.hora_inicio;
     const fin = turnoActual.hora_fin;
 
@@ -89,7 +108,17 @@ onHoraChange() {
   ngOnInit() {
     this.obtenerDatosIniciales();
   }
+  eliminarArea(areaId: number) {
+    this.areaService.eliminarArea(areaId).subscribe({
+      next: () => {
+        this.toastr.success("Área eliminada exitosamente");
+        this.cargarConfiguracionAreas();
+      },
+      error: () => this.toastr.error("Error al eliminar el área")
+    });
+  }
 
+  
   obtenerDatosIniciales() {
     // 1. Cargamos el catálogo general (No marca nada por defecto)
     this.turnoService.getTurnos({}).subscribe((res: any) => {
@@ -106,6 +135,7 @@ onHoraChange() {
       this.categoriasDisponibles.set(res.data || res);
     });
   }
+
 
  
   
@@ -128,6 +158,32 @@ onHoraChange() {
     // Sincronizamos la selección visual (objetos) y la lógica (ids)
     this.objetosSeleccionados = data;
     this.turnosSeleccionadosIds.set(data.map((t: any) => t.id));
+  });
+}
+
+cargarConfiguracionAreas() {
+  const id = this.servicioIdSeleccionado();
+  if (!id) return;
+  
+  this.cargando.set(true); 
+
+  // 2. Ejecuta ambas peticiones simultáneamente y espera a que ambas terminen
+  forkJoin({
+    turnos: this.turnoService.getTurnosPorServicio(id),
+    areas: this.areaService.getAreasPorServicio(id)
+  }).subscribe({
+    next: (res) => {
+      // res.turnos contiene el resultado de getTurnosPorServicio
+      // res.areas contiene el resultado de getAreasPorServicio
+      this.areasDelServicio.set(res.areas);
+      // Aquí procesas tu respuesta de turnos también...
+      
+      this.cargando.set(false);
+    },
+    error: (err) => {
+      this.toastr.error("Error al cargar la configuración del servicio");
+      this.cargando.set(false);
+    }
   });
 }
 
@@ -204,7 +260,7 @@ onCategoriaChange(id: number) {
       next: () => {
         this.toastr.success("Turno creado exitosamente");
         this.mostrarModalCrear.set(false);
-        this.obtenerDatosIniciales(); // Recargar catálogo
+        this.obtenerDatosIniciales(); 
         this.cargando.set(false);
       },
       error: (err) => {
@@ -214,4 +270,67 @@ onCategoriaChange(id: number) {
     });
   }
 
+abrirModalNuevaArea() {
+  const servicioId = this.servicioIdSeleccionado();
+  
+  if (!servicioId) {
+    this.toastr.warning("Debe seleccionar un servicio primero");
+    return;
+  }
+
+  // 1. Preparamos los datos
+  this.nuevaArea.set({ 
+    nombre: '', 
+    servicio_id: servicioId,
+    categoria_id: null 
+  });
+
+  // 2. ¡IMPORTANTE! Esto es lo que abre el diálogo
+  this.mostrarModalArea.set(true); 
+  
+  // 3. Cargamos las áreas actuales del servicio
+  this.cargarConfiguracionAreas();
+}
+
+  
+guardarNuevaArea() {
+  const currentServicioId = this.servicioIdSeleccionado();
+  const data = this.nuevaArea(); // Obtenemos el nombre y el categoria_id del signal
+
+  // 1. Verificación de seguridad
+  if (currentServicioId === null) {
+    this.toastr.error("Error: Debe seleccionar un servicio válido");
+    return;
+  }
+
+  // 2. Validación de campos obligatorios
+  if (!data.nombre || !data.categoria_id) {
+    this.toastr.warning("El nombre y la categoría son obligatorios");
+    return;
+  }
+
+  // 3. Creamos el payload completo con los 3 campos necesarios
+  const payload = {
+    nombre: data.nombre,
+    servicio_id: currentServicioId,
+    categoria_id: data.categoria_id // <--- ¡Esto es lo que faltaba!
+  };
+
+  this.cargando.set(true);
+
+  // 4. Enviamos al servicio
+  this.areaService.crearArea(payload).subscribe({
+    next: () => {
+      this.toastr.success("Área creada correctamente");
+      this.mostrarModalArea.set(false);
+      this.cargando.set(false);
+      this.cargarConfiguracionAreas();
+    },
+    error: (err) => {
+      console.error(err);
+      this.toastr.error("Error al guardar: " + (err.error?.message || ""));
+      this.cargando.set(false);
+    }
+  });
+}
 }

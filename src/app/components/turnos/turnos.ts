@@ -839,9 +839,7 @@ calcularTotalHoras(p: any): number {
   }, 0);
 }
 
-// 1. Esta función reemplaza el inicio del flujo.
-// Se ejecuta al hacer clic en el menú desplegable "ROTAR PERSONAL".
-// 1. Se ejecuta al hacer clic en el menú desplegable "ROTAR PERSONAL".
+
 onRotarMensual() {
   // Apuntamos a tu variable real de la grilla: personalAgrupado
   if (this.personalAgrupado && this.personalAgrupado.length > 0) {

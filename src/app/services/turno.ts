@@ -84,17 +84,7 @@ export class TurnoService {
     });
   }
 
-  /**
-   * Rota al personal del mes actual al mes siguiente
-   */
- // rotarPersonalMensual(servicioId: number, mesId: number, mesDestinoId: number): Observable<any> {
-    // Ya no inyectamos headers aquí porque el authInterceptor lo hace automáticamente
-   // return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, {
-     // servicio_id: servicioId,
-      //mes_id: mesId,
-     // mes_destino: mesDestinoId
-   // });
-  //}
+
 
   rotarPersonalMensual(payload: any): Observable<any> {
   return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, payload);
@@ -142,8 +132,7 @@ export class TurnoService {
    */
  
 getReporteMensual(mes_id: number, gestion: number, servicio_id: number): Observable<any[]> {
-  // Usar HttpParams asegura que los caracteres especiales se escapen correctamente
-  const params = new HttpParams()
+    const params = new HttpParams()
     .set('mes_id', mes_id.toString())
     .set('gestion', gestion.toString())
     .set('servicio_id', servicio_id.toString());
@@ -155,20 +144,17 @@ getServiciosPorUsuario(usuarioId: number): Observable<any> {
 }
 
   crearTurno(data: { nombre_turno: string, hora_inicio: string, hora_fin: string, duracion_horas: number }): Observable<any> {
-  // CAMBIO CLAVE: Cambiar 'lista-turnos-disponibles' por 'turnos'
+  
   return this.http.post(`${this.apiUrl}/turnos`, data);
 }
 
-/**
- * Elimina un tipo de turno del catálogo
- * Corresponde a: DELETE v1/turnos/{id} (Admin)
- */
+
 eliminarTipoTurno(id: number): Observable<any> {
   return this.http.delete(`${this.apiUrl}/turnos/${id}`);
 }
 
 getReporteSemanalPdf(semanaId: number, servicioId: number, categoriaId: number): Observable<Blob> {
-    // Configuramos los parámetros de búsqueda (?servicio_id=X&categoria_id=Y)
+
     const params = new HttpParams()
       .set('servicio_id', servicioId.toString())
       .set('categoria_id', categoriaId.toString());

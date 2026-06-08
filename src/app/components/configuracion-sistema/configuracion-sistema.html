@@ -15,6 +15,14 @@
             (onChange)="cargarConfiguracionActual()">
           </p-select>
           
+           <p-button 
+            label="Áreas" 
+            icon="pi pi-map" 
+            severity="info"
+            [disabled]="!servicioIdSeleccionado()"
+            (onClick)="abrirModalNuevaArea()">
+          </p-button>
+          
           <p-button 
             label="Guardar Configuración" 
             icon="pi pi-save" 
@@ -195,17 +203,52 @@
       severity="secondary" 
       (onClick)="mostrarModalCrear.set(false)">
     </p-button>
+    
     <p-button 
       label="Guardar" 
       icon="pi pi-check" 
       [loading]="cargando()" 
       (onClick)="guardarNuevoTurno()">
     </p-button>
+  
   </ng-template>
 </p-dialog>
   
+<p-dialog 
+  header="Áreas del Servicio" 
+  [(visible)]="mostrarModalArea" 
+  [modal]="true" 
+  [style]="{ width: '450px' }">
+  
+  <div class="p-fluid">
+    <div class="field mb-3">
+      <input pInputText [(ngModel)]="nuevaArea().nombre" placeholder="Nombre de nueva área" class="mb-2" />
+      
+   <p-select 
+  [options]="categoriasDisponibles()" 
+  [(ngModel)]="nuevaArea().categoria_id" 
+  optionLabel="nombre" 
+  optionValue="id" 
+  placeholder="Seleccione una categoría">
+</p-select>
 
+      <p-button label="Agregar" icon="pi pi-plus" (onClick)="guardarNuevaArea()"></p-button>
+    </div>
 
+    <div class="field">
+      <label>Áreas actuales:</label>
+      <div class="list-none p-0 m-0 border-1 border-round border-300">
+        <div *ngFor="let area of areasDelServicio()" class="p-2 border-bottom-1 border-300 flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ area.nombre }}</strong>
+            <div class="text-sm text-500">{{ area.categoria?.nombre }}</div>
+          </div>
+          <i class="pi pi-trash text-red-500 cursor-pointer" (click)="eliminarArea(area.id)"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</p-dialog>
 
 
 </div> 
