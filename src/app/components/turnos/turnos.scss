@@ -1,3 +1,4 @@
+@use "sass:color";
 // ==========================================
 // VARIABLES DE PALETA: VERDE AGUA HOSPITALARIO PREMIUM
 // ==========================================
@@ -66,7 +67,7 @@ $border-color: #dee2e6;          // Bordes generales del sistema
   }
   
   &:disabled {
-    background-color: lighten($btn-confirm-dark, 30%) !important;
+    background-color: color.adjust($btn-confirm-dark, $lightness: 30%) !important;
     cursor: not-allowed;
   }
 }
@@ -345,7 +346,7 @@ $border-color: #dee2e6;          // Bordes generales del sistema
     }
     
     &:hover { 
-      background-color: darken(#60b55a, 10%) !important; 
+      background-color: color.adjust(#60b55a, $lightness: -10%) !important;
     }
   }
 
@@ -364,7 +365,7 @@ $border-color: #dee2e6;          // Bordes generales del sistema
     }
     
     &:hover { 
-      background-color: darken(#bcddc1, 10%) !important; 
+      background-color: color.adjust(#bcddc1, $lightness: -10%) !important;
     }
   }
   

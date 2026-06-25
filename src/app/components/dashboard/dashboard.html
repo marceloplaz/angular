@@ -1,12 +1,13 @@
 <div class="main-wrapper">
     <aside class="sidebar" [class.d-none]="!sidebarVisible()">
-        <a routerLink="/dashboard" class="brand-logo d-flex align-items-center text-decoration-none">
-            <div class="logo-box me-3">
-                <i class="bi bi-hospital"></i>
-            </div>
-            <span class="fw-bold text-success text-uppercase" style="font-size: 0.8rem;">Hospital San Juan de Dios</span>
-        </a>
-        
+    <a routerLink="/dashboard" class="brand-logo d-flex align-items-center text-decoration-none">
+        <div class="logo-box me-3">
+            <i class="bi bi-hospital"></i>
+        </div>
+        <span class="fw-bold text-success text-uppercase" style="font-size: 0.8rem;">Hospital San Juan de Dios</span>
+    </a>
+    
+    <div class="sidebar-scroll">
         <nav class="mt-3">
             <a routerLink="/dashboard" class="nav-item" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">
                 <i class="bi bi-house-door"></i> Inicio / Dashboard
@@ -21,7 +22,6 @@
                 <a routerLink="/dashboard/turnos" class="nav-item" routerLinkActive="active">
                     <i class="bi bi-calendar-check"></i> Gestión de Turnos
                 </a>
-
                 <ul class="submenu-vertical">
                     <li>
                         <a (click)="generarPDFMensualGeneral()" class="submenu-link" style="cursor: pointer;">
@@ -54,8 +54,20 @@
             <a routerLink="/dashboard/configuracion-sistema" class="nav-item" routerLinkActive="active">
                 <i class="bi bi-gear"></i> Configuración de Sistema
             </a>
+        
+            <div class="nav-label mt-3">MAPA FUNCIONARIO</div>
+            <a routerLink="/dashboard/mapa" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-map"></i> Ver Mapa de Zonas
+            </a>
+          <div class="nav-label mt-3">TEXTO-AUDIO</div>
+            <a routerLink="/dashboard/audio" class="nav-item" routerLinkActive="active">
+    <i class="bi bi-mic"></i> TRANSFORMAR AUDIO A TEXTO
+</a>
+
+
+
         </nav>
-    </aside>
+    </div> </aside>
 
     <main class="content-area">
         <header class="top-bar d-flex justify-content-between align-items-center px-4">
@@ -362,7 +374,7 @@
                 <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
                     Cancelar
                 </button>
-                <button type="button" class="btn btn-success px-4 shadow-sm fw-bold" [disabled]="permisoCuentaForm?.invalid" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-success px-4 shadow-sm fw-bold" [disabled]="permisoCuentaForm.invalid" data-bs-dismiss="modal">
                     <i class="bi bi-cloud-arrow-up-fill me-1"></i> Registrar Permiso
                 </button>
             </div>

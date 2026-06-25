@@ -308,7 +308,8 @@ puedeExportar(): boolean {
   this.turnoService.obtenerPdfReporteMensual(
     this.filters.servicio_id, 
     this.filters.mes_id, 
-    this.rolUsuario
+    this.rolUsuario,
+    this.filters.categoria_id
   ).subscribe({
     next: (blob: Blob) => {
       if (blob) {
@@ -1259,20 +1260,24 @@ exportarPDFSemanal() {
   });
 }
 
+
+
 exportarPDFMensual() {
-  if (!this.filters.servicio_id || !this.filters.mes_id) {
-    this.toastr.warning('Seleccione servicio y mes antes de exportar', 'Atención');
+  // 1. Añadimos la validación para asegurar que exista la categoría seleccionada
+  if (!this.filters.servicio_id || !this.filters.mes_id || !this.filters.categoria_id) {
+    this.toastr.warning('Seleccione servicio, mes y categoría antes de exportar', 'Atención');
     return;
   }
 
   this.loading = true;
 
-  this.turnoService.getResumenMensual(this.filters.servicio_id, this.filters.mes_id).subscribe({
+  // 2. Pasamos 'this.filters.categoria_id' como tercer parámetro a tu servicio
+  this.turnoService.getResumenMensual(this.filters.servicio_id, this.filters.mes_id, this.filters.categoria_id).subscribe({
     next: (response) => {
       const listaPersonal = response.data;
 
       if (!listaPersonal || listaPersonal.length === 0) {
-        this.toastr.info('No hay datos disponibles para este mes/servicio', 'Información');
+        this.toastr.info('No hay datos disponibles para este mes/servicio/categoría', 'Información');
         this.loading = false;
         return;
       }
@@ -1312,16 +1317,16 @@ exportarPDFMensual() {
       // =========================================================================
       autoTable(doc, {
         startY: 36,
-        head: [['PERSONAL', 'CATEGORÍA', 'DÍAS\nTRAB.', 'TOTAL\nHORAS']], // Usamos \n para forzar el quiebre en la cabecera
+        head: [['PERSONAL', 'CATEGORÍA', 'DÍAS\nTRAB.', 'TOTAL\nHORAS']], 
         body: rows,
         theme: 'grid',
         
         styles: { 
           fontSize: 9, 
-          cellPadding: 3.5,             // Ajuste sutil de colchón para ganar espacio
+          cellPadding: 3.5,             
           valign: 'middle',             
           font: 'helvetica',
-          overflow: 'linebreak'         // Permite quiebre limpio si fuera necesario
+          overflow: 'linebreak'         
         },
 
         headStyles: { 
@@ -1332,12 +1337,11 @@ exportarPDFMensual() {
           halign: 'center'
         },
 
-        // 💎 CONFIGURACIÓN DE ANCHOS SUPREMA PARA EVITAR APRETAR NOMBRES 💎
         columnStyles: {
-          0: { cellWidth: 105, halign: 'left' },   // ¡Máximo espacio para el Nombre Completo!
-          1: { cellWidth: 37, halign: 'center' },  // Categoría compacta y prolija
-          2: { cellWidth: 20, halign: 'center' },  // Reducido al mínimo para los días
-          3: { cellWidth: 20, halign: 'center' }   // Reducido al mínimo para las horas
+          0: { cellWidth: 105, halign: 'left' },   
+          1: { cellWidth: 37, halign: 'center' },  
+          2: { cellWidth: 20, halign: 'center' },  
+          3: { cellWidth: 20, halign: 'center' }   
         },
 
         alternateRowStyles: {
@@ -1345,7 +1349,8 @@ exportarPDFMensual() {
         }
       });
 
-      doc.save(`Reporte_Mensual_${this.filters.mes_id}.pdf`);
+      // Puedes concatenar también la categoría en el nombre del archivo final si gustas
+      doc.save(`Reporte_Mensual_${this.filters.mes_id}_Cat_${this.filters.categoria_id}.pdf`);
       this.loading = false;
     },
     error: (err) => {
@@ -1355,6 +1360,7 @@ exportarPDFMensual() {
     }
   });
 }
+
 
 
 

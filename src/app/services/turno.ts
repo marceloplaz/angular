@@ -90,11 +90,12 @@ export class TurnoService {
   return this.http.post(`${this.apiUrl}/turnos-asignados/rotar-mensual`, payload);
 }
   
-  getResumenMensual(servicioId: number, mesId: number): Observable<any> {
-  return this.http.get(`${this.apiUrl}/reportes/turnos/resumen-mensual`, {
+ getResumenMensual(servicioId: number, mesId: number, categoriaId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/reportes/turnos/resumen-mensual`, {
       params: {
         servicio_id: servicioId.toString(),
-        mes_id: mesId.toString()
+        mes_id: mesId.toString(),
+        categoria_id: categoriaId.toString() 
       }
     });
   }
@@ -177,11 +178,12 @@ return this.http.get(`${this.apiUrl}/reportes/semanal/${semanaId}`, {
   /**
    * Descargar el PDF del Rol Mensual generado desde el Blade de Laravel
    */
-obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string): Observable<Blob> {
+obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string,categoria_id: number): Observable<Blob> {
   const params = new HttpParams()
     .set('servicio_id', servicio_id.toString())
     .set('mes_id', mes_id.toString())
-    .set('rol_usuario', usuario_rol);
+    .set('rol_usuario', usuario_rol)
+    .set('categoria_id', categoria_id.toString());
 
   // 🌟 Apuntamos al nuevo endpoint protegido contra colisiones
   return this.http.get(`${environment.apiUrl}/acciones-reporte/mensual-pdf`, {

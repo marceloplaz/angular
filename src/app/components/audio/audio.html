@@ -1,0 +1,25 @@
+<div style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+  <h2>TRANSCRIPCION</h2>
+  <p><strong>Estado:</strong> {{ statusMessage() }}</p>
+
+  <div style="margin: 15px 0;">
+    @if (!isRecording()) {
+      <button [disabled]="!isModelLoaded()" (click)="startRecording()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+        🎙️ Iniciar Micrófono
+      </button>
+    } @else {
+      <button (click)="stopRecording()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: red; color: white; border: none;">
+        🛑 Detener Micrófono
+      </button>
+    }
+  </div>
+
+  <div>
+    <textarea 
+      [value]="transcriptionText()" 
+      placeholder="Empieza a hablar y aquí se irá escribiendo solo..." 
+      style="width: 100%; height: 150px; padding: 10px; font-size: 16px;" 
+      readonly>
+    </textarea>
+  </div>
+</div>

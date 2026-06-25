@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Mapa de Cobertura</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Seleccionar Zona</mat-label>
+      <mat-select (selectionChange)="seleccionarZona($event.value)">
+        <mat-option *ngFor="let zona of zonas" [value]="zona">
+          {{ zona.nombre }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div id="map"></div>
+  </mat-card-content>
+</mat-card>

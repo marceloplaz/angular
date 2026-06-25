@@ -16,6 +16,10 @@ import { IncidenciasComponent } from './components/incidencias/incidencias';
 import { VacacionComponent } from './components/vacaciones/vacaciones';
 import { NovedadComponent } from './components/novedad/novedad';
 import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
+import { MapaComponent } from './components/mapa/mapa';
+
+import { AudioComponent } from './components/audio/audio'; 
+
 
 const ROLES_ADMIN_FULL = ['super_admin', 'admin', 'admin_jefe_medico', 'admin_jefa_enfermeras', 'admin_jefa_servicios_generales'];
 const ROLES_JEFATURAS = [...ROLES_ADMIN_FULL, 'jefe_medico_servicio', 'jefa_enfermeras_servicio', 'jefe_servicio'];
@@ -93,7 +97,21 @@ export const routes: Routes = [
         canActivate: [roleGuard], 
         data: { roles: ['super_admin', 'admin'] } 
       },
+  
+{ 
+  path: 'mapa', 
+  component: MapaComponent,
+  canActivate: [roleGuard],
+  data: { roles: [...ROLES_JEFATURAS] } // Define quiénes pueden ver el mapa
+},
 
+ { 
+  path: 'audio', // Mantén este path para no romper el menú
+  component: AudioComponent, // <-- Cambia la clase aquí
+  canActivate: [authGuard] // Dejado sin roleGuard temporalmente para evitar que te mande al login
+},
+
+ 
     
     ]
   },

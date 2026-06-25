@@ -1,0 +1,15 @@
+#map {
+  height: 400px;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 10px;
+  z-index: 1; /* Asegura que el mapa se pinte correctamente */
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-card {
+  margin: 20px;
+}
