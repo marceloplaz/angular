@@ -348,31 +348,28 @@ actualizarNombresDeFiltros() {
   this.filters.categoria_nombre = cat ? cat.nombre : 'TODAS';
 }
 
-// En el cambio de Mes
 onMesChange(mesId: any) {
-  this.filters.mes_id = mesId; // Asegurar el ID
-  const mesSeleccionado = this.mesesDisponibles.find(m => m.id == mesId);
+  this.filters.mes_id = mesId; 
+  const mesSeleccionado = this.mesesDisponibles.find((m: any) => m.id == mesId);
   
   if (mesSeleccionado) {
-    this.filters.mes_nombre = mesSeleccionado.nombre.toUpperCase();
+    this.filters.mes_nombre = mesSeleccionado.nombre ? mesSeleccionado.nombre.toUpperCase() : '';
     
-    // 🌟 ENFOQUE SEMANA: Actualizamos el listado de semanas del mes seleccionado
+    // Leemos el listado de semanas directo del objeto del mes seleccionado
     this.semanasDisponibles = mesSeleccionado.semanas || [];
     
     if (this.semanasDisponibles.length > 0) {
-      // Seleccionamos la primera semana del nuevo mes por defecto
       this.filters.semana_id = this.semanasDisponibles[0].id;
-      
-      // Ejecutamos tu método de recálculo con la fecha de inicio de esta primera semana
-      if (this.semanasDisponibles[0].fecha_inicio) {
-        this.generarFechasDeLaSemana(this.semanasDisponibles[0].fecha_inicio);
-      }
+    } else {
+      this.filters.semana_id = null;
+      this.personalAgrupado = [];
     }
   }
-  
-  // Al final llamamos a cargarTurnos para actualizar los datos del backend
+  this.verificarEstadoBloqueo();
   this.cargarTurnos();
 }
+
+
 
 // En el cambio de Filtros (Servicio y Categoría)
 onServicioChange() {
@@ -391,39 +388,64 @@ onCategoriaChange(event: any) {
   this.filters.categoria_nombre = catSeleccionada ? catSeleccionada.nombre : 'TODAS';
   this.cargarTurnos();
 }
-
-
-
-
-
-// En tu clase TurnosComponent:
-
-
 cargarListasJerarquicas() {
   this.loading = true;
+  
+  // 1. Cargar servicios y categorías autorizados
   this.turnoService.getFiltrosJerarquia().subscribe({
-    next: (res) => {
-      // 1. Cargamos los servicios que el usuario TIENE PERMITIDO ver
-      this.servicios = res.servicios;
-      
-      // 2. Cargamos las categorías que el usuario PUEDE GESTIONAR
-      this.categorias = res.categorias;
+    next: (res: any) => {
+      this.servicios = res.servicios || [];
+      this.categorias = res.categorias || [];
 
-      // 3. Si hay servicios disponibles, seleccionamos el primero por defecto
       if (this.servicios.length > 0 && !this.filters.servicio_id) {
         this.filters.servicio_id = this.servicios[0].id;
-        this.cargarTiposDeTurnos(); // Refrescamos turnos para ese servicio
+        this.onFilterChange(); 
+      }
+      this.cdRef.detectChanges();
+    },
+    error: (err: any) => console.error("Error cargando jerarquía:", err)
+  });
+
+  // 2. Cargar la configuración del calendario mapeando la ruta correcta
+  this.turnoService.getConfiguracionCalendario().subscribe({
+    next: (res: any) => {
+      console.log("JSON del calendario recibido:", res);
+      
+      // APUNTAMOS A LA RUTA REAL: res -> gestiones -> primer elemento -> meses
+      if (res && res.gestiones && res.gestiones.length > 0) {
+        this.mesesDisponibles = res.gestiones[0].meses || [];
+      } else {
+        this.mesesDisponibles = [];
       }
 
+      console.log("Meses procesados con éxito:", this.mesesDisponibles);
+
+      // Auto-seleccionar el mes actual del sistema
+      if (this.mesesDisponibles.length > 0) {
+        const numeroMesActual = new Date().getMonth() + 1; // Julio = 7
+        
+        const mesEncontrado = this.mesesDisponibles.find((m: any) => 
+          Number(m.numero_mes) === numeroMesActual || Number(m.id) === numeroMesActual
+        );
+
+        this.filters.mes_id = mesEncontrado ? mesEncontrado.id : this.mesesDisponibles[0].id;
+        
+        // Disparamos la carga de semanas hijas pasándole el ID del mes
+        this.onMesChange(this.filters.mes_id);
+      }
+      
       this.loading = false;
       this.cdRef.detectChanges();
     },
-    error: (err) => {
-      console.error("Error cargando jerarquía:", err);
+    error: (err: any) => {
+      console.error("Error cargando calendario:", err);
       this.loading = false;
     }
   });
 }
+
+
+
 
 cargarAreas() {
   // Verificamos de nuevo por seguridad

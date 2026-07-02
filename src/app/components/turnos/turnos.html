@@ -5,6 +5,7 @@
       
       <div class="col-md-2">
         <label class="form-label small fw-bold text-success">SERVICIO</label>
+        <!-- CORREGIDO: onFilterChange() -->
         <select class="form-select form-select-sm border-light-subtle" [(ngModel)]="filters.servicio_id" (change)="onFilterChange()">
           <option *ngFor="let s of servicios" [value]="s.id">{{ s.nombre }}</option>
         </select>
@@ -12,6 +13,7 @@
 
       <div class="col-md-2">
         <label class="form-label small fw-bold text-success">CATEGORÍA</label>
+        <!-- CORREGIDO: onFilterChange() -->
         <select class="form-select form-select-sm border-light-subtle" [(ngModel)]="filters.categoria_id" (change)="onFilterChange()">
           <option value="">Todas</option>
           <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
@@ -20,6 +22,7 @@
 
       <div class="col-md-1">
         <label class="form-label small fw-bold text-success">GESTIÓN</label>
+        <!-- CORREGIDO: onCambioGestion() -->
         <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.gestion" (change)="onCambioGestion()">
           <option value="2026">2026</option>
           <option value="2027">2027</option>
@@ -31,6 +34,7 @@
 
       <div class="col-md-2">
         <label class="form-label small fw-bold text-success mb-1">MES</label>
+        <!-- CORREGIDO: Se le pasa el parámetro filters.mes_id requerido por TS -->
         <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.mes_id" (change)="onCambioMes(filters.mes_id)">
           <option *ngFor="let m of mesesDisponibles" [value]="m.id">{{ m.nombre | uppercase }}</option>
         </select>
@@ -38,6 +42,7 @@
 
       <div class="col-md-3">
         <label class="form-label small fw-bold text-success mb-1">SEMANA</label>
+        <!-- CORREGIDO: cargarTurnos() -->
         <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.semana_id" (change)="cargarTurnos()">
           <option *ngFor="let s of semanasDisponibles" [value]="s.id">
             Sem. {{ s.numero_semana }} ({{ s.fecha_inicio | date:'dd/MM' }} al {{ s.fecha_fin | date:'dd/MM' }})
