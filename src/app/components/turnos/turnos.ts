@@ -35,6 +35,7 @@ export interface ResumenMensual {
      NovedadComponent,    
     DialogModule,
     
+
   ],
   templateUrl: './turnos.html',
   styleUrl: './turnos.scss',
@@ -58,6 +59,8 @@ export class TurnosComponent implements OnInit {
   mesesDisponibles: any[] = [];
   semanasDisponibles: any[] = [];
   personalAgrupado: any[] = []; 
+  personalOriginal: any[] = [];
+  categoriasSeleccionadas: number[] = []; //para seleccion multiple de categorias  
   listaTurnos: any[] = [];
   fechasRealesDeLaSemana: string[] = [];  
   // Propiedades de Historial y Modales
@@ -118,6 +121,26 @@ get rangoFechasMes(): { inicio: string, fin: string } {
 }  
 
 
+// Copia esto tal cual en tu componente
+filtrarTablaVisualmente() {
+  if (this.categoriasSeleccionadas.length === 0) {
+    // Si no hay nada seleccionado, mostramos todo (tu lógica actual)
+    return;
+  }
+  
+  // Si hay selecciones, ocultamos los que NO pertenecen a esas categorías
+  this.personalAgrupado = this.personalAgrupado.filter(p => 
+    this.categoriasSeleccionadas.includes(Number(p.categoria_id))
+  );
+  this.cdRef.detectChanges();
+}
+
+
+
+  
+
+
+
 // En turnos.ts
 get personalParaReemplazo() {
   if (!this.personalAgrupado || !Array.isArray(this.personalAgrupado)) {
@@ -154,6 +177,7 @@ ngOnInit() {
     this.cargarAreas();
   }
 
+  
   // ========================================================
   // NUEVO: ESCUCHA PARA GENERACIÓN DE PDF (ORQUESTACIÓN)
   // ========================================================
@@ -528,6 +552,7 @@ onNovedadProcesada() {
       error: (err: any) => console.error("Error categorías", err)
     });
   }
+
 cargarTiposDeTurnos() {
   // Verificamos que tengamos un servicio seleccionado
   const servicioId = this.filters.servicio_id;
@@ -592,30 +617,28 @@ onCambioGestion() {
   }
 }
 
-
   
 
 cargarTurnos() {
-
-  // 1. Validación de seguridad existente
     if (!this.filters.servicio_id || !this.filters.semana_id) return;
     this.cargando = true;
     this.cdRef.detectChanges();
 
-    // =========================================================================
-    // 🌟 ENFOQUE SEMANA: Buscamos la semana activa para actualizar los números
-    // =========================================================================
     const semanaSeleccionada = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
     if (semanaSeleccionada && semanaSeleccionada.fecha_inicio) {
       this.generarFechasDeLaSemana(semanaSeleccionada.fecha_inicio);
     }
-    // =========================================================================
 
-    // 2. Tu petición HTTP al servicio se mantiene exactamente igual
-    this.turnoService.getEquipoPorFiltros(this.filters.servicio_id, this.filters.categoria_id, this.filters.semana_id)
+    // CAMBIO: Enviamos 'null' en la categoría para traer todo el equipo
+    this.turnoService.getEquipoPorFiltros(this.filters.servicio_id, null, this.filters.semana_id)
       .subscribe({
         next: (res: any) => {
-          this.personalAgrupado = res.equipo_visible || res.data || res;
+          // 1. Guardamos la "Fuente de la Verdad"
+          this.personalOriginal = res.equipo_visible || res.data || res;
+          
+          // 2. Ejecutamos el filtro inmediatamente (si el usuario ya seleccionó algo)
+          this.filtrarPersonal(); 
+          
           this.cargando = false;
           this.cdRef.detectChanges();
         },
@@ -624,6 +647,29 @@ cargarTurnos() {
           this.cdRef.detectChanges(); 
         }
       });
+}
+
+toggleCategoria(id: number) {
+  const index = this.categoriasSeleccionadas.indexOf(id);
+  if (index > -1) {
+    this.categoriasSeleccionadas.splice(index, 1);
+  } else {
+    this.categoriasSeleccionadas.push(id);
+  }
+  
+  // Aplicamos el filtro localmente
+  this.filtrarPersonal();
+}
+
+filtrarPersonal() {
+  if (this.categoriasSeleccionadas.length === 0) {
+    this.personalAgrupado = [...this.personalOriginal];
+  } else {
+    this.personalAgrupado = this.personalOriginal.filter(p => 
+      // Comparamos el nombre de la categoría del empleado con los seleccionados
+      this.categoriasSeleccionadas.includes(p.categoria_nombre)
+    );
+  }
 }
 
   // --- LÓGICA DE MOVIMIENTO (DRAG & DROP) ---
