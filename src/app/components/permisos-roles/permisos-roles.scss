@@ -1,0 +1,96 @@
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.x-small {
+  font-size: 0.75rem;
+}
+
+.bg-success-light {
+  background-color: rgba(42, 121, 83, 0.12);
+}
+
+// Contenedor del buscador predictivo
+.custom-search-dropdown {
+  background: #ffffff;
+  border: 1px solid #e3e6f0;
+  border-radius: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+  z-index: 1060;
+
+  li:hover {
+    background-color: #f8f9fa;
+    strong {
+      color: #2a7953 !important;
+    }
+  }
+}
+
+// Cajas contenedoras fijas de configuracion
+.container-config-box {
+  background-color: #fafbfc;
+  border-color: #eaedf1 !important;
+  
+  .scroll-container {
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+}
+
+// Tarjetas internas de Radio Buttons para Roles
+.custom-radio-card {
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #2a7953 !important;
+    background-color: #fafdfb;
+  }
+  
+  .form-check-input:checked + label {
+    color: #2a7953 !important;
+  }
+}
+
+// Filas de Checkboxes
+.checkbox-row {
+  transition: background-color 0.15s ease;
+  &:hover {
+    background-color: #f1f5f2;
+  }
+}
+
+// Botonera principal Verde Hospital
+.btn-guardar-config {
+  background-color: #2a7953 !important;
+  border-radius: 8px;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+
+  &:hover {
+    background-color: #216142 !important;
+    transform: translateY(-1px);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// Estilizado de las barras de scroll internas
+.scroll-container::-webkit-scrollbar {
+  width: 5px;
+}
+.scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

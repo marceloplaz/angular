@@ -16,7 +16,10 @@ import { IncidenciasComponent } from './components/incidencias/incidencias';
 import { VacacionComponent } from './components/vacaciones/vacaciones';
 import { NovedadComponent } from './components/novedad/novedad';
 import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
+import { PermisosRolesComponent } from './components/permisos-roles/permisos-roles';
+
 import { MapaComponent } from './components/mapa/mapa';
+
 
 import { AudioComponent } from './components/audio/audio'; 
 
@@ -98,6 +101,14 @@ export const routes: Routes = [
         data: { roles: ['super_admin', 'admin'] } 
       },
   
+      {
+        path: 'permisos-roles',
+        component: PermisosRolesComponent, 
+        canActivate: [roleGuard], 
+        data: { roles: ['super_admin', 'admin'] }
+      },
+
+      
 { 
   path: 'mapa', 
   component: MapaComponent,

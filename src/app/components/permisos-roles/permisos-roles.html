@@ -1,0 +1,119 @@
+<div class="container-fluid py-4">
+  <div class="card shadow-sm border-0 row-card mb-4 text-dark bg-white" style="border-radius: 12px;">
+    <div class="card-body p-4">
+      
+      <div class="d-flex align-items-center mb-1">
+        <i class="bi bi-shield-lock-fill text-success fs-3 me-3"></i>
+        <div>
+          <h3 class="fw-bold mb-0 text-dark">Configuración de Roles y Permisos</h3>
+          <p class="text-muted small mb-0">Busca un usuario del sistema, asígnale su rol jerárquico y vincula los servicios médicos y permisos modulares.</p>
+        </div>
+      </div>
+      
+      <hr class="my-4" style="opacity: 0.1;">
+
+      <div class="row mb-4 position-relative">
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark small">1. BUSCAR USUARIO O EMPLEADO</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 bg-light" 
+                   placeholder="Escribe el nombre del profesional o correo..." 
+                   [value]="terminoBusqueda"
+                   (input)="onBuscarUsuario($event)">
+          </div>
+          
+          <ul class="list-group position-absolute w-100 shadow custom-search-dropdown" *ngIf="usuariosFiltrados.length > 0">
+            <li class="list-group-item list-group-item-action cursor-pointer py-2" 
+                *ngFor="let u of usuariosFiltrados" (click)="seleccionarUsuario(u)">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="text-dark">{{ u.persona ? u.persona.nombre_completo : u.name }}</strong>
+                  <span class="d-block text-muted x-small">{{ u.email }}</span>
+                </div>
+                <span class="badge bg-success-light text-success px-2 py-1 small" *ngIf="u.roles?.length > 0">
+                  {{ u.roles[0].name }}
+                </span>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="col-md-6 mt-3 mt-md-0" *ngIf="usuarioSeleccionado">
+          <div class="p-3 rounded text-white d-flex align-items-center justify-content-between" style="background-color: #2a7953;">
+            <div>
+              <h6 class="mb-0 fw-bold"><i class="bi bi-person-check-fill me-2"></i>Personal Seleccionado</h6>
+              <span class="small opacity-90">{{ usuarioSeleccionado.persona ? usuarioSeleccionado.persona.nombre_completo : usuarioSeleccionado.name }}</span>
+            </div>
+            <i class="bi bi-check-circle-fill fs-3 opacity-75"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-2" *ngIf="usuarioSeleccionado">
+        
+        <div class="col-lg-4">
+          <div class="p-3 border rounded h-100 container-config-box">
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-person-badge me-2"></i>2. Asignar Rol Principal</h6>
+            <div class="scroll-container">
+              <div class="form-check custom-radio-card p-3 mb-2 rounded border" *ngFor="let rol of roles">
+                <input class="form-check-input ms-0 me-2" type="radio" name="rolHospitalRadio" 
+                       [id]="'rol_'+rol.id" [value]="rol.id" [(ngModel)]="rolSeleccionadoId">
+                <label class="form-check-label text-dark fw-semibold cursor-pointer" [for]="'rol_'+rol.id">
+                  {{ rol.name }}
+                  <span class="d-block text-muted fw-normal x-small mt-1">{{ rol.description || 'Sin descripción del rol.' }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="p-3 border rounded h-100 container-config-box">
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-hospital me-2"></i>3. Vincular a Servicios</h6>
+            <div class="scroll-container px-1">
+              <div class="form-check checkbox-row py-2 border-bottom d-flex align-items-center" *ngFor="let serv of servicios">
+                <input class="form-check-input my-0" type="checkbox" [id]="'serv_'+serv.id" 
+                       [checked]="serviciosSeleccionados.includes(serv.id)" (change)="toggleServicio(serv.id)">
+                <label class="form-check-label text-dark small ms-2 cursor-pointer w-100" [for]="'serv_'+serv.id">
+                  {{ serv.nombre }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="p-3 border rounded h-100 container-config-box">
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-key me-2"></i>4. Permisos de Acción</h6>
+            <div class="scroll-container px-1">
+              <div class="form-check checkbox-row py-2 border-bottom d-flex align-items-center" *ngFor="let perm of permisos">
+                <input class="form-check-input my-0" type="checkbox" [id]="'perm_'+perm.id"
+                       [checked]="permisosSeleccionados.includes(perm.id)" (change)="togglePermiso(perm.id)">
+                <label class="form-check-label text-dark small ms-2 cursor-pointer w-100 d-flex justify-content-between align-items-center" [for]="'perm_'+perm.id">
+                  <span>{{ perm.label }}</span>
+                  <span class="badge bg-light text-secondary border border-secondary-subtle x-small font-monospace">{{ perm.subject }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 text-end mt-4">
+          <button class="btn btn-success btn-lg px-5 fw-bold text-white shadow-sm border-0 btn-guardar-config" 
+                  (click)="guardarConfiguracion()">
+            <i class="bi bi-hdd-fill me-2"></i> Guardar Matriz de Accesos
+          </button>
+        </div>
+
+      </div>
+
+      <div class="text-center p-5 text-muted my-4" *ngIf="!usuarioSeleccionado">
+        <i class="bi bi-shield-lock text-body-tertiary" style="font-size: 4rem; opacity: 0.4;"></i>
+        <h5 class="mt-3 fw-semibold text-secondary">Ningún profesional en edición</h5>
+        <p class="small text-muted">Usa el campo de búsqueda de arriba para cargar el expediente de accesos de un empleado.</p>
+      </div>
+
+    </div>
+  </div>
+</div>

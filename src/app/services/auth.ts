@@ -5,32 +5,58 @@ import { tap } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  
-  // URL base ajustada al prefijo "v1" y al grupo "auth" de tu api.php
   private API_URL = 'http://localhost:8000/api/v1/auth'; 
 
   login(credentials: any) {
-    // La petición ahora irá a http://localhost:8000/api/v1/auth/login
     return this.http.post<any>(`${this.API_URL}/login`, credentials).pipe(
       tap(res => {
-        // Laravel Sanctum suele devolver 'access_token' o 'token'
         if (res && res.access_token) { 
+          // 1. Guardamos el token de Sanctum para las cabeceras HTTP
           localStorage.setItem('token', res.access_token);
-          console.log('Sesión iniciada correctamente en bd_proyecto_backend');
+          
+          // 2. Extraemos los campos del objeto 'user' que configuramos en el UserResource
+          if (res.user) {
+            localStorage.setItem('user_id', res.user.id);
+            localStorage.setItem('nombre_usuario', res.user.nombre_usuario);
+            localStorage.setItem('rol_nombre', res.user.rol_nombre);
+            
+            // 🔒 Guardamos el array de IDs de servicios permitidos serializado en texto JSON (Ej: "[5]")
+            localStorage.setItem('user_servicios', JSON.stringify(res.user.servicios || []));
+          }
+          
+          console.log('Sesión iniciada correctamente con perfil de alcance optimizado.');
         }
       })
     );
   }
 
+  // Comprueba si el usuario tiene inmunidad total en el hospital (Administración Central)
+  esAdminAbsoluto(): boolean {
+    const rol = localStorage.getItem('rol_nombre');
+    return rol === 'super_admin' || rol === 'admin';
+  }
+
+  // Devuelve el array real de IDs de servicios médicos que este usuario puede gestionar
+  getServiciosPermitidos(): number[] {
+    const serviciosRaw = localStorage.getItem('user_servicios');
+    return serviciosRaw ? JSON.parse(serviciosRaw) : [];
+  }
+
+  // Verifica puntualmente si el usuario autenticado tiene jurisdicción sobre un ID de servicio
+  tieneAccesoAServicio(servicioId: number): boolean {
+    if (this.esAdminAbsoluto()) return true; // El administrador tiene pase libre a todo el hospital
+    return this.getServiciosPermitidos().includes(servicioId);
+  }
+
   logout() {
-    localStorage.removeItem('token');
+    // Limpieza total para que no queden residuos de sesiones previas al cambiar de cuenta
+    localStorage.clear();
   }
 
   getToken() {
     return localStorage.getItem('token');
   }
-
-  
+ 
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
