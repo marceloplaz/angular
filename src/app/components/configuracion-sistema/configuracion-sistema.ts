@@ -51,6 +51,7 @@ export class ConfiguracionSistemaComponent implements OnInit {
   mostrarModalArea = signal<boolean>(false);
   // para configurar areas
   areasDelServicio = signal<any[]>([]);
+  
   // En tu clase:
   
 

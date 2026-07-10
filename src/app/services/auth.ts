@@ -18,9 +18,8 @@ export class AuthService {
           if (res.user) {
             localStorage.setItem('user_id', res.user.id);
             localStorage.setItem('nombre_usuario', res.user.nombre_usuario);
-            localStorage.setItem('rol_nombre', res.user.rol_nombre);
-            
-            // 🔒 Guardamos el array de IDs de servicios permitidos serializado en texto JSON (Ej: "[5]")
+            localStorage.setItem('rol_nombre', res.user.rol_nombre);       
+            localStorage.setItem('user_categorias', JSON.stringify(res.user.categorias || []));
             localStorage.setItem('user_servicios', JSON.stringify(res.user.servicios || []));
           }
           
@@ -35,6 +34,11 @@ export class AuthService {
     const rol = localStorage.getItem('rol_nombre');
     return rol === 'super_admin' || rol === 'admin';
   }
+
+  getCategoriasPermitidas(): number[] {
+  const categoriasRaw = localStorage.getItem('user_categorias');
+  return categoriasRaw ? JSON.parse(categoriasRaw) : [];
+}
 
   // Devuelve el array real de IDs de servicios médicos que este usuario puede gestionar
   getServiciosPermitidos(): number[] {

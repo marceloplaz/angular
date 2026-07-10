@@ -83,6 +83,21 @@
           </div>
         </div>
 
+        <div class="card p-3">
+          <h5 class="text-success fw-bold">4. Alcance de Categorías</h5>
+           <div class="form-check my-2" *ngFor="let cat of categorias">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [id]="'cat_' + cat.id"
+              [checked]="categoriasSeleccionadas.includes(cat.id)"
+              (change)="toggleCategoria(cat.id)">
+            <label class="form-check-label" [for]="'cat_' + cat.id">
+              {{ cat.nombre | uppercase }}
+            </label>
+          </div>
+        </div>
+
         <div class="col-lg-4">
           <div class="p-3 border rounded h-100 container-config-box">
             <h6 class="fw-bold text-success mb-3"><i class="bi bi-key me-2"></i>4. Permisos de Acción</h6>

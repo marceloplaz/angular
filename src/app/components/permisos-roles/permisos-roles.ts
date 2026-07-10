@@ -1,9 +1,12 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AccesoService } from '../../services/acceso'; // Ajusta los niveles '../' según tu árbol real
+import { AccesoService } from '../../services/acceso';
 import Swal from 'sweetalert2'; 
+import { Subject, Subscription } from 'rxjs'; // 2. Importamos las herramientas de control de flujos
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
 
 @Component({
   selector: 'app-configuracion-sistema',
@@ -16,23 +19,45 @@ export class PermisosRolesComponent implements OnInit {
   // Catálogos desde la API
   roles: any[] = [];
   servicios: any[] = [];
+  categorias: any[] = [];
   permisos: any[] = [];
 
   // Buscador predictivo
   usuariosFiltrados: any[] = [];
   usuarioSeleccionado: any = null;
+  categoriasSeleccionadas: number[] = [];
   terminoBusqueda: string = '';
-
-  // IDs seleccionados para la persistencia
   rolSeleccionadoId: number | null = null;
   serviciosSeleccionados: number[] = [];
   permisosSeleccionados: number[] = [];
 
-  // Inyectamos de forma limpia el servicio de la carpeta común
+  private buscador$ = new Subject<string>();
+  private buscadorSub!: Subscription;
+
   constructor(private accesoService: AccesoService) {}
 
-  ngOnInit(): void {
-    this.cargarComponentesMatriz();
+ ngOnInit(): void {
+  this.cargarComponentesMatriz();
+  this.buscadorSub = this.buscador$.pipe(
+    debounceTime(400),       
+    distinctUntilChanged()   
+  ).subscribe(termino => {
+        
+    this.accesoService.buscarEmpleado(termino).subscribe({
+      next: (res) => {
+        if (res.status === 'success') {
+          this.usuariosFiltrados = res.usuarios;
+        }
+      },
+      error: (err) => console.error('Error en búsqueda:', err)
+    });
+
+  });
+}
+  ngOnDestroy(): void {
+    if (this.buscadorSub) {
+      this.buscadorSub.unsubscribe();
+    }
   }
 
   cargarComponentesMatriz() {
@@ -41,6 +66,7 @@ export class PermisosRolesComponent implements OnInit {
         if (res.status === 'success') {
           this.roles = res.roles;
           this.servicios = res.servicios;
+          this.categorias = res.categorias || []
           this.permisos = res.permisos;
         }
       },
@@ -48,22 +74,27 @@ export class PermisosRolesComponent implements OnInit {
     });
   }
 
-  onBuscarUsuario(event: any) {
-    this.terminoBusqueda = event.target.value;
-    
-    if (this.terminoBusqueda.length < 3) {
-      this.usuariosFiltrados = [];
-      return;
-    }
-
-    this.accesoService.buscarEmpleado(this.terminoBusqueda).subscribe({
-      next: (res) => {
-        if (res.status === 'success') {
-          this.usuariosFiltrados = res.usuarios;
-        }
-      }
-    });
+ onBuscarUsuario(event: any) {
+  const termino = event.target.value;
+  this.terminoBusqueda = termino;
+  
+  if (termino.length < 3) {
+    this.usuariosFiltrados = [];
+    return;
   }
+
+  this.buscador$.next(termino);
+}
+ejecutarBusquedaEfectiva(termino: string) {
+  this.accesoService.buscarEmpleado(termino).subscribe({
+    next: (res) => {
+      if (res.status === 'success') {
+        this.usuariosFiltrados = res.usuarios;
+      }
+    },
+    error: (err) => console.error('Error en búsqueda predictiva:', err)
+  });
+}
 
   seleccionarUsuario(user: any) {
     this.usuarioSeleccionado = user;
@@ -74,13 +105,14 @@ export class PermisosRolesComponent implements OnInit {
     if (user.roles && user.roles.length > 0) {
       const rolActivo = user.roles[0];
       this.rolSeleccionadoId = rolActivo.id;
-      
-      this.serviciosSeleccionados = rolActivo.servicios ? rolActivo.servicios.map((s: any) => s.id) : [];
+       this.serviciosSeleccionados = rolActivo.servicios ? rolActivo.servicios.map((s: any) => s.id) : [];
       this.permisosSeleccionados = rolActivo.permissions ? rolActivo.permissions.map((p: any) => p.id) : [];
+      this.categoriasSeleccionadas = rolActivo.categorias ? rolActivo.categorias.map((c: any) => c.id) : [];
     } else {
       this.rolSeleccionadoId = null;
       this.serviciosSeleccionados = [];
       this.permisosSeleccionados = [];
+      this.categoriasSeleccionadas = [];
     }
   }
 
@@ -90,6 +122,15 @@ export class PermisosRolesComponent implements OnInit {
       this.serviciosSeleccionados.splice(index, 1);
     } else {
       this.serviciosSeleccionados.push(servicioId);
+    }
+  }
+
+  toggleCategoria(categoriaId: number) {
+    const index = this.categoriasSeleccionadas.indexOf(categoriaId);
+    if (index > -1) {
+      this.categoriasSeleccionadas.splice(index, 1);
+    } else {
+      this.categoriasSeleccionadas.push(categoriaId);
     }
   }
 
@@ -108,10 +149,12 @@ export class PermisosRolesComponent implements OnInit {
       return;
     }
 
+
     const payload = {
       user_id: this.usuarioSeleccionado.id,
       role_id: this.rolSeleccionadoId,
       servicios_ids: this.serviciosSeleccionados,
+      categorias_ids: this.categoriasSeleccionadas,
       permisos_ids: this.permisosSeleccionados
     };
 
@@ -128,6 +171,7 @@ export class PermisosRolesComponent implements OnInit {
           this.usuarioSeleccionado.roles = [{
             id: this.rolSeleccionadoId,
             servicios: this.serviciosSeleccionados.map(id => ({ id })),
+            categorias: this.categoriasSeleccionadas.map(id => ({ id })),
             permissions: this.permisosSeleccionados.map(id => ({ id }))
           }];
         }
