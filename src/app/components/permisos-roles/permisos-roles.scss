@@ -3,7 +3,7 @@
 }
 
 .x-small {
-  font-size: 0.75rem;
+  font-size: 0.78rem !important; // Unificado ligeramente para mejorar legibilidad de descripciones
 }
 
 .bg-success-light {
@@ -22,10 +22,14 @@
   right: 12px;
   z-index: 1060;
 
-  li:hover {
-    background-color: #f8f9fa;
-    strong {
-      color: #2a7953 !important;
+  li {
+    font-size: 0.88rem; // Tamaño de letra base para los resultados de búsqueda
+    
+    &:hover {
+      background-color: #f8f9fa;
+      strong {
+        color: #2a7953 !important;
+      }
     }
   }
 }
@@ -34,6 +38,19 @@
 .container-config-box {
   background-color: #fafbfc;
   border-color: #eaedf1 !important;
+  
+  // 🎯 UNIFICACIÓN DE ENCABEZADOS (Títulos 2, 3, 4 y 5)
+  h6 {
+    font-size: 0.95rem !important;
+    letter-spacing: 0.3px;
+    font-weight: 700;
+  }
+
+  // 🎯 UNIFICACIÓN DE CONTENIDOS INTERNOS (Checkboxes y Radios comparten el mismo tamaño)
+  .form-check-label {
+    font-size: 0.88rem !important; 
+    line-height: 1.25rem;
+  }
   
   .scroll-container {
     max-height: 380px;
@@ -69,6 +86,7 @@
 .btn-guardar-config {
   background-color: #2a7953 !important;
   border-radius: 8px;
+  font-size: 0.9rem !important; // Unificado para que no sea excesivamente gigante
   transition: transform 0.15s ease, background-color 0.2s ease;
 
   &:hover {

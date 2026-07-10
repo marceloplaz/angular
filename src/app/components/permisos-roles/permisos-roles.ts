@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AccesoService } from '../../services/acceso';
 import Swal from 'sweetalert2'; 
-import { Subject, Subscription } from 'rxjs'; // 2. Importamos las herramientas de control de flujos
+import { Subject, Subscription } from 'rxjs'; 
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 
@@ -74,9 +74,9 @@ export class PermisosRolesComponent implements OnInit {
     });
   }
 
- onBuscarUsuario(event: any) {
-  const termino = event.target.value;
-  this.terminoBusqueda = termino;
+onBuscarUsuario() {
+ 
+  const termino = this.terminoBusqueda;
   
   if (termino.length < 3) {
     this.usuariosFiltrados = [];

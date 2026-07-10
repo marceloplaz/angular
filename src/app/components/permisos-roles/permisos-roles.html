@@ -12,16 +12,15 @@
       
       <hr class="my-4" style="opacity: 0.1;">
 
-      <div class="row mb-4 position-relative">
-        <div class="col-md-6">
-          <label class="form-label fw-bold text-dark small">1. BUSCAR USUARIO O EMPLEADO</label>
-          <div class="input-group">
-            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" class="form-control border-start-0 bg-light" 
-                   placeholder="Escribe el nombre del profesional o correo..." 
-                   [value]="terminoBusqueda"
-                   (input)="onBuscarUsuario($event)">
-          </div>
+    <div class="row mb-4 position-relative">
+  <div class="col-md-6">
+    <label class="form-label fw-bold text-dark small">1. BUSCAR USUARIO O EMPLEADO</label>
+    <div class="input-group">
+      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" class="form-control border-start-0 bg-light" 
+             placeholder="Escribe el nombre del profesional o correo..." 
+             [(ngModel)]="terminoBusqueda"
+             (input)="onBuscarUsuario()"> </div>
           
           <ul class="list-group position-absolute w-100 shadow custom-search-dropdown" *ngIf="usuariosFiltrados.length > 0">
             <li class="list-group-item list-group-item-action cursor-pointer py-2" 
@@ -50,11 +49,11 @@
         </div>
       </div>
 
-      <div class="row g-4 mt-2" *ngIf="usuarioSeleccionado">
+      <div class="row g-3 mt-2" *ngIf="usuarioSeleccionado">
         
-        <div class="col-lg-4">
+        <div class="col-xl-3 col-md-6">
           <div class="p-3 border rounded h-100 container-config-box">
-            <h6 class="fw-bold text-success mb-3"><i class="bi bi-person-badge me-2"></i>2. Asignar Rol Principal</h6>
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-person-badge me-2"></i> 2. Asignar Rol Principal</h6>
             <div class="scroll-container">
               <div class="form-check custom-radio-card p-3 mb-2 rounded border" *ngFor="let rol of roles">
                 <input class="form-check-input ms-0 me-2" type="radio" name="rolHospitalRadio" 
@@ -68,9 +67,9 @@
           </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-xl-3 col-md-6">
           <div class="p-3 border rounded h-100 container-config-box">
-            <h6 class="fw-bold text-success mb-3"><i class="bi bi-hospital me-2"></i>3. Vincular a Servicios</h6>
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-hospital me-2"></i> 3. Vincular a Servicios</h6>
             <div class="scroll-container px-1">
               <div class="form-check checkbox-row py-2 border-bottom d-flex align-items-center" *ngFor="let serv of servicios">
                 <input class="form-check-input my-0" type="checkbox" [id]="'serv_'+serv.id" 
@@ -83,24 +82,24 @@
           </div>
         </div>
 
-        <div class="card p-3">
-          <h5 class="text-success fw-bold">4. Alcance de Categorías</h5>
-           <div class="form-check my-2" *ngFor="let cat of categorias">
-            <input 
-              class="form-check-input" 
-              type="checkbox" 
-              [id]="'cat_' + cat.id"
-              [checked]="categoriasSeleccionadas.includes(cat.id)"
-              (change)="toggleCategoria(cat.id)">
-            <label class="form-check-label" [for]="'cat_' + cat.id">
-              {{ cat.nombre | uppercase }}
-            </label>
+        <div class="col-xl-3 col-md-6">
+          <div class="p-3 border rounded h-100 container-config-box">
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-tags me-2"></i> 4. Alcance de Categorías</h6>
+            <div class="scroll-container px-1">
+              <div class="form-check checkbox-row py-2 border-bottom d-flex align-items-center" *ngFor="let cat of categorias">
+                <input class="form-check-input my-0" type="checkbox" [id]="'cat_'+cat.id"
+                       [checked]="categoriasSeleccionadas.includes(cat.id)" (change)="toggleCategoria(cat.id)">
+                <label class="form-check-label text-dark small ms-2 cursor-pointer w-100" [for]="'cat_'+cat.id">
+                  {{ cat.nombre | uppercase }}
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-xl-3 col-md-6">
           <div class="p-3 border rounded h-100 container-config-box">
-            <h6 class="fw-bold text-success mb-3"><i class="bi bi-key me-2"></i>4. Permisos de Acción</h6>
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-key me-2"></i> 5. Permisos de Acción</h6>
             <div class="scroll-container px-1">
               <div class="form-check checkbox-row py-2 border-bottom d-flex align-items-center" *ngFor="let perm of permisos">
                 <input class="form-check-input my-0" type="checkbox" [id]="'perm_'+perm.id"
