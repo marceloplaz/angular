@@ -60,7 +60,7 @@ export class TurnosComponent implements OnInit {
   semanasDisponibles: any[] = [];
   personalAgrupado: any[] = []; 
   personalOriginal: any[] = [];
-  categoriasSeleccionadas: number[] = []; //para seleccion multiple de categorias  
+  categoriasSeleccionadas: string[] = []; //para seleccion multiple de categorias  
   listaTurnos: any[] = [];
   fechasRealesDeLaSemana: string[] = [];  
   // Propiedades de Historial y Modales
@@ -130,7 +130,7 @@ filtrarTablaVisualmente() {
   
   // Si hay selecciones, ocultamos los que NO pertenecen a esas categorías
   this.personalAgrupado = this.personalAgrupado.filter(p => 
-    this.categoriasSeleccionadas.includes(Number(p.categoria_id))
+    this.categoriasSeleccionadas.includes((p.categoria_id))
   );
   this.cdRef.detectChanges();
 }
@@ -635,6 +635,8 @@ cargarTurnos() {
         next: (res: any) => {
           // 1. Guardamos la "Fuente de la Verdad"
           this.personalOriginal = res.equipo_visible || res.data || res;
+          const nombres = this.personalOriginal.map(p => p.categoria_nombre).filter(Boolean);
+          this.categorias = [...new Set(nombres)].map(nombre => ({ nombre }));
           
           // 2. Ejecutamos el filtro inmediatamente (si el usuario ya seleccionó algo)
           this.filtrarPersonal(); 
@@ -648,16 +650,13 @@ cargarTurnos() {
         }
       });
 }
-
-toggleCategoria(id: number) {
-  const index = this.categoriasSeleccionadas.indexOf(id);
+toggleCategoria(nombreCategoria: string) {
+  const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
   if (index > -1) {
     this.categoriasSeleccionadas.splice(index, 1);
   } else {
-    this.categoriasSeleccionadas.push(id);
+    this.categoriasSeleccionadas.push(nombreCategoria);
   }
-  
-  // Aplicamos el filtro localmente
   this.filtrarPersonal();
 }
 
