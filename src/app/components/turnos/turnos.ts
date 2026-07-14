@@ -172,6 +172,8 @@ ngOnInit() {
   this.cargarListasJerarquicas();
   this.cargarTiposDeTurnos();
   this.cargarConfiguracionInicial();
+  this.cargarCategoriasGlobales();
+
 
   if (this.filters.servicio_id) {
     this.cargarAreas();
@@ -270,7 +272,23 @@ puedeExportar(): boolean {
     return !this.isPeriodoBloqueado || esAdmin;
   }
 
+cargarCategoriasGlobales() {
+  const categoriasPermitidas = JSON.parse(localStorage.getItem('user_categorias') || '[]');
 
+  this.turnoService.getCategorias().subscribe({
+    next: (res: any) => {
+      const todasLasCategorias = res.data || res;
+      
+      // Filtramos las categorías que coinciden con los IDs del usuario
+      this.categorias = todasLasCategorias.filter((cat: any) => 
+        categoriasPermitidas.includes(cat.id) // Asegúrate de que 'cat.id' sea el campo correcto
+      );
+      
+      this.cdRef.detectChanges();
+    },
+    error: (err: any) => console.error("Error al cargar categorías", err)
+  });
+}
 
   
   verificarEstadoBloqueo(): void {
@@ -635,8 +653,7 @@ cargarTurnos() {
         next: (res: any) => {
           // 1. Guardamos la "Fuente de la Verdad"
           this.personalOriginal = res.equipo_visible || res.data || res;
-          const nombres = this.personalOriginal.map(p => p.categoria_nombre).filter(Boolean);
-          this.categorias = [...new Set(nombres)].map(nombre => ({ nombre }));
+         
           
           // 2. Ejecutamos el filtro inmediatamente (si el usuario ya seleccionó algo)
           this.filtrarPersonal(); 

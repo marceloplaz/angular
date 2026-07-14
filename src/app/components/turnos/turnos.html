@@ -16,16 +16,21 @@
     <button class="btn btn-sm btn-light border-light-subtle w-100 text-start dropdown-toggle shadow-none" 
             type="button" data-bs-toggle="dropdown" aria-expanded="false"
             style="border: 1px solid #dee2e6; height: 31px; padding-top: 4px;">
-      {{ categoriasSeleccionadas.length === 0 ? 'Todas' : categoriasSeleccionadas.length + ' Seleccionadas' }}
+      {{ categoriasSeleccionadas.length === 0 ? 'Seleccione categoría' : categoriasSeleccionadas.length + ' Seleccionadas' }}
     </button>
     
     <ul class="dropdown-menu p-2 shadow-sm w-100" style="max-height: 300px; overflow-y: auto;">
-    <li *ngFor="let c of categorias">
-  <input 
-    type="checkbox" 
-    [checked]="categoriasSeleccionadas.includes(c.nombre)"
-    (change)="toggleCategoria(c.nombre)"> {{ c.nombre }}
-</li>
+      <li *ngFor="let c of categorias" class="form-check">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          [id]="'cat_' + c.nombre"
+          [checked]="categoriasSeleccionadas.includes(c.nombre)"
+          (change)="toggleCategoria(c.nombre)"> 
+        <label class="form-check-label ms-2" [for]="'cat_' + c.nombre">
+          {{ c.nombre }}
+        </label>
+      </li>
     </ul>
   </div>
 </div>
