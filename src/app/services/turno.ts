@@ -175,17 +175,14 @@ return this.http.get(`${this.apiUrl}/reportes/semanal/${semanaId}`, {
   });
 }
 
-  /**
-   * Descargar el PDF del Rol Mensual generado desde el Blade de Laravel
-   */
-obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string,categoria_id: number): Observable<Blob> {
+ // En tu archivo turnos.service.ts
+obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string, categoria_id: any): Observable<Blob> {
   const params = new HttpParams()
     .set('servicio_id', servicio_id.toString())
     .set('mes_id', mes_id.toString())
     .set('rol_usuario', usuario_rol)
-    .set('categoria_id', categoria_id.toString());
+    .set('categoria_id', categoria_id.toString()); // .toString() funcionará tanto para número como para string
 
-  // 🌟 Apuntamos al nuevo endpoint protegido contra colisiones
   return this.http.get(`${environment.apiUrl}/acciones-reporte/mensual-pdf`, {
     params: params,
     responseType: 'blob'

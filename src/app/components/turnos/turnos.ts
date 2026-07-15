@@ -332,49 +332,40 @@ cargarCategoriasGlobales() {
     }
   });
 }
-
- exportarPdfMensualBlade(): void {
-  // 1. Verificación de seguridad: ¿Están listos los filtros?
+exportarPdfMensualBlade(): void {
+  // 1. Validación de filtros
   if (!this.filters || !this.filters.servicio_id || !this.filters.mes_id) {
-    this.toastr.warning('Por favor, seleccione un Servicio y un Mes antes de exportar.', 'Faltan datos');
+    this.toastr.warning('Por favor, seleccione un Servicio y un Mes.');
     return;
   }
 
-  // 2. Verificación de existencia del servicio
-  if (!this.turnoService) {
-    console.error("Error: TurnoService no está inyectado correctamente.");
-    return;
-  }
+  // 2. Construimos el string con todos los IDs seleccionados
+  // Esto soluciona que el reporte salga vacío o con "N/A"
+  const categoriaIds = (this.categoriasSeleccionadas && this.categoriasSeleccionadas.length > 0)
+    ? this.categoriasSeleccionadas.map(nombre => {
+        // Buscamos el ID real basado en el nombre seleccionado
+        const cat = this.categorias.find(c => c.nombre === nombre);
+        return cat ? cat.id : null;
+      }).filter(id => id !== null).join(',')
+    : this.categorias.map(c => c.id).join(',');
 
-  // 3. Ejecución segura
+  // 3. Ejecución segura enviando el string de IDs
   this.turnoService.obtenerPdfReporteMensual(
     this.filters.servicio_id, 
     this.filters.mes_id, 
     this.rolUsuario,
-    this.filters.categoria_id
+    categoriaIds // Ya no da error porque cambiamos el tipo en el servicio
   ).subscribe({
     next: (blob: Blob) => {
-      if (blob) {
-        const fileURL = URL.createObjectURL(blob);
-        window.open(fileURL, '_blank');
-      }
+      const fileURL = URL.createObjectURL(blob);
+      window.open(fileURL, '_blank');
     },
     error: (err) => {
-      console.error("Error capturado en la exportación:", err);
-      if (err.status === 403) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Acceso Denegado',
-          text: 'Este reporte mensual ha sido cerrado y bloqueado.',
-          confirmButtonColor: '#4B930F'
-        });
-      } else {
-        this.toastr.error('Error al generar el PDF.', 'Servidor');
-      }
+      console.error("Error capturado:", err);
+      this.toastr.error('Error al generar el PDF.');
     }
   });
 }
-
 
 actualizarNombresDeFiltros() {
   // 1. Nombre del Mes
@@ -668,12 +659,15 @@ cargarTurnos() {
       });
 }
 toggleCategoria(nombreCategoria: string) {
-  const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
-  if (index > -1) {
-    this.categoriasSeleccionadas.splice(index, 1);
-  } else {
-    this.categoriasSeleccionadas.push(nombreCategoria);
+  // Cambiamos a comportamiento de "Radio Button" (solo 1 a la vez)
+  this.categoriasSeleccionadas = [nombreCategoria];
+  
+  // Actualizamos el filtro central para que el reporte sepa qué ID usar
+  const cat = this.categorias.find(c => c.nombre === nombreCategoria);
+  if (cat) {
+      this.filters.categoria_id = cat.id;
   }
+  
   this.filtrarPersonal();
 }
 
