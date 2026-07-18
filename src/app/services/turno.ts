@@ -39,15 +39,17 @@ export class TurnoService {
     return this.http.get(`${this.apiUrl}/categorias-lista`);
   }
 
-  getEquipoPorFiltros(servicioId: any, categoriaId: any, semanaId: any): Observable<any> {
-    return this.http.get(`${this.apiUrl}/equipo-filtrado`, {
-      params: { 
-        servicio_id: servicioId || '',
-        categoria_id: categoriaId || '', 
-        semana_id: semanaId || ''
-      }
-    });
-  }
+ // Asegúrate de que el nombre aquí sea exactamente 'mesId'
+getEquipoPorFiltros(servicioId: any, categoriaId: any, semanaId: any, mesId: any): Observable<any> {
+  return this.http.get(`${this.apiUrl}/equipo-filtrado`, {
+    params: { 
+      servicio_id: servicioId || '',
+      categoria_id: categoriaId || '', 
+      semana_id: semanaId || '',
+      mes_id: mesId || '' 
+    }
+  });
+}
 
   getTurnos(params: any): Observable<any> {
     return this.http.get(`${this.apiUrl}/lista-turnos-disponibles`, { params });
@@ -175,7 +177,7 @@ return this.http.get(`${this.apiUrl}/reportes/semanal/${semanaId}`, {
   });
 }
 
- // En tu archivo turnos.service.ts
+ // reporte principal de de turnos pdf
 obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string, categoria_id: any): Observable<Blob> {
   const params = new HttpParams()
     .set('servicio_id', servicio_id.toString())

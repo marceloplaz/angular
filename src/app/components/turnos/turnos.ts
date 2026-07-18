@@ -291,48 +291,63 @@ cargarCategoriasGlobales() {
 }
 
   
-  verificarEstadoBloqueo(): void {
+  
+verificarEstadoBloqueo(): void {
     // Aquí puedes llamar a un método rápido de consulta si lo deseas al cambiar filtros
   }
 
  toggleBloqueoPeriodo(): void {
-  // 1. Verificación de permisos
+  // 1. Verificación de permisos de seguridad
   if (this.rolUsuario !== 'super_admin' && this.rolUsuario !== 'admin') {
     this.toastr.warning('¡Acceso Restringido!', 'Hospital San Juan de Dios');
     return;
   }
 
-  // 2. Confirmación antes de procesar
-  const estadoDestino = !this.isPeriodoBloqueado ? 'BLOQUEAR' : 'DESBLOQUEAR';
-  
+  // 2. Definición del estado de destino para la interfaz
+  const nuevoEstado = !this.isPeriodoBloqueado;
+  const mensajeAccion = nuevoEstado ? 'BLOQUEAR' : 'DESBLOQUEAR';
+
+  // 3. Confirmación con el usuario
   Swal.fire({
-    title: `¿Confirmar acción: ${estadoDestino}?`,
-    text: "Esta acción afectará la disponibilidad de descarga del reporte mensual.",
+    title: `¿Confirmar acción: ${mensajeAccion}?`,
+    text: "Esta acción afectará la disponibilidad de descarga del reporte mensual para todos los usuarios.",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#004d40',
+    confirmButtonColor: '#004d40', // Verde hospital
     cancelButtonColor: '#d33',
     confirmButtonText: 'Sí, confirmar'
   }).then((result) => {
     if (result.isConfirmed) {
-      // 3. Ejecución si el usuario confirma
-      const nuevoEstado = !this.isPeriodoBloqueado;
-      this.turnoService.cambiarBloqueoRol(this.filters.servicio_id, this.filters.mes_id, nuevoEstado)
-        .subscribe({
-          next: (res: any) => {
-            this.isPeriodoBloqueado = res.bloqueado; 
-            this.toastr.success(res.message, 'Gestión de Cierres');
-            this.cdRef.detectChanges();
-          },
-          error: (err) => {
-            console.error(err);
-            this.toastr.error('Error al intentar procesar el bloqueo.', 'Error');
-          }
-        });
+      // 4. Ejecución de la petición al servidor
+      this.turnoService.cambiarBloqueoRol(
+        this.filters.servicio_id, 
+        this.filters.mes_id, 
+        nuevoEstado
+      ).subscribe({
+        next: (res: any) => {
+          // 5. Actualización reactiva del estado
+          // Al asignar esto, el *ngIf en el HTML ocultará o mostrará el botón
+          this.isPeriodoBloqueado = res.bloqueado; 
+          
+          // 6. Notificación y refresco de vista
+          this.toastr.success(res.message, 'Gestión de Cierres');
+          this.cdRef.detectChanges(); 
+        },
+        error: (err) => {
+          console.error("Error en bloqueo:", err);
+          this.toastr.error('Error al intentar procesar el bloqueo.', 'Error');
+        }
+      });
     }
   });
 }
+// reporte mensual 
 exportarPdfMensualBlade(): void {
+  
+  if (!this.puedeExportar()) {
+    this.toastr.error('El reporte está bloqueado para este periodo.', 'Acción no permitida');
+    return;
+  }  
   // 1. Validación de filtros
   if (!this.filters || !this.filters.servicio_id || !this.filters.mes_id) {
     this.toastr.warning('Por favor, seleccione un Servicio y un Mes.');
@@ -627,47 +642,52 @@ onCambioGestion() {
 }
 
   
-
 cargarTurnos() {
-    if (!this.filters.servicio_id || !this.filters.semana_id) return;
+    if (!this.filters.servicio_id || !this.filters.semana_id || !this.filters.mes_id) return;
     this.cargando = true;
     this.cdRef.detectChanges();
 
     const semanaSeleccionada = this.semanasDisponibles.find(s => s.id == this.filters.semana_id);
     if (semanaSeleccionada && semanaSeleccionada.fecha_inicio) {
-      this.generarFechasDeLaSemana(semanaSeleccionada.fecha_inicio);
+        this.generarFechasDeLaSemana(semanaSeleccionada.fecha_inicio);
     }
 
-    // CAMBIO: Enviamos 'null' en la categoría para traer todo el equipo
-    this.turnoService.getEquipoPorFiltros(this.filters.servicio_id, null, this.filters.semana_id)
-      .subscribe({
+    // Ahora enviamos el mes_id:
+    this.turnoService.getEquipoPorFiltros(
+        this.filters.servicio_id, 
+        null, 
+        this.filters.semana_id, 
+        this.filters.mes_id 
+ 
+      ).subscribe({
         next: (res: any) => {
-          // 1. Guardamos la "Fuente de la Verdad"
-          this.personalOriginal = res.equipo_visible || res.data || res;
-         
-          
-          // 2. Ejecutamos el filtro inmediatamente (si el usuario ya seleccionó algo)
-          this.filtrarPersonal(); 
-          
-          this.cargando = false;
-          this.cdRef.detectChanges();
+            this.personalOriginal = res.equipo_visible || res.data || res;
+            
+            // Asignamos el estado real que viene del servidor
+            this.isPeriodoBloqueado = !!res.isBloqueado; 
+            
+            this.filtrarPersonal(); 
+            this.cargando = false;
+            this.cdRef.detectChanges();
         },
         error: (err: any) => { 
-          this.cargando = false; 
-          this.cdRef.detectChanges(); 
+            this.cargando = false; 
+            this.cdRef.detectChanges(); 
         }
-      });
+    });
 }
 toggleCategoria(nombreCategoria: string) {
-  // Cambiamos a comportamiento de "Radio Button" (solo 1 a la vez)
-  this.categoriasSeleccionadas = [nombreCategoria];
+  const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
   
-  // Actualizamos el filtro central para que el reporte sepa qué ID usar
-  const cat = this.categorias.find(c => c.nombre === nombreCategoria);
-  if (cat) {
-      this.filters.categoria_id = cat.id;
+  if (index > -1) {
+    // Si ya está seleccionado, lo quitamos
+    this.categoriasSeleccionadas.splice(index, 1);
+  } else {
+    // Si no está, lo añadimos
+    this.categoriasSeleccionadas.push(nombreCategoria);
   }
   
+  // Ya no actualizamos un único 'categoria_id', porque ahora manejamos múltiples
   this.filtrarPersonal();
 }
 
@@ -1308,48 +1328,52 @@ toggleVistaMensual() {
       console.log('Cambiando a vista semanal...');
     }
   }
- 
-  
-exportarPDFSemanal() {
-  // 1. Extraemos los IDs de tu objeto 'filters'
-  const semanaId = this.filters.semana_id;
-  const servicioId = this.filters.servicio_id;
-  const categoriaId = this.filters.categoria_id;
+ exportarPDFSemanal() {
+  // Depuración: Verifica qué hay en 'this.filters'
+  console.log('Filtros actuales:', this.filters); 
 
-  // 2. Validación básica
+  // Acceso seguro a los valores
+  const semanaId = this.filters?.semana_id;
+  const servicioId = this.filters?.servicio_id;
+  const categoriaId = this.filters?.categoria_id;
+
+  // Validación robusta
   if (!semanaId || !servicioId || !categoriaId) {
-    this.toastr.warning('Por favor seleccione Servicio, Categoría y Semana', 'Atención');
+    this.toastr.warning('Asegúrate de haber seleccionado Servicio, Categoría y Semana.', 'Atención');
     return;
   }
 
-  // 3. Construimos la URL usando el environment que ya importaste
-  const url = `${environment.apiUrl}/reportes/semanal/${semanaId!}?servicio_id=${servicioId!}&categoria_id=${categoriaId!}`;
+  this.loading = true;
 
-  // 4. Petición HTTP para obtener el Blob
+  const url = `${environment.apiUrl}/reportes/semanal/${semanaId}?servicio_id=${servicioId}&categoria_id=${categoriaId}`;
+
   this.http.get(url, { responseType: 'blob' }).subscribe({
     next: (res: Blob) => {
-      const fileURL = URL.createObjectURL(res);
-      window.open(fileURL, '_blank');
+      this.loading = false;
+      // ... lógica de descarga ...
     },
     error: (err: any) => {
-      console.error('Error al generar la vista previa', err);
-      this.toastr.error('No se pudo generar el reporte', 'Error');
+      this.loading = false;
+      console.error('Error HTTP:', err);
+      // Verifica si el error es 404 (ruta no encontrada) o 500 (error en el servidor)
+      this.toastr.error('Error al generar el reporte.');
     }
   });
 }
-
-
-
+//  reporte principal con multiples servicios opcion de bloquear
 exportarPDFMensual() {
   // 1. Añadimos la validación para asegurar que exista la categoría seleccionada
   if (!this.filters.servicio_id || !this.filters.mes_id || !this.filters.categoria_id) {
     this.toastr.warning('Seleccione servicio, mes y categoría antes de exportar', 'Atención');
     return;
   }
-
-  this.loading = true;
-
-  // 2. Pasamos 'this.filters.categoria_id' como tercer parámetro a tu servicio
+const esAdmin = (this.rolUsuario === 'super_admin' || this.rolUsuario === 'admin');
+  
+  if (this.isPeriodoBloqueado && !esAdmin) {
+    this.toastr.error('El reporte está bloqueado para este periodo.', 'Acción no permitida');
+    return;
+  } 
+   // 2. Pasamos 'this.filters.categoria_id' como tercer parámetro a tu servicio
   this.turnoService.getResumenMensual(this.filters.servicio_id, this.filters.mes_id, this.filters.categoria_id).subscribe({
     next: (response) => {
       const listaPersonal = response.data;

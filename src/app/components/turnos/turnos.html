@@ -95,15 +95,14 @@
      
 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
   
-  <li *ngIf="puedeExportar()">
-  <button ... (click)="exportarPdfMensualBlade()">EXPORTAR PDF</button>
+  <!-- El botón desaparece si isPeriodoBloqueado es true -->
+<li *ngIf="!isPeriodoBloqueado">
+  <button class="dropdown-item" (click)="exportarPdfMensualBlade()">
+    REPORTE MENSUAL PDF
+  </button>
 </li>
 
-<li *ngIf="!puedeExportar()">
-  <span class="dropdown-item text-muted">
-     <i class="pi pi-lock"></i> PDF BLOQUEADO
-  </span>
-</li>
+
 
   <li>
     <a class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#modalRotarPersonal" (click)="onRotarMensual()">
