@@ -95,7 +95,7 @@
      
 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
   
-  <!-- El botón desaparece si isPeriodoBloqueado es true -->
+  
 <li *ngIf="!isPeriodoBloqueado">
   <button class="dropdown-item" (click)="exportarPdfMensualBlade()">
     REPORTE MENSUAL PDF
@@ -132,7 +132,7 @@
     <a class="dropdown-item py-2" (click)="exportarPDFSemanal()" style="cursor: pointer;">
       <i class="pi pi-file-pdf me-2 text-danger"></i> 
       <span *ngIf="!loading">EXPORTAR REPORTE SEMANAL</span>
-      <span *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> GENERANDO...</span>
+      <span *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> GENERANDO RESPUESTA DEL SERVIDOR</span>
     </a>
   </li>
 </ul> 
@@ -162,22 +162,19 @@
               </a>
             </li>
             <li><hr class="dropdown-divider"></li>
-            <li>
-              <a class="dropdown-item py-2" (click)="exportarPDFMensual()">
-                <i class="pi pi-file-pdf me-2 text-danger"></i> EXPORTAR PDF MENSUAL
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" (click)="exportarPDFSemanal()" style="cursor: pointer;">
-                <i class="pi pi-file-pdf me-2 text-danger"></i> 
-                <span *ngIf="!loading">EXPORTAR REPORTE SEMANAL</span>
-                <span *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> GENERANDO...</span>
-              </a>
-            </li>
-          </ul>
+            </ul>
         </div>
       </div>
 
+<!-- Icono de PDF visible  de reporte-semanal  -->
+<div class="d-flex align-items-center ms-3">
+    <button class="btn btn-link p-0" 
+            (click)="exportarPDFSemanal()" 
+            [disabled]="loading || !filters.servicio_id || !filters.semana_id"
+            title="PDF SEMANAL">
+        <i class="pi pi-file-pdf text-danger" style="font-size: 1.5rem;"></i>
+    </button>
+</div>
 
 
   <div class="card shadow-sm border-0 p-3 bg-white" style="border-radius: 12px;">

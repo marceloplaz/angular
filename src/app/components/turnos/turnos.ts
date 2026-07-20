@@ -1328,38 +1328,59 @@ toggleVistaMensual() {
       console.log('Cambiando a vista semanal...');
     }
   }
- exportarPDFSemanal() {
-  // Depuración: Verifica qué hay en 'this.filters'
-  console.log('Filtros actuales:', this.filters); 
 
-  // Acceso seguro a los valores
-  const semanaId = this.filters?.semana_id;
-  const servicioId = this.filters?.servicio_id;
-  const categoriaId = this.filters?.categoria_id;
+// PDF REPORTE SEMANAL 
+exportarPDFSemanal() {
+  console.log("Valores actuales de filtros:", this.filters);
+  console.log("Categorías seleccionadas actualmente:", this.categoriasSeleccionadas);
+  
+  const { semana_id, servicio_id } = this.filters;
 
-  // Validación robusta
-  if (!semanaId || !servicioId || !categoriaId) {
-    this.toastr.warning('Asegúrate de haber seleccionado Servicio, Categoría y Semana.', 'Atención');
+  if (!semana_id || !servicio_id) {
+    this.toastr.warning('Debe seleccionar Servicio y Semana', 'Atención');
     return;
   }
 
+  // 1. Usamos 'this.categoriasSeleccionadas' en lugar de 'this.filters.categoria_id'
+  const cats = this.categoriasSeleccionadas;
+
+  let url = `${environment.apiUrl}/reportes/semanal/${semana_id}?servicio_id=${servicio_id}`;
+
+// CAMBIO AQUÍ: Verifica si tienes objetos completos o solo nombres
+if (this.categoriasSeleccionadas && this.categoriasSeleccionadas.length > 0) {
+    this.categoriasSeleccionadas.forEach(catNombre => {
+        // Buscamos el ID real de la categoría basándonos en el nombre seleccionado
+        const catEncontrada = this.categorias.find(c => c.nombre === catNombre);
+        const idAEnviar = catEncontrada ? catEncontrada.id : catNombre; // Envía el ID si existe, sino el nombre
+        
+        url += `&categoria_id[]=${idAEnviar}`;
+    });
+}
+
+console.log("URL final:", url);
+
   this.loading = true;
-
-  const url = `${environment.apiUrl}/reportes/semanal/${semanaId}?servicio_id=${servicioId}&categoria_id=${categoriaId}`;
-
   this.http.get(url, { responseType: 'blob' }).subscribe({
     next: (res: Blob) => {
       this.loading = false;
-      // ... lógica de descarga ...
+      const blob = new Blob([res], { type: 'application/pdf' });
+      const urlBlob = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = urlBlob;
+      a.download = `Reporte_Semanal_${semana_id}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(urlBlob);
     },
-    error: (err: any) => {
+    error: (err) => {
       this.loading = false;
-      console.error('Error HTTP:', err);
-      // Verifica si el error es 404 (ruta no encontrada) o 500 (error en el servidor)
       this.toastr.error('Error al generar el reporte.');
     }
   });
 }
+
+
+
+
 //  reporte principal con multiples servicios opcion de bloquear
 exportarPDFMensual() {
   // 1. Añadimos la validación para asegurar que exista la categoría seleccionada
