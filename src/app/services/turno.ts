@@ -143,10 +143,28 @@ obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: strin
     responseType: 'blob'
   });
 }
+
 getSemanasPorMes(mesId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/calendario/configuracion`);
   }
 getReporteHorasSemana(semanaId: number): Observable<any> {
   return this.http.get<any>(`${this.apiUrl}/reportes/reporte-semanal/${semanaId}`);
 }
+
+  exportarPdfSemanal(semanaId: number | string, servicioId: number | string, categorias: any[] = []): Observable<Blob> {
+  let params = new HttpParams().set('servicio_id', servicioId);
+  if (Array.isArray(categorias) && categorias.length > 0) {
+    categorias.forEach(cat => {
+      params = params.append('categoria_id[]', cat);
+    });
+  }
+  const url = `${environment.apiUrl}/reportes/semanal/${semanaId}`;
+  return this.http.get<Blob>(url, { 
+    params: params, 
+    responseType: 'blob' as 'json' 
+  });
+}
+
+
+
 }

@@ -1341,26 +1341,20 @@ exportarPDFSemanal() {
     return;
   }
 
-  // 1. Usamos 'this.categoriasSeleccionadas' en lugar de 'this.filters.categoria_id'
-  const cats = this.categoriasSeleccionadas;
-
-  let url = `${environment.apiUrl}/reportes/semanal/${semana_id}?servicio_id=${servicio_id}`;
-
-// CAMBIO AQUÍ: Verifica si tienes objetos completos o solo nombres
-if (this.categoriasSeleccionadas && this.categoriasSeleccionadas.length > 0) {
-    this.categoriasSeleccionadas.forEach(catNombre => {
-        // Buscamos el ID real de la categoría basándonos en el nombre seleccionado
-        const catEncontrada = this.categorias.find(c => c.nombre === catNombre);
-        const idAEnviar = catEncontrada ? catEncontrada.id : catNombre; // Envía el ID si existe, sino el nombre
-        
-        url += `&categoria_id[]=${idAEnviar}`;
-    });
-}
-
-console.log("URL final:", url);
+  // Mapeamos las categorías seleccionadas a sus IDs correspondientes
+  const idsACambiar: any[] = [];
+  if (this.categoriasSeleccionadas && this.categoriasSeleccionadas.length > 0) {
+      this.categoriasSeleccionadas.forEach(catNombre => {
+          const catEncontrada = this.categorias.find(c => c.nombre === catNombre);
+          const idAEnviar = catEncontrada ? catEncontrada.id : catNombre; 
+          idsACambiar.push(idAEnviar);
+      });
+  }
 
   this.loading = true;
-  this.http.get(url, { responseType: 'blob' }).subscribe({
+
+  // REEMPLAZAMOS EL HTTP.GET MANUAL POR EL SERVICIO
+  this.turnoService.exportarPdfSemanal(semana_id, servicio_id, idsACambiar).subscribe({
     next: (res: Blob) => {
       this.loading = false;
       const blob = new Blob([res], { type: 'application/pdf' });
