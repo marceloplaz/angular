@@ -1261,17 +1261,15 @@ calcularDiasTrabajados(usuario: any): number {
   return fechasUnicas.size;
 }
 
-// 1. Definir una estructura para el resumen
 
+// guarda la asignacion de turnos por servicio
 guardarAsignacion() {
     // AHORA: Solo el turno es estrictamente obligatorio
     if (!this.turnoIdSeleccionado) {
         this.toastr.warning('Por favor seleccione al menos un turno');
         return;
     }
-
     let fechasAEnviar: string[] = [];
-
     // Lógica de fechas (Mensual o Individual)
     if (this.esMensual && this.fechasSeleccionadas) {
         fechasAEnviar = this.fechasSeleccionadas.map(date => 
@@ -1286,6 +1284,7 @@ guardarAsignacion() {
     const payload = {
         usuario_id: this.personalSeleccionado.usuario_id,
         turno_id: this.turnoIdSeleccionado,
+        servicio_id: this.filters.servicio_id,
         // Si no hay área seleccionada, enviamos null para que sea "General"
         area_id: this.areaIdSeleccionado || null, 
         fechas_multiples: fechasAEnviar,
