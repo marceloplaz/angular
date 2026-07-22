@@ -526,45 +526,38 @@ limpiarSemana() {
     });
   }
 // En turnos.ts
-
-  abrirRegistroNovedad(turno: any) {
+abrirRegistroNovedad(turno: any) {
   console.log('Intentando abrir novedad para:', turno);
-  if (!turno) {
-    alert('Por favor, selecciona primero un turno de la tabla.');
-    return;  }
-
-  // 1. Capturamos el ID de la asignación
-  const idAsignacion = turno.id_asignacion || turno.id;
-
-  // 2. Cerramos el modal de "Gestionar Asignación" (el de los botones verde/rojo/amarillo)
-  this.mostrarModalCRUD = false;
-
-  // 3. Activamos el modo registro en el componente Novedad
-  this.idTurnoParaNovedad = idAsignacion;
-  this.mostrarModalNovedad = true;
-
-  // 4. Aseguramos que el historial no esté bloqueando la vista
-  this.verNovedades = false;
-
-  // Forzamos la detección de cambios para que Angular renderice el @if(modoRegistro)
-  this.cdRef.detectChanges();
-}
-
-// Y no olvides el método para cuando termine de guardar
-onNovedadProcesada() {
-  console.log('Novedad guardada con éxito, refrescando tabla...');
-  this.mostrarModalNovedad = false;
-  this.idTurnoParaNovedad = null;
-  this.cargarTurnos(); // Refresca la tabla
-}
-// Este es el método que te pide el error del compilador
-  finalizarNovedad(): void {
-    this.verNovedades = false;        // Cierra el historial si estuviera abierto
-    this.mostrarModalNovedad = false; // Cierra el formulario de registro
-    this.idTurnoParaNovedad = null;   // Limpia el ID seleccionado
-    this.cargarTurnos();              // Refresca la tabla de turnos
+  
+  const idAsignacion = turno?.id_asignacion || turno?.id;
+  if (!idAsignacion) {
+    alert('El turno seleccionado no tiene un ID de asignación válido.');
+    return;
   }
 
+  // 1. Cerramos el modal CRUD anterior
+  this.mostrarModalCRUD = false;
+
+  // 2. Asignamos el ID que espera el input del hijo
+  this.idTurnoParaNovedad = idAsignacion;
+
+  // 3. Activamos la bandera que hace aparecer el componente app-novedad en el HTML principal
+  this.mostrarModalNovedad = true;
+  
+  // 4. Forzamos la detección de cambios
+  this.cdRef.detectChanges();
+}
+finalizarNovedad() {
+  this.mostrarModalNovedad = false;
+  this.idTurnoParaNovedad = null;
+  this.cargarTurnos(); // Refresca tu grilla si es necesario
+}
+
+onNovedadProcesada() {
+  this.mostrarModalNovedad = false;
+  this.idTurnoParaNovedad = null;
+  this.cargarTurnos();
+}
 
   
   cargarCategorias() {
@@ -1232,8 +1225,11 @@ aceptarDias() {
 
 abrirOpcionesTurno(turno: any, personal: any) {
     this.cerrarTodosLosModales();
-    
-    this.turnoSeleccionado = { ...turno }; // Clonamos el objeto
+    this.turnoSeleccionado = { 
+        ...turno,
+        usuario_nombre: turno.usuario_nombre || personal.usuario_nombre,
+        usuario_id: turno.usuario_id || personal.usuario_id
+    };
     this.personalSeleccionado = personal;
     this.mostrarModalCRUD = true; 
 }

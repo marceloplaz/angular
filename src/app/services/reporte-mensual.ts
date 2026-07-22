@@ -28,7 +28,7 @@ export class ReporteMensualService {
   enviarDatosParaPDF(datos: any): void {
     this.enviarDatosSource.next(datos);
   }
-
+// genera el pdf por calendario
   private generarCalendarioMensualPDF(reporte: any): void {
     const doc = new jsPDF('l', 'mm', 'a4');
     const { filtros, contenido } = reporte;
@@ -53,10 +53,9 @@ const desplazamiento = primerDiaDelaSemana === 0 ? 6 : primerDiaDelaSemana - 1;
     
 
     doc.setFontSize(10);
-    doc.text(`ROL MENSUAL DE TURNOS - ${filtros.servicio}`, 14, 22);
-    doc.text(`Mes: ${filtros.mes} | Gestión: ${filtros.gestion} | Categoría: ${filtros.categoria}`, 14, 28);
+    doc.text(`FUNCIONARIO: ${filtros.funcionario || filtros.servicio}`, 14, 22);
+    doc.text(`Servicio: ${filtros.servicio} | Mes: ${filtros.mes} | Gestión: ${filtros.gestion} | Categoría: ${filtros.categoria}`, 14, 28);
 
-    
     const filasCalendario = [];
     let semana: any[] = Array(7).fill("");
 

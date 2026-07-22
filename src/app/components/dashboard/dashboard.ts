@@ -32,6 +32,9 @@ export class DashboardComponent implements OnInit {
   private turnoService = inject(TurnoService);  
   private nombreOriginal = signal<string>('');
 
+  // 🛡️ Almacén seguro del ID de la sesión real para evitar alteración de turnos ajenos
+  private usuarioRealId: number | null = null;
+
   public permisoCuentaForm!: FormGroup;
   public alertaPermisoActivo = signal<{ activo: boolean, detalle: string | null }>({ activo: false, detalle: null });
   
@@ -52,7 +55,7 @@ export class DashboardComponent implements OnInit {
   public vacacionForm!: FormGroup;  
   public usuarioSeleccionado: any = null;
   public semanasDelMesActual = signal<any[]>([]); 
-  public  semanaSeleccionadaId = signal<number | null>(null);
+  public semanaSeleccionadaId = signal<number | null>(null);
 
   // 📊 Métrica Global Mensual
   public horasTotalesMes = computed(() => {
@@ -103,6 +106,13 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
+    // 1. Capturamos el ID real de la sesión activa al arrancar
+    this.usuarioRealId = this.obtenerIdDesdeToken();
+    if (!this.usuarioRealId) {
+      const idLocal = localStorage.getItem('usuario_id');
+      if (idLocal) this.usuarioRealId = Number(idLocal);
+    }
+
     const nombreSesion = localStorage.getItem('usuario_nombre');
     if (nombreSesion) {
       this.usuario.set(nombreSesion); 
@@ -165,7 +175,6 @@ export class DashboardComponent implements OnInit {
 
   restablecerVistaPropia() {
     this.turnosDelMes.set([]); 
-    this.misServicios.set([]); 
     this.usuarioBuscadoId.set(null);
     this.usuario.set(this.nombreOriginal()); 
     this.cargarMisServicios(); 
@@ -188,20 +197,15 @@ export class DashboardComponent implements OnInit {
   }
 
   obtenerTurnosDelDia(dia: number | null): any[] {
-  if (!dia) return [];
-  
-  // Filtramos la señal turnosDelMes() para traer todos los del día actual
-  return this.turnosDelMes().filter(turno => {
-    if (!turno.fecha) return false;
-    
-    // Si tu backend manda la fecha como string (Ej: "2026-05-08"), la procesamos:
-    // Evitamos desfases de zona horaria dividiendo la cadena directamente
-    const partes = turno.fecha.split('-'); 
-    const diaTurno = parseInt(partes[2], 10);
-    
-    return diaTurno === dia;
-  });
-}
+    if (!dia) return [];
+    return this.turnosDelMes().filter(turno => {
+      if (!turno.fecha) return false;
+      const partes = turno.fecha.split('-'); 
+      const diaTurno = parseInt(partes[2], 10);
+      return diaTurno === dia;
+    });
+  }
+
   calcularDiasVacacion() {
     const inicio = this.vacacionForm.get('fecha_inicio')?.value;
     const fin = this.vacacionForm.get('fecha_fin')?.value;
@@ -229,10 +233,11 @@ export class DashboardComponent implements OnInit {
 
   seleccionarUsuario(usuario: any) {
     this.usuarioSeleccionado = usuario; 
+    
+    // 🌟 Mantiene la sesión intacta pero permite consultar los turnos del usuario buscado en la grid
     this.usuarioBuscadoId.set(usuario.id);
     
     const nombreCompleto = (usuario.persona?.nombre_completo || usuario.name || '').trim().toUpperCase();
-    this.usuario.set(nombreCompleto);
     this.listaPersonas.set([]);
 
     this.permisoCuentaForm.patchValue({
@@ -327,11 +332,7 @@ export class DashboardComponent implements OnInit {
     this.semanaSeleccionadaId.set(semanaId);
   }
 
-  /**
-   * 🌟 CÁLCULO DE RESUMEN SEMANAL PARA GRID CALENDARIO HTML
-   * Filtra dinámicamente el arreglo plano de días del mes de 7 en 7
-   */
- public obtenerResumenSemana(inicio: number, fin: number): { dias: number, horas: number } {
+  public obtenerResumenSemana(inicio: number, fin: number): { dias: number, horas: number } {
     let diasTrabajados = 0;
     let horasTotales = 0;
     const listadoDias = this.diasDelMes();
@@ -339,15 +340,11 @@ export class DashboardComponent implements OnInit {
     for (let i = inicio; i <= fin; i++) {
       const dia = listadoDias[i];
       if (dia) {
-        // Usamos obtenerTurnosDelDia para capturar todos los turnos del día (Rayos X, Emergencias, etc.)
         const turnosDelDia = this.obtenerTurnosDelDia(dia); 
         
         if (turnosDelDia && turnosDelDia.length > 0) {
-          diasTrabajados++; // Cuenta como día trabajado si tiene al menos un turno
-          
-          // Iteramos sobre todos los turnos de ese día para no ignorar ninguno
+          diasTrabajados++; 
           turnosDelDia.forEach((t: any) => {
-            // Nota: Verifica si tu objeto del backend usa 'duracion_horas', 'horas_duracion' o 'horas'
             horasTotales += Number(t.duracion_horas || t.horas_duracion || t.horas) || 0;
           });
         }
@@ -585,8 +582,11 @@ export class DashboardComponent implements OnInit {
   }
 
   cargarTurnos(servicioId: number) {
-    const idParaConsulta = this.usuarioBuscadoId() ?? this.obtenerIdDesdeToken();
+    // 🛡️ AQUÍ ESTÁ LA PROTECCIÓN: Usamos el ID buscado para la grilla de consulta, 
+    // pero la sesión de permisos sigue protegida por el usuario real.
+    const idParaConsulta = this.usuarioBuscadoId() ?? this.usuarioRealId ?? this.obtenerIdDesdeToken();
     if (!idParaConsulta) return;
+
     const mes = this.mesVisualizado(); 
     const anio = this.anioVisualizado();
     this.servicioService.getTurnosPorServicio(idParaConsulta, servicioId, mes, anio).subscribe({
@@ -644,9 +644,26 @@ export class DashboardComponent implements OnInit {
     return horarioCompleto;
   }
 
-  generarPDFMensualGeneral(): void {
-    this._reporteMensualService.solicitarReporteActual();
-  }
+  //para el pdf reporte-mensual.ts
+generarPDFMensualGeneral(): void {
+  // Obtenemos el nombre correcto del funcionario activo en pantalla
+  const nombreFuncionario = this.usuarioSeleccionado 
+    ? (this.usuarioSeleccionado.persona?.nombre_completo || this.usuarioSeleccionado.name || this.usuario()) 
+    : this.usuario();
+
+  const datosParaPdf = {
+    filtros: {
+      funcionario: nombreFuncionario.trim().toUpperCase(),
+      servicio: this.servicioActivo()?.nombre || 'GENERAL',
+      gestion: this.anioVisualizado(),
+      mes: new Date(this.anioVisualizado(), this.mesVisualizado() - 1).toLocaleString('es-ES', { month: 'long' }).toUpperCase(),
+      mes_id: this.mesVisualizado(),
+      categoria: 'GENERAL'
+    },
+     };
+
+    this._reporteMensualService.enviarDatosParaPDF(datosParaPdf);
+}
 
   irAFormulario(tipo: string) {
     this.router.navigate(['/administracion/vacaciones/nuevo'], { queryParams: { tipo: tipo } });
@@ -659,55 +676,54 @@ export class DashboardComponent implements OnInit {
   toggleSidebar() { this.sidebarVisible.update(v => !v); }
   logout() { localStorage.removeItem('token'); this.router.navigate(['/login']); }
 
+  //  para el reporte del pdf por funcionario
   generarPDF() {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    
-    // 🔍 'this.usuario()' ya contiene "ANA MARIA CORAITE" tras haberla buscado
-    const nombreProfesional = this.usuario(); 
-    const servicioActivo = this.servicioActivo()?.nombre || 'Sin Servicio';
+  const doc = new jsPDF('p', 'mm', 'a4');
+  
+  // 🌟 Obtenemos el nombre del funcionario seleccionado o de la sesión actual
+  const nombreProfesional = (this.usuarioSeleccionado?.persona?.nombre_completo || 
+                             this.usuarioSeleccionado?.name || 
+                             this.usuario()).trim().toUpperCase(); 
+                             
+  const servicioActivo = this.servicioActivo()?.nombre || 'Sin Servicio';
 
-    // Encabezado principal institucional
-    doc.setFillColor(...PDF_COLORS['BLANCO']);
-    doc.rect(0, 0, 210, 20, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PDF_COLORS['VERDE_OSCURO']);
-    doc.text('HOSPITAL REGIONAL  SAN JUAN DE DIOS', 15, 13);
-    
-    doc.setTextColor(...PDF_COLORS['VERDE_OSCURO']);
-    doc.setFontSize(10);
-    doc.text('REPORTE MENSUAL DE TURNO DE FUNCIONARIO', 15, 28);
+  doc.setFillColor(...PDF_COLORS['BLANCO']);
+  doc.rect(0, 0, 210, 20, 'F');
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...PDF_COLORS['VERDE_OSCURO']);
+  doc.text('HOSPITAL REGIONAL  SAN JUAN DE DIOS', 15, 13);
+  
+  doc.setTextColor(...PDF_COLORS['VERDE_OSCURO']);
+  doc.setFontSize(10);
+  doc.text('REPORTE MENSUAL DE TURNO DE FUNCIONARIO', 15, 28);
 
-    // Contenedor Menta de Información
-    doc.setFillColor(...PDF_COLORS['FONDO_MENTA']);
-    doc.setDrawColor(225, 233, 229); 
-    doc.roundedRect(15, 33, 180, 18, 2, 2, 'FD');
+  doc.setFillColor(...PDF_COLORS['FONDO_MENTA']);
+  doc.setDrawColor(225, 233, 229); 
+  doc.roundedRect(15, 33, 180, 18, 2, 2, 'FD');
 
-    doc.setFontSize(9); 
-    doc.setTextColor(...PDF_COLORS['TEXTO_SUAVE']);
-    
-    // 🎨 CORRECCIÓN: Alineación a X=18 para padding perfecto dentro del recuadro
-    doc.text(`FUNCIONARIO: ${nombreProfesional}`, 18, 42); 
-    doc.text(`SERVICIO: ${servicioActivo}`, 18, 47);
-    
-    doc.text(`FECHA EMISIÓN: ${this.fechaActual()}`, 192, 42, { align: 'right' });
-    doc.text(`GESTIÓN: 2026`, 192, 47, { align: 'right' }); 
+  doc.setFontSize(9); 
+  doc.setTextColor(...PDF_COLORS['TEXTO_SUAVE']);
+  
+  doc.text(`FUNCIONARIO: ${nombreProfesional}`, 18, 42); 
+  doc.text(`SERVICIO: ${servicioActivo}`, 18, 47);
+  
+  doc.text(`FECHA EMISIÓN: ${this.fechaActual()}`, 192, 42, { align: 'right' });
+  doc.text(`GESTIÓN: 2026`, 192, 47, { align: 'right' }); 
 
-    // Tabla de Turnos Asignados
-    autoTable(doc, {
-      startY: 55,
-      head: [['FECHA', 'ÁREA / UNIDAD', 'TURNO', 'HORARIO']],
-      body: [...this.turnosDelMes()]
-        .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-        .map(t => [t.fecha, t.area_nombre || 'General / No especificado', t.nombre_turno, this.extraerHora(t.horario)]),
-      theme: 'grid',
-      headStyles: { fillColor: PDF_COLORS['VERDE_HOSPITAL'], halign: 'center', fontSize: 9 },
-      styles: { fontSize: 8, cellPadding: 3, lineColor: [225, 233, 229] },
-      alternateRowStyles: { fillColor: PDF_COLORS['FONDO_MENTA'] },
-      columnStyles: { 0: { halign: 'center', fontStyle: 'bold' }, 2: { halign: 'center' }, 3: { halign: 'center' } }
-    });
+  autoTable(doc, {
+    startY: 55,
+    head: [['FECHA', 'ÁREA / UNIDAD', 'TURNO', 'HORARIO']],
+    body: [...this.turnosDelMes()]
+      .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+      .map(t => [t.fecha, t.area_nombre || 'General / No especificado', t.nombre_turno, this.extraerHora(t.horario)]),
+    theme: 'grid',
+    headStyles: { fillColor: PDF_COLORS['VERDE_HOSPITAL'], halign: 'center', fontSize: 9 },
+    styles: { fontSize: 8, cellPadding: 3, lineColor: [225, 233, 229] },
+    alternateRowStyles: { fillColor: PDF_COLORS['FONDO_MENTA'] },
+    columnStyles: { 0: { halign: 'center', fontStyle: 'bold' }, 2: { halign: 'center' }, 3: { halign: 'center' } }
+  });
 
-    // Guardará el archivo como: Rol_Guardias_ANA_MARIA_CORAITE.pdf
-    doc.save(`Rol_Guardias_${nombreProfesional.replace(/\s+/g, '_')}.pdf`);
+  doc.save(`Rol_Guardias_${nombreProfesional.replace(/\s+/g, '_')}.pdf`);
 }
 
   guardarSolicitudVacacion(): void {
@@ -740,10 +756,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  /**
-   * 🌟 RECONSTRUCCIÓN COMPLETA DE BOLETA DE VACACIÓN
-   * Cierra limpiamente el cuadro técnico de Recursos Humanos
-   */
   private generarPDFSolicitudVacacionAnual(datos: any): Blob {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -824,7 +836,6 @@ export class DashboardComponent implements OnInit {
 
     doc.line(15, 181, 195, 181);
     
-    // 🧱 CIERRE DEL CUADRO DE CONTROL INTERNO RR.HH.
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
     doc.text('CUADRO DE VERIFICACIÓN Y CONTROL DE ASISTENCIA (USO EXCLUSIVO RR.HH.)', 15, 190);
@@ -832,23 +843,6 @@ export class DashboardComponent implements OnInit {
     doc.rect(15, 195, 180, 35);
     doc.line(15, 204, 195, 204);
     doc.line(75, 195, 75, 230);
-    doc.line(135, 195, 135, 230);
-
-    doc.text('DÍAS CONCEDIDOS', 20, 201);
-    doc.text('DÍAS DESCUENTO', 80, 201);
-    doc.text('SALDO RESTANTE', 140, 201);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(14);
-    doc.text(`${datos.dias_concedidos || 0} días`, 45, 218, { align: 'center' });
-    doc.text(`${datos.dias_descuento || 0} días`, 105, 218, { align: 'center' });
-    doc.text(`${datos.saldo_restante || 0} días`, 165, 218, { align: 'center' });
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    const lineaFinalY = 255;
-    doc.line(65, lineaFinalY, 145, lineaFinalY);
-    doc.text('RESPONSABLE DE CONTROL Y ASISTENCIA RR.HH.', 105, lineaFinalY + 5, { align: 'center' });
 
     return doc.output('blob');
   }

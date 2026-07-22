@@ -223,11 +223,10 @@
                         <div class="col-md-12">
                             <div class="card border-0 shadow-sm p-4 h-100">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h5 class="fw-bold m-0 text-uppercase" style="font-size: 0.9rem;">
+                                  <h5 class="fw-bold m-0 text-uppercase" style="font-size: 0.9rem;">
                                         <i class="bi bi-calendar3 text-warning me-2"></i>
-                                        FUNCIONARIO: {{ servicioActivo()?.nombre || 'Sin servicio seleccionado' }}
+                                FUNCIONARIO: {{ usuarioSeleccionado?.persona?.nombre_completo || usuarioSeleccionado?.name || usuario() }}
                                     </h5>
-                                    
                                     <button (click)="generarPDF()" class="btn btn-sm btn-outline-danger border-0 d-flex align-items-center gap-2 px-3" style="font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
                                         <i class="bi bi-file-earmark-pdf-fill fs-6"></i>
                                         <span>REPORTE-TURNO-HORARIO</span>
