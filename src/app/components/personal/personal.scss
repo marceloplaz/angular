@@ -97,3 +97,10 @@ label {
 :ng-deep .p-paginator .p-link {
     color: var(--hospital-green-dark) !important;
 }
+.celda-turno {
+  font-size: 10px;       /* Letra más pequeña para que encaje perfecto */
+  line-height: 1.1;      /* Reduce el espacio vertical entre líneas */
+  text-align: center;    /* Centrado para que se vea ordenado */
+  padding: 2px;          /* Márgenes internos mínimos */
+  white-space: pre-line; /* Respeta los saltos de línea controlados */
+}

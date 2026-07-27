@@ -26,6 +26,7 @@ export class PersonaService {
 getEspecialista(id: string | number) {
   return this.http.get(`${this.API_URL}/${id}`);
 }
+
 getMatrizTurnos(mes_id: any, gestion: any, filtro: string, categoriaModal?: string): Observable<any> {
   let params = new HttpParams()
     .set('mes_id', mes_id)

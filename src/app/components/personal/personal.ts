@@ -261,19 +261,16 @@ export class PersonalComponent implements OnInit {
   console.log('Generando reporte con:', datosReporte);
   
   if (this.reporteTurnosForm.invalid) {
-    alert('Por favor, completa los datos del mes y la gestión.');
+    alert('Completa los datos del Mes y la Gestión.');
     return;
   }
-
   const { mes_id, gestion } = datosReporte;
   const filtroSeleccionado = datosReporte.categoria_nombre || datosReporte.categoria_id || 'Todos';
   const nombreMes = this.NOMBRES_MESES[Number(mes_id) - 1] || 'General';
-  const tipoSalarioActivo = this.tabActiva || 'Todos'; // 'tgn', 'sus', 'contrato' o 'todos'
+  const tipoSalarioActivo = this.tabActiva || 'Todos'; 
   const categoriaSeleccionadaModal = datosReporte.categoria_nombre || datosReporte.categoria_id;
 
-  
-
-   this._personaService.getMatrizTurnos(mes_id, gestion, tipoSalarioActivo, categoriaSeleccionadaModal).subscribe({
+     this._personaService.getMatrizTurnos(mes_id, gestion, tipoSalarioActivo, categoriaSeleccionadaModal).subscribe({
     
     next: (res: any) => {
       const personalList = res.data || [];
@@ -327,17 +324,42 @@ export class PersonalComponent implements OnInit {
         let diasTrabajados = 0;
         let horasTotales = 0;
 
-        fechasCabecera.forEach(fechaStr => {
-          const turnoEnFecha = (item.turnos || []).find((t: any) => t.fecha === fechaStr);
-          if (turnoEnFecha) {
-            diasTrabajados++;
-            horasTotales += Number(turnoEnFecha.duracion_horas || 8);
-            fila.push(turnoEnFecha.abreviatura || turnoEnFecha.nombre_turno || 'X');
-          } else {
-            fila.push('-');
-          }
-        });
 
+        fechasCabecera.forEach(fechaStr => {
+  const turnoEnFecha = (item.turnos || []).find((t: any) => {
+    const fechaTurno = t.pivot ? t.pivot.fecha : t.fecha;
+    return fechaTurno === fechaStr;
+  });
+
+  if (turnoEnFecha) {
+    diasTrabajados++;
+    horasTotales += Number(turnoEnFecha.duracion_horas || 0);
+
+    const nombreTurno = turnoEnFecha.nombre_turno || 'TURNO';
+    const horaInicio = turnoEnFecha.hora_inicio ? turnoEnFecha.hora_inicio.substring(0, 5) : '';
+    const horaFin = turnoEnFecha.hora_fin ? turnoEnFecha.hora_fin.substring(0, 5) : '';
+    const nombreServicio = turnoEnFecha.pivot ? turnoEnFecha.pivot.nombre_servicio : '';
+
+    // Estructura compacta:
+    // Línea 1: Nombre del turno (ej: Tarde/Noche)
+    // Línea 2: Horas juntas (ej: 13:00 - 07:00)
+    // Línea 3: Servicio en minúscula o abreviado para ahorrar espacio
+    let textoCelda = `${nombreTurno}`;
+    
+    if (horaInicio && horaFin) {
+      textoCelda += `\n${horaInicio}-${horaFin}`; // Sin espacios extra alrededor del guion
+    }
+    
+    if (nombreServicio) {
+      // Opcional: Si el nombre del servicio es muy largo (ej: EMERGENCIAS), puedes mostrarlo entre paréntesis y en tipografía más compacta
+      textoCelda += `\n(${nombreServicio})`;
+    }
+
+    fila.push(textoCelda);
+  } else {
+    fila.push('-');
+  }
+});
         fila.push(diasTrabajados);
         fila.push(`${horasTotales}h`);
         return fila;
