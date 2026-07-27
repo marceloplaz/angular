@@ -51,7 +51,7 @@ export const routes: Routes = [
   path: 'servicios',
   component: ServiciosComponent,
   canActivate: [roleGuard],
-  data: { roles: [...ROLES_JEFATURAS] } // Limpio, ya contiene a la jefa de enfermeras
+  data: { roles: [...ROLES_JEFATURAS,'jefa_enfermeras' ] } 
 },
       {
         path: 'servicios/:id/asignar',
@@ -64,7 +64,7 @@ export const routes: Routes = [
   path: 'turnos', 
   component: TurnosComponent, 
   canActivate: [roleGuard], 
-  data: { roles: [...ROLES_JEFATURAS] } 
+  data: { roles: [...ROLES_JEFATURAS,'jefa_enfermeras']} 
 },
     { 
   path: 'categorias', 

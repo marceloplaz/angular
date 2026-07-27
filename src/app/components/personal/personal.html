@@ -22,7 +22,16 @@
     class="btn btn-outline-danger shadow-sm rounded-pill px-4" 
     (click)="exportarPdf()">
     <i class="bi bi-file-earmark-pdf-fill me-2"></i>
-    Descargar PDF Completo
+    REPORTE-PERSONAL
+  </button>
+</div>
+<div class="d-flex justify-content-end mb-3">
+  <button 
+    class="btn btn-outline-success shadow-sm rounded-pill px-4" 
+    data-bs-toggle="modal" 
+    data-bs-target="#modalReporteTurnosPersonal">
+    <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+    REPORTE-TURNO-PERSONAL
   </button>
 </div>
 
@@ -113,5 +122,74 @@
     
     </div>
   </div>
-
   </div>
+<!-- Modal de Filtros para Reporte de Turnos de Personal -->
+<div class="modal fade" id="modalReporteTurnosPersonal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fs-6 fw-bold">CONFIGURAR REPORTE DE TURNOS</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="reporteTurnosForm">
+          
+          <!-- Selección de Mes y Gestión -->
+          <div class="row g-2 mb-3">
+            <div class="col-md-7">
+              <label class="form-label fw-bold text-secondary small">MES:</label>
+              <select class="form-select" formControlName="mes_id" (change)="actualizarRangoPorMes()">
+                <option [value]="1">Enero</option>
+                <option [value]="2">Febrero</option>
+                <option [value]="3">Marzo</option>
+                <option [value]="4">Abril</option>
+                <option [value]="5">Mayo</option>
+                <option [value]="6">Junio</option>
+                <option [value]="7">Julio</option>
+                <option [value]="8">Agosto</option>
+                <option [value]="9">Septiembre</option>
+                <option [value]="10">Octubre</option>
+                <option [value]="11">Noviembre</option>
+                <option [value]="12">Diciembre</option>
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label fw-bold text-secondary small">GESTIÓN:</label>
+              <input type="number" class="form-control" formControlName="gestion" (change)="actualizarRangoPorMes()">
+            </div>
+          </div>
+
+          <!-- Rango de Fechas (Auto-completadas) -->
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold text-secondary small">FECHA INICIO:</label>
+              <input type="date" class="form-control" formControlName="fecha_inicio">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold text-secondary small">FECHA FIN:</label>
+              <input type="date" class="form-control" formControlName="fecha_fin">
+            </div>
+          </div>
+
+<div class="mb-3">
+    <label class="form-label fw-bold text-secondary small">CATEGORÍA A REPORTAR:</label>
+    <select class="form-select" formControlName="categoria_id">
+        <option value="TODOS">-- TODAS LAS CATEGORÍAS --</option>
+        <option *ngFor="let cat of categorias" [value]="cat.id">
+            {{ cat.nombre }}
+        </option>
+    </select>
+    <div class="form-text text-muted">Seleccione la categoría correspondiente para el reporte.</div>
+</div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+  <button class="btn btn-success" (click)="generarPdfTurnosPersonal()" data-bs-dismiss="modal">
+    Generar Matriz de Turnos PDF
+  </button>
+</div>
+    </div>
+  </div>
+</div>

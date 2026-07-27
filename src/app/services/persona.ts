@@ -1,5 +1,5 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
+import { inject, Injectable} from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 
@@ -26,6 +26,41 @@ export class PersonaService {
 getEspecialista(id: string | number) {
   return this.http.get(`${this.API_URL}/${id}`);
 }
+getMatrizTurnos(mes_id: any, gestion: any, filtro: string, categoriaModal?: string): Observable<any> {
+  let params = new HttpParams()
+    .set('mes_id', mes_id)
+    .set('gestion', gestion);
+
+  const tiposSalarioValidos = ['tgn', 'sus', 'contrato'];
+
+  if (filtro && filtro.toLowerCase() !== 'todos') {
+    // Si la pestaña activa es un tipo de salario, lo enviamos
+    if (tiposSalarioValidos.includes(filtro.toLowerCase())) {
+      params = params.set('tipo_salario', filtro);
+    } else {
+      // Si no es salario, se trata de una categoría del filtro general
+      if (!isNaN(Number(filtro))) {
+        params = params.set('categoria_id', filtro);
+      } else {
+        params = params.set('categoria_nombre', filtro);
+      }
+    }
+  }
+
+  // Si además viene una categoría específica desde el modal, la agregamos obligatoriamente
+  if (categoriaModal && categoriaModal.toLowerCase() !== 'todos' && categoriaModal.toLowerCase() !== 'todas') {
+    if (!isNaN(Number(categoriaModal))) {
+      params = params.set('categoria_id', categoriaModal);
+    } else {
+      params = params.set('categoria_nombre', categoriaModal);
+    }
+  }
+
+  return this.http.get<any>(`${this.API_URL}/reporte-turnos`, { 
+    params, 
+    headers: this.getHeaders() 
+  });
+}
 
 exportarPdf(): Observable<Blob> {
   // "/usuarios","" , la limpiamos:
@@ -42,11 +77,6 @@ getPersonas(): Observable<any> {
   return this.http.get<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
 }
 
-
-  /**
-   * Registra un nuevo usuario con su respectiva persona y rol.
-   * Acepta el objeto anidado del Send Request
-   */
   crearPersona(datos: any): Observable<any> {
     // CORRECCIÓN: Se usa this.API_URL y se agregan los headers con el token
     return this.http.post<any>(this.API_URL, datos, { headers: this.getHeaders() });
@@ -59,6 +89,7 @@ getPersonas(): Observable<any> {
   deletePersona(id: number): Observable<any> {
     return this.http.delete<any>(`${this.API_URL}/${id}`, { headers: this.getHeaders() });
   }
+  
 getCatalogosFormulario(): Observable<any> {
   const urlLimpia = this.API_URL.replace('/usuarios', '') + '/persona-catalogos';
   return this.http.get(urlLimpia, { headers: this.getHeaders() });
