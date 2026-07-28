@@ -255,27 +255,24 @@ export class PersonalComponent implements OnInit {
       }
     });
   }
-
- generarPdfTurnosPersonal(): void {
+generarPdfTurnosPersonal(): void {
   const datosReporte = this.reporteTurnosForm.value;
-  console.log('Generando reporte con:', datosReporte);
-  
-  if (this.reporteTurnosForm.invalid) {
+    if (this.reporteTurnosForm.invalid) {
     alert('Completa los datos del Mes y la Gestión.');
     return;
   }
-  const { mes_id, gestion } = datosReporte;
+  const { mes_id, gestion, fecha_inicio, fecha_fin } = datosReporte;// 🟢 Extraemos las fechas del form
   const filtroSeleccionado = datosReporte.categoria_nombre || datosReporte.categoria_id || 'Todos';
   const nombreMes = this.NOMBRES_MESES[Number(mes_id) - 1] || 'General';
   const tipoSalarioActivo = this.tabActiva || 'Todos'; 
   const categoriaSeleccionadaModal = datosReporte.categoria_nombre || datosReporte.categoria_id;
 
-     this._personaService.getMatrizTurnos(mes_id, gestion, tipoSalarioActivo, categoriaSeleccionadaModal).subscribe({
-    
+  
+  this._personaService.getMatrizTurnos(mes_id, gestion, tipoSalarioActivo, categoriaSeleccionadaModal, fecha_inicio, fecha_fin).subscribe({
     next: (res: any) => {
       const personalList = res.data || [];
-      const fecha_inicio = res.fecha_inicio;
-      const fecha_fin = res.fecha_fin;
+      const fechaInicioReal = res.fecha_inicio;
+      const fechaFinReal = res.fecha_fin;
       const nombreFiltroAplicado = res.nombre_categoria || filtroSeleccionado;
 
       if (personalList.length === 0) {
@@ -301,10 +298,9 @@ export class PersonalComponent implements OnInit {
       doc.text(`PERIODO: Del ${fecha_inicio} al ${fecha_fin}`, 14, 39);
 
       // Generar columnas de días (del 1 al 31 según el mes)
-      const fechasCabecera: string[] = [];
-      let currDate = new Date(fecha_inicio + 'T00:00:00');
-      const endDate = new Date(fecha_fin + 'T00:00:00');
-      
+    const fechasCabecera: string[] = [];
+      let currDate = new Date(fechaInicioReal + 'T00:00:00');
+      const endDate = new Date(fechaFinReal + 'T00:00:00');
       while (currDate <= endDate) {
         fechasCabecera.push(currDate.toISOString().split('T')[0]);
         currDate.setDate(currDate.getDate() + 1);
@@ -317,6 +313,27 @@ export class PersonalComponent implements OnInit {
         'HORAS'
       ];
 
+      // Función auxiliar para abreviar servicios largos y que quepan en la celda
+      const abreviarServicio = (nombre: string): string => {
+        if (!nombre) return '';
+        const map: { [key: string]: string } = {
+          'HEMODIALISIS': 'HEM',
+          'CIRUGIA MUJERES': 'CIR.M',
+          'CIRUGIA VARONES': 'CIR.V',
+          'MEDICINA MUJERES': 'MED.M',
+          'MEDICINA VARONES': 'MED.V',
+          'GINECOLOGIA': 'GIN',
+          'MATERNIDAD': 'MAT',
+          'QUIROFANO': 'QFNO',
+          'PEDIATRIA': 'PED',
+          'NEONATOLOGIA': 'NEO',
+          'EMERGENCIAS': 'EME',
+         
+        };
+        const upper = nombre.toUpperCase();
+        return map[upper] || upper.substring(0, 3); // Si no está en la lista, toma las primeras 5 letras
+      };
+
       // Mapear filas con los turnos reales devueltos por Laravel
       const bodyRows = personalList.map((item: any) => {
         const nombre = (item.persona?.nombre_completo || item.name || 'SIN NOMBRE').toUpperCase();
@@ -324,55 +341,81 @@ export class PersonalComponent implements OnInit {
         let diasTrabajados = 0;
         let horasTotales = 0;
 
-
         fechasCabecera.forEach(fechaStr => {
-  const turnoEnFecha = (item.turnos || []).find((t: any) => {
-    const fechaTurno = t.pivot ? t.pivot.fecha : t.fecha;
-    return fechaTurno === fechaStr;
-  });
+          const turnoEnFecha = (item.turnos || []).find((t: any) => {
+            const fechaTurno = t.pivot ? t.pivot.fecha : t.fecha;
+            return fechaTurno === fechaStr;
+          });
 
-  if (turnoEnFecha) {
-    diasTrabajados++;
-    horasTotales += Number(turnoEnFecha.duracion_horas || 0);
+          if (turnoEnFecha) {
+            diasTrabajados++;
+            horasTotales += Number(turnoEnFecha.duracion_horas || 0);
 
-    const nombreTurno = turnoEnFecha.nombre_turno || 'TURNO';
-    const horaInicio = turnoEnFecha.hora_inicio ? turnoEnFecha.hora_inicio.substring(0, 5) : '';
-    const horaFin = turnoEnFecha.hora_fin ? turnoEnFecha.hora_fin.substring(0, 5) : '';
-    const nombreServicio = turnoEnFecha.pivot ? turnoEnFecha.pivot.nombre_servicio : '';
+            // Abreviar el nombre del turno si es muy largo (ej: Tarde/Noche -> T/N o mantener si entra)
+            let nombreTurno = turnoEnFecha.nombre_turno || 'TURNO';
+            if (nombreTurno.toLowerCase().includes('tarde/noche')) nombreTurno = 'T/N';
+            if (nombreTurno.toLowerCase().includes('mañana/tarde')) nombreTurno = 'M/T';
+            if (nombreTurno.toLowerCase().includes('noche')) nombreTurno = 'N';
 
-    // Estructura compacta:
-    // Línea 1: Nombre del turno (ej: Tarde/Noche)
-    // Línea 2: Horas juntas (ej: 13:00 - 07:00)
-    // Línea 3: Servicio en minúscula o abreviado para ahorrar espacio
-    let textoCelda = `${nombreTurno}`;
-    
-    if (horaInicio && horaFin) {
-      textoCelda += `\n${horaInicio}-${horaFin}`; // Sin espacios extra alrededor del guion
-    }
-    
-    if (nombreServicio) {
-      // Opcional: Si el nombre del servicio es muy largo (ej: EMERGENCIAS), puedes mostrarlo entre paréntesis y en tipografía más compacta
-      textoCelda += `\n(${nombreServicio})`;
-    }
+            const horaInicio = turnoEnFecha.hora_inicio ? turnoEnFecha.hora_inicio.substring(0, 3) : '';
+            const horaFin = turnoEnFecha.hora_fin ? turnoEnFecha.hora_fin.substring(0, 3) : '';
+            const rawServicio = turnoEnFecha.pivot ? turnoEnFecha.pivot.nombre_servicio : '';
+            const servicioCorto = abreviarServicio(rawServicio);
 
-    fila.push(textoCelda);
-  } else {
-    fila.push('-');
-  }
-});
+            // Estructura ultra compacta en líneas separadas para jsPDF
+            let textoCelda = `${nombreTurno}`;
+            if (horaInicio && horaFin) {
+              textoCelda += `\n${horaInicio}-${horaFin}`;
+            }
+            if (servicioCorto) {
+              textoCelda += `\n${servicioCorto}`;
+            }
+
+            fila.push(textoCelda);
+          } else {
+            fila.push('-');
+          }
+        });
+
         fila.push(diasTrabajados);
         fila.push(`${horasTotales}h`);
         return fila;
       });
+
+      // Definir anchos de columna personalizados para que la hoja A4 horizontal (297mm) distribuya bien el espacio
+      const columnStylesConfig: any = {
+        0: { halign: 'left', fontStyle: 'bold', cellWidth: 42 } // Columna de nombre más ancha
+      };
+
+      // Asignar un ancho pequeño y uniforme a cada una de las columnas de los días (ej. 6.5mm por día)
+      let currentIdx = 1;
+      fechasCabecera.forEach(() => {
+        columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: 6.5 };
+        currentIdx++;
+      });
+      // Columnas finales de DÍAS y HORAS
+      columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: 10, fontStyle: 'bold' };     // Días
+      columnStylesConfig[currentIdx + 1] = { halign: 'center', cellWidth: 12, fontStyle: 'bold' }; // Horas
 
       autoTable(doc, {
         startY: 43,
         head: [headColumns],
         body: bodyRows,
         theme: 'grid',
-        headStyles: { fillColor: PDF_COLORS['VERDE_HOSPITAL'], halign: 'center', fontSize: 6, cellPadding: 1 },
-        styles: { fontSize: 6, cellPadding: 1, halign: 'center', valign: 'middle' },
-        columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 45 } },
+        headStyles: { 
+          fillColor: PDF_COLORS['VERDE_HOSPITAL'], 
+          halign: 'center', 
+          fontSize: 5.5, 
+          cellPadding: 1 
+        },
+        styles: { 
+          fontSize: 4,           // Letra minúscula para que los 3 datos entren perfecto en vertical
+          cellPadding: 0.8,      // Margen interno mínimo
+          halign: 'center', 
+          valign: 'middle',
+          font: 'helvetica'
+        },
+        columnStyles: columnStylesConfig,
         alternateRowStyles: { fillColor: [245, 247, 246] }
       });
 

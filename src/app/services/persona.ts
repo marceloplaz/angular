@@ -27,19 +27,25 @@ getEspecialista(id: string | number) {
   return this.http.get(`${this.API_URL}/${id}`);
 }
 
-getMatrizTurnos(mes_id: any, gestion: any, filtro: string, categoriaModal?: string): Observable<any> {
+getMatrizTurnos(mes_id: any, gestion: any, filtro: string, categoriaModal?: string, fecha_inicio?: string, fecha_fin?: string): Observable<any> {
   let params = new HttpParams()
     .set('mes_id', mes_id)
     .set('gestion', gestion);
 
+  // 🟢 Adjuntamos las fechas si se proporcionan opcionalmente
+  if (fecha_inicio) {
+    params = params.set('fecha_inicio', fecha_inicio);
+  }
+  if (fecha_fin) {
+    params = params.set('fecha_fin', fecha_fin);
+  }
+
   const tiposSalarioValidos = ['tgn', 'sus', 'contrato'];
 
   if (filtro && filtro.toLowerCase() !== 'todos') {
-    // Si la pestaña activa es un tipo de salario, lo enviamos
     if (tiposSalarioValidos.includes(filtro.toLowerCase())) {
       params = params.set('tipo_salario', filtro);
     } else {
-      // Si no es salario, se trata de una categoría del filtro general
       if (!isNaN(Number(filtro))) {
         params = params.set('categoria_id', filtro);
       } else {
@@ -48,7 +54,6 @@ getMatrizTurnos(mes_id: any, gestion: any, filtro: string, categoriaModal?: stri
     }
   }
 
-  // Si además viene una categoría específica desde el modal, la agregamos obligatoriamente
   if (categoriaModal && categoriaModal.toLowerCase() !== 'todos' && categoriaModal.toLowerCase() !== 'todas') {
     if (!isNaN(Number(categoriaModal))) {
       params = params.set('categoria_id', categoriaModal);
