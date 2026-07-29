@@ -25,8 +25,8 @@ export class SemanaMesComponent implements OnInit {
 
   ngOnInit(): void {
     this.inicializarFormulario();
-    this.cargarMeses();       // <--- 1. Cargamos los meses al iniciar
-    this.cargarCategorias();  // <--- 2. Cargamos las categorías al iniciar
+    this.cargarMeses();       
+    this.cargarCategorias();  
 
     this.generarForm = this.fb.group({
     fecha_inicio: [''],

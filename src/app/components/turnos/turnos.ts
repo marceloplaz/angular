@@ -313,7 +313,7 @@ verificarEstadoBloqueo(): void {
     text: "Esta acción afectará la disponibilidad de descarga del reporte mensual para todos los usuarios.",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#004d40', // Verde hospital
+    confirmButtonColor: '#004d40', 
     cancelButtonColor: '#d33',
     confirmButtonText: 'Sí, confirmar'
   }).then((result) => {
@@ -396,26 +396,77 @@ actualizarNombresDeFiltros() {
   this.filters.categoria_nombre = cat ? cat.nombre : 'TODAS';
 }
 
+
 onMesChange(mesId: any) {
   this.filters.mes_id = mesId; 
   const mesSeleccionado = this.mesesDisponibles.find((m: any) => m.id == mesId);
-  
+ 
   if (mesSeleccionado) {
     this.filters.mes_nombre = mesSeleccionado.nombre ? mesSeleccionado.nombre.toUpperCase() : '';
     
-    // Leemos el listado de semanas directo del objeto del mes seleccionado
-    this.semanasDisponibles = mesSeleccionado.semanas || [];
-    
-    if (this.semanasDisponibles.length > 0) {
-      this.filters.semana_id = this.semanasDisponibles[0].id;
-    } else {
-      this.filters.semana_id = null;
-      this.personalAgrupado = [];
-    }
+    // Aquí filtramos las semanas según la categoría seleccionada
+    this.actualizarSemanasDisponibles(mesSeleccionado);
   }
+  
   this.verificarEstadoBloqueo();
   this.cargarTurnos();
 }
+//actualizamos las semanas segun la categoria
+actualizarSemanasDisponibles(mesSeleccionado: any) {
+  const todasLasSemanas = mesSeleccionado.semanas || [];
+
+  if (this.categoriasSeleccionadas.length === 0) {
+    this.semanasDisponibles = todasLasSemanas;
+  } else {
+    // Filtramos las semanas que pertenezcan a los IDs de las categorías seleccionadas
+    // (Asumiendo que cada semana en tu JSON trae un campo 'categoria_id')
+    const idsCategoriasSeleccionadas = this.categoriasSeleccionadas.map(nombreCat => {
+      const cat = this.categorias.find(c => c.nombre === nombreCat);
+      return cat ? cat.id : null;
+    });
+
+    this.semanasDisponibles = todasLasSemanas.filter((s: any) => 
+      !s.categoria_id || idsCategoriasSeleccionadas.includes(s.categoria_id)
+    );
+  }
+
+  // Auto-seleccionar la primera semana disponible del filtro resultante
+  if (this.semanasDisponibles.length > 0) {
+    this.filters.semana_id = this.semanasDisponibles[0].id;
+  } else {
+    this.filters.semana_id = null;
+    this.personalAgrupado = [];
+  }
+}
+// 3. Actualizar el método cuando cambian las categorías 
+
+toggleCategoria(nombreCategoria: string) {
+  const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
+  
+  if (index > -1) {
+    this.categoriasSeleccionadas.splice(index, 1);
+  } else {
+    this.categoriasSeleccionadas.push(nombreCategoria);
+  }
+  
+  // Re-filtramos el personal en la tabla
+  this.filtrarPersonal();
+
+  // Y actualizamos las semanas del mes actual en base a la nueva selección de categoría
+  const mesActual = this.mesesDisponibles.find((m: any) => m.id == this.filters.mes_id);
+  if (mesActual) {
+    // Buscamos dentro de la estructura general de gestiones para obtener las semanas originales del mes
+    const gestionActual = this.todasLasGestiones?.find((g: any) => g.año == this.filters.gestion);
+    const mesOriginal = gestionActual?.meses?.find((m: any) => m.id == this.filters.mes_id);
+    
+    if (mesOriginal) {
+      this.actualizarSemanasDisponibles(mesOriginal);
+    }
+  }
+
+  this.cargarTurnos();
+}
+
 
 
 
@@ -598,6 +649,7 @@ cargarConfiguracionInicial() {
     const data = resCal.data || resCal;
     this.todasLasGestiones = data.gestiones; // Guardamos todo el árbol en una variable nueva
 
+    
     // Buscamos el año 2026 (o el que tengas en filters.gestion)
     const gestionActual = this.todasLasGestiones?.find((g: any) => g.año == this.filters.gestion);
     
@@ -669,20 +721,22 @@ cargarTurnos() {
         }
     });
 }
-toggleCategoria(nombreCategoria: string) {
-  const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
+
+//toggleCategoria(nombreCategoria: string) {
+  //const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
   
-  if (index > -1) {
+  //if (index > -1) {
     // Si ya está seleccionado, lo quitamos
-    this.categoriasSeleccionadas.splice(index, 1);
-  } else {
+    //this.categoriasSeleccionadas.splice(index, 1);
+  //} else {
     // Si no está, lo añadimos
-    this.categoriasSeleccionadas.push(nombreCategoria);
-  }
-  
-  // Ya no actualizamos un único 'categoria_id', porque ahora manejamos múltiples
-  this.filtrarPersonal();
-}
+    //this.categoriasSeleccionadas.push(nombreCategoria);
+  //}
+    // Ya no actualizamos un único 'categoria_id', porque ahora manejamos múltiples
+  //this.filtrarPersonal();
+//}
+
+
 
 filtrarPersonal() {
   if (this.categoriasSeleccionadas.length === 0) {
