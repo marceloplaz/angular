@@ -17,6 +17,7 @@ import { VacacionComponent } from './components/vacaciones/vacaciones';
 import { NovedadComponent } from './components/novedad/novedad';
 import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
 import { PermisosRolesComponent } from './components/permisos-roles/permisos-roles';
+import { SemanaMesComponent } from './components/semana-mes/semana-mes';
 
 
 
@@ -103,7 +104,12 @@ export const routes: Routes = [
         canActivate: [roleGuard], 
         data: { roles: ['super_admin', 'admin'] }
       },
-
+      {
+       path: 'semana-mes', // O la ruta que prefieras para la URL (ej: 'gestion-semanas')
+        component: SemanaMesComponent, 
+        canActivate: [roleGuard], 
+        data: { roles: ['super_admin', 'admin'] }
+      },
  
  
     

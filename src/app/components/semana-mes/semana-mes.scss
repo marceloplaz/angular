@@ -1,0 +1,36 @@
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.x-small {
+  font-size: 0.78rem !important;
+}
+
+.bg-success-light {
+  background-color: rgba(42, 121, 83, 0.12);
+}
+
+// 🎯 Contenedor principal de filtros de semana y mes
+.container-config-box {
+  background-color: #fafbfc;
+  border: 1px solid #eaedf1 !important;
+  border-radius: 8px;
+
+  label {
+    color: #334155;
+    font-size: 0.88rem;
+  }
+
+  /* Estilizado unificado para los selects de la barra de filtros */
+  .form-select {
+    font-size: 0.88rem;
+    border-color: #cbd5e1;
+    border-radius: 6px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+      border-color: #2a7953;
+      box-shadow: 0 0 0 0.2rem rgba(42, 121, 83, 0.15);
+    }
+  }
+}
