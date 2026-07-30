@@ -14,6 +14,7 @@ export class SemanaMesComponent implements OnInit {
 
   filtroForm!: FormGroup;
   listaMeses: any[] = [];
+  listaGestiones: any[] = [];
   listaCategorias: any[] = [];
   listaSemanas: any[] = [];
   generarForm!: FormGroup;
@@ -25,36 +26,69 @@ export class SemanaMesComponent implements OnInit {
 
   ngOnInit(): void {
     this.inicializarFormulario();
-    this.cargarMeses();       
+    this.cargarGestiones();      // <-- Única llamada inicial principal
     this.cargarCategorias();  
 
     this.generarForm = this.fb.group({
-    fecha_inicio: [''],
-    fecha_fin: ['']
-});
-
+      fecha_inicio: [''],
+      fecha_fin: ['']
+    });
   }
 
   inicializarFormulario(): void {
     const gestionActual = new Date().getFullYear();
 
     this.filtroForm = this.fb.group({
-      mes_id: [''],         // Iniciamos vacío para que se seleccione tras cargar la lista
+      mes_id: [''],        
       gestion: [gestionActual],
       categoria_id: [''],
       semana_id: [null]
     });
   }
 
-  // Método para obtener los meses desde el backend
-  cargarMeses(): void {
-    this.accesoService.getMeses().subscribe({
+
+
+  cargarGestiones(): void {
+    this.accesoService.getGestiones().subscribe({
+      next: (gestiones: any[]) => {
+        this.listaGestiones = gestiones; 
+        
+        const anioActual = new Date().getFullYear();
+        const gestionActualEnLista = this.listaGestiones.find(g => g.anio == anioActual) || this.listaGestiones[0];
+
+if (gestionActualEnLista && !this.filtroForm.get('gestion')?.value) {
+  this.filtroForm.patchValue({ gestion: gestionActualEnLista.anio });
+}
+        
+        // --- AQUÍ ESTÁ LA CLAVE ---
+        // Llamamos a cargarMeses() solo DESPUÉS de que las gestiones ya llegaron y se seleccionó una por defecto.
+        this.cargarMeses();
+      },
+      error: (err: any) => console.error('Error al cargar gestiones:', err)
+    });
+  }
+cargarMeses(): void {
+    const gestionSeleccionada = this.filtroForm.get('gestion')?.value;
+    const mesActualSeleccionado = this.filtroForm.get('mes_id')?.value; // Guardamos el mes actual
+    
+    this.accesoService.getMeses(gestionSeleccionada).subscribe({
       next: (meses: any[]) => {
         this.listaMeses = meses;
-        // Si hay meses, seleccionamos el primero por defecto o dejamos que el usuario elija
-        if (this.listaMeses.length > 0 && !this.filtroForm.get('mes_id')?.value) {
-          this.filtroForm.patchValue({ mes_id: this.listaMeses[0].id });
-          this.actualizarSemanas(); // Actualizamos las semanas del primer mes cargado
+        if (this.listaMeses.length > 0) {
+          // Verificamos si el mes que tenías seleccionado existe en la nueva lista
+          const existeMes = this.listaMeses.some(m => m.id == mesActualSeleccionado);
+
+          if (!existeMes) {
+            // Solo si no hay uno válido seleccionado, ponemos el primero por defecto (Enero)
+            this.filtroForm.patchValue({ mes_id: this.listaMeses[0].id });
+          }
+          
+          this.actualizarSemanas(); 
+        } else {
+          this.listaMeses = [];
+          this.listaSemanas = [];
+          this.filtroForm.patchValue({ mes_id: '', semana_id: null });
+          this.semanaSeleccionada.emit(null);
         }
       },
       error: (err) => console.error('Error al cargar meses:', err)
@@ -96,17 +130,24 @@ export class SemanaMesComponent implements OnInit {
     }
   }
 
+
   onSemanaChange(event: any): void {
-    const semanaId = event.target.value;
+    const semanaId = event.target ? event.target.value : event;
     const seleccion = this.listaSemanas.find(s => s.id == semanaId);
+    
     if (seleccion) {
       this.semanaSeleccionada.emit(seleccion);
+          this.generarForm.patchValue({
+        fecha_inicio: seleccion.fecha_inicio,
+        fecha_fin: seleccion.fecha_fin
+      });
     }
   }
 
-  onFiltroCambio() {
-    this.actualizarSemanas(); // Unificamos la lógica para que llame a la misma función de actualización
+ onFiltroCambio() {
+    this.cargarMeses(); 
   }
+
 
 ejecutarGeneracionSemanas(): void {
   const mesId = this.filtroForm.get('mes_id')?.value;
@@ -138,5 +179,30 @@ ejecutarGeneracionSemanas(): void {
   });
 }
 
+guardarModificacionSemana(): void {
+    const semanaActual = this.filtroForm.get('semana_id')?.value;
+    const { fecha_inicio, fecha_fin } = this.generarForm.value;
+
+    if (!semanaActual) {
+      alert('Por favor selecciona una semana para modificar.');
+      return;
+    }
+
+    const payload = {
+      fecha_inicio: fecha_inicio,
+      fecha_fin: fecha_fin
+    };
+
+    this.accesoService.actualizarSemana(semanaActual, payload).subscribe({
+      next: (res) => {
+        alert(res.message || 'Semana modificada correctamente');
+        this.actualizarSemanas(); // Recarga las semanas para reflejar los cambios
+      },
+      error: (err) => {
+        console.error('Error al modificar semana:', err);
+        alert('Ocurrió un error al actualizar la semana.');
+      }
+    });
+  }
   
 }

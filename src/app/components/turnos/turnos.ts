@@ -56,6 +56,7 @@ export class TurnosComponent implements OnInit {
   // Propiedades de datos
   servicios: any[] = [];
   categorias: any[] = [];
+  gestionesDisponibles: any[] = [];
   mesesDisponibles: any[] = [];
   semanasDisponibles: any[] = [];
   personalAgrupado: any[] = []; 
@@ -640,40 +641,49 @@ cargarTiposDeTurnos() {
     }
   });
 }
-
-
 // 1. Carga inicial (Corre una sola vez al abrir el componente)
 cargarConfiguracionInicial() {
   this.loading = true;
   this.turnoService.getConfiguracionCalendario().subscribe((resCal: any) => {
     const data = resCal.data || resCal;
-    this.todasLasGestiones = data.gestiones; // Guardamos todo el árbol en una variable nueva
+    this.todasLasGestiones = data.gestiones || [];  
 
-    
-    // Buscamos el año 2026 (o el que tengas en filters.gestion)
-    const gestionActual = this.todasLasGestiones?.find((g: any) => g.año == this.filters.gestion);
+    // Mapeamos todas las gestiones para el selector visual
+    this.gestionesDisponibles = this.todasLasGestiones.map((g: any) => ({
+      id: g.id,
+      anio: g.año
+    }));
+
+    // Si filters.gestion no tiene valor, le asignamos el primer año disponible
+    if (!this.filters.gestion && this.gestionesDisponibles.length > 0) {
+      this.filters.gestion = this.gestionesDisponibles[0].anio;
+    }
+
+    // Buscamos la gestión actual usando doble igual (==) para evitar problemas de tipos (string vs number)
+    const gestionActual = this.todasLasGestiones.find((g: any) => g.año == this.filters.gestion) || this.todasLasGestiones[0];
     
     if (gestionActual) {
-      this.mesesDisponibles = gestionActual.meses;
-      // Buscamos el mes que el servidor dice que es el "actual"
+      this.filters.gestion = gestionActual.año; // Sincronizamos formato
+      this.mesesDisponibles = gestionActual.meses || [];
+      
       const mesActual = this.mesesDisponibles.find((m: any) => m.numero_mes == data.mes_actual) || this.mesesDisponibles[0];
       
       if (mesActual) {
         this.filters.mes_id = mesActual.id;
-        this.semanasDisponibles = mesActual.semanas;
+        this.semanasDisponibles = mesActual.semanas || [];
         this.filters.semana_id = this.semanasDisponibles[0]?.id;
-        //carga la semana inicial de las fechas 
+        
         if (this.semanasDisponibles[0]?.fecha_inicio) {
-         this.generarFechasDeLaSemana(this.semanasDisponibles[0].fecha_inicio);
-  }
-
+          this.generarFechasDeLaSemana(this.semanasDisponibles[0].fecha_inicio);
+        }
       }
     }
+    
     this.cargarTurnos();
     this.loading = false;
+    this.cdRef.detectChanges(); 
   });
 }
-
 // 2. Nueva función: Se dispara cuando el usuario cambia el año en el <select>
 onCambioGestion() {
   const gestion = this.todasLasGestiones.find((g: any) => g.año == this.filters.gestion);

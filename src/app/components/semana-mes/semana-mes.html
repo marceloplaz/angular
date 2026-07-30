@@ -1,14 +1,17 @@
 <div class="row g-3 align-items-center p-3 bg-light rounded shadow-sm" [formGroup]="filtroForm">
-  
-  <!-- GESTIÓN -->
-  <div class="col-md-2">
-    <label class="form-label fw-bold">Gestión:</label>
-    <select class="form-select" formControlName="gestion" (change)="onFiltroCambio()">
-      <option value="2026">2026</option>
-    </select>
-  </div>
+ <!-- GESTIÓN -->
+<div class="col-md-2" [formGroup]="filtroForm">
+  <label class="form-label fw-bold">Gestión:</label>
+  <select class="form-select" formControlName="gestion" (change)="onFiltroCambio()">
+    <option *ngFor="let g of listaGestiones" [value]="g.anio">
+      {{ g.anio }}
+    </option>
+  </select>
+</div>
+        
+   
 
-  <!-- MES -->
+ 
   <div class="col-md-3">
     <label class="form-label fw-bold">Mes:</label>
     <select class="form-select" formControlName="mes_id" (change)="onFiltroCambio()">

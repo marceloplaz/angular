@@ -36,9 +36,21 @@ export class AccesoService {
     return this.http.post<any>(`${this.apiUrl}/generar-semanas`, data);
   }
 
-  // --- NUEVOS MÉTODOS PARA LLENAR LOS SELECTS ---
-  getMeses(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/meses`);
+  getGestiones(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/gestiones`);
+  }
+
+  actualizarSemana(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/semanas/${id}`, data);
+  }
+ 
+
+  getMeses(gestion?: any): Observable<any> {
+    let params = new HttpParams();
+    if (gestion) {
+      params = params.set('gestion', gestion);
+    }
+    return this.http.get<any>(`${this.apiUrl}/meses`, { params });
   }
 
   getCategorias(): Observable<any> {

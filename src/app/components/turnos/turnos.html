@@ -36,12 +36,14 @@
 </div>
 
 
-      <div class="col-md-1">
-        <label class="form-label small fw-bold text-success">GESTIÓN</label>
-        <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.gestion" (change)="onCambioGestion()">
-          <option value="2026">2026</option>
-               </select>
-      </div>
+        <div class="col-md-1">
+            <label class="form-label small fw-bold text-success">GESTIÓN</label>
+            <select class="form-select form-select-sm border-success shadow-none" [(ngModel)]="filters.gestion" (change)="onCambioGestion()">
+                <option *ngFor="let g of gestionesDisponibles" [value]="g.anio">
+                    {{ g.anio }}
+                </option>
+            </select>
+        </div>
 
       <div class="col-md-2">
         <label class="form-label small fw-bold text-success mb-1">MES</label>
