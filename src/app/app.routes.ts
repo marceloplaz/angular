@@ -18,6 +18,7 @@ import { NovedadComponent } from './components/novedad/novedad';
 import { ConfiguracionSistemaComponent } from './components/configuracion-sistema/configuracion-sistema';
 import { PermisosRolesComponent } from './components/permisos-roles/permisos-roles';
 import { SemanaMesComponent } from './components/semana-mes/semana-mes';
+import { UpdatePersonalComponent } from './components/personal/update-personal/update-personal';
 
 
 
@@ -35,17 +36,17 @@ export const routes: Routes = [
     children: [
       // SECCIÓN PERSONAL
      
-      {
-        path: 'personal',
-        canActivate: [roleGuard],
-        data: { roles: [...ROLES_JEFATURAS] },
-        children: [
-          { path: '', component: PersonalComponent },
-          { path: 'nuevo', component: NuevoPersonalComponent },
-          { path: 'editar/:id', component: NuevoPersonalComponent },
-          { path: 'ver/:id', component: VerPersonalComponent },
-        ]
-      },
+     {
+  path: 'personal',
+  canActivate: [roleGuard],
+  data: { roles: [...ROLES_JEFATURAS] },
+  children: [
+    { path: '', component: PersonalComponent },
+    { path: 'nuevo', component: NuevoPersonalComponent },
+    { path: 'ver/:id', component: VerPersonalComponent },
+    { path: 'editar/:id', component: UpdatePersonalComponent }, 
+  ]
+},
 
       // SECCIÓN SERVICIOS
       {
@@ -105,17 +106,16 @@ export const routes: Routes = [
         data: { roles: ['super_admin', 'admin'] }
       },
       {
-       path: 'semana-mes', // O la ruta que prefieras para la URL (ej: 'gestion-semanas')
+       path: 'semana-mes', 
         component: SemanaMesComponent, 
         canActivate: [roleGuard], 
         data: { roles: ['super_admin', 'admin'] }
       },
- 
- 
-    
+          
+   
     ]
   },
-  { path: 'unauthorized', component: LoginComponent }, // Idealmente un componente 403
+  { path: 'unauthorized', component: LoginComponent }, 
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];
