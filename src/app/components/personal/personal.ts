@@ -27,20 +27,31 @@ export class PersonalComponent implements OnInit {
   paginaActual: number = 1;
 
   categorias: any[] = [];
+  
+
   categoriaSeleccionada: any = 'TODOS';
 
   public listaPersonas: any[] = [];
   public personasFiltradas: any[] = [];
-  
+  public tiposSalario: any[] = [];
   public reporteTurnosForm!: FormGroup;
   public categoriaFiltroActiva: string = 'TODOS';
-
+  public mostrarBotonComidas: boolean = false;
   public mostrarModal: boolean = false;
   public editando: boolean = false;
   public usuarioIdSeleccionado: number | null = null;
   public filtroActual: string = 'Todos';
   public terminoBusqueda: string = '';
-
+  
+ private CATEGORIAS_CON_COMIDA: string[] = [
+  'MEDICOS',
+  'MEDICO',
+  'INTERNOS-MEDICINA',
+  'INTERNOS-IMAGENOLOGIA',
+  'INTERNOS',
+  'RESIDENTES'
+];
+  
   // Estructura para nuevo usuario / edición
   public nuevoUsuario: any = {
     name: '', 
@@ -73,56 +84,103 @@ export class PersonalComponent implements OnInit {
     const mesActual = new Date().getMonth() + 1;
     const gestionActual = new Date().getFullYear();
     
-
     this.reporteTurnosForm = this.fb.group({
       mes_id: [mesActual, Validators.required],
       gestion: [gestionActual, Validators.required],
       fecha_inicio: ['', Validators.required],
       fecha_fin: ['', Validators.required],
-      categoria_id: ['']
+      categoria_id: [''],
+      dia_relativo: [0, Validators.required]
+            });
+
+      this.actualizarRangoPorMes();
       
-      });
+      this.reporteTurnosForm.get('categoria_id')?.valueChanges.subscribe(val => {
+      this.evaluarVisibilidadComidas(val);
+    });
+    this.reporteTurnosForm.get('categoria_nombre')?.valueChanges.subscribe(val => {
+      this.evaluarVisibilidadComidas(val);
+    });
 
-    this.actualizarRangoPorMes();
   }
 
-  // --- MÉTODO PARA CARGA MASIVA DE EXCEL ---
-  onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
+   //visibilidad de comidas segun boton y seleccion de categoria
+  evaluarVisibilidadComidas(valorCategoria: any): void {
+  if (!valorCategoria || valorCategoria === '' || valorCategoria === 'TODOS') {
+    this.mostrarBotonComidas = false;
+    return;
+  }
 
-    if (file) {
-      const extension = file.name.split('.').pop()?.toLowerCase();
-      if (extension !== 'xlsx' && extension !== 'xls') {
-        alert('Por favor, selecciona un archivo Excel válido (.xlsx o .xls)');
-        return;
-      }
+  let nombreBusqueda = '';
 
-      if (confirm(`¿Deseas importar el personal desde el archivo "${file.name}"?`)) {
-        this._personaService.importarPersonalExcel(file).subscribe({
-          next: () => {
-            alert('¡Importación exitosa! El personal ha sido registrado correctamente.');
-            this.cargarDatos(); 
-          },
-          error: (err) => {
-            console.error('Error en importación:', err);
-            const errorMsg = err.error?.error || 'Hubo un problema al procesar el archivo.';
-            alert('Error: ' + errorMsg);
-          }
-        });
-      }
-      event.target.value = '';
+  // Si recibimos un ID (ej: "1" o 1)
+  if (!isNaN(Number(valorCategoria))) {
+    const encontrada = this.categorias.find(c => c.id == valorCategoria);
+    if (encontrada) {
+      nombreBusqueda = encontrada.nombre || encontrada.categoria || '';
     }
+  } else {
+    // Si se recibe directamente el texto del select
+    nombreBusqueda = valorCategoria.toString();
   }
 
-  cargarCategorias() {
-    this._personaService.getCatalogosFormulario().subscribe({next:(res: any) => {
-    this.categorias = res.categorias || res;
+  // Si aún no han cargado las categorías, intentamos sincronizar
+  if (!nombreBusqueda && this.categorias.length === 0) {
+    this.mostrarBotonComidas = false;
+    return;
+  }
+
+  // Sanitizado: Convertir a mayúsculas y quitar acentos (é -> e)
+  const textoLimpio = nombreBusqueda
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+  // Evaluamos si el texto coincide con la lista permitida
+  this.mostrarBotonComidas = this.CATEGORIAS_CON_COMIDA.some(cat => 
+    textoLimpio.includes(cat) || cat.includes(textoLimpio)
+  );
+
+  console.log('Categoría seleccionada:', valorCategoria, '| Nombre resolved:', textoLimpio, '| Visible:', this.mostrarBotonComidas);
+}
+  
+   //FALTA REVISAR  ES EL LOGO EN ACCIONES
+descargarReporteAlimentacion(personaId: number): void {
+    this._personaService.getReporteAlimentacionPersona(personaId).subscribe({
+      next: (res: any) => {
+        console.log('Datos del reporte:', res);
+        this.generarPDFAlimentacion(res);
+      },
+      error: (err: any) => { // Tipado explícito para evitar TS7006
+        console.error('Error al generar reporte de alimentación:', err);
+      }
+    });
+  }
+
+  // Agrega este método para procesar la respuesta   ES EN LAS ACCIONES
+  generarPDFAlimentacion(data: any): void {
+    // Aquí invocas tu librería de generación de PDF (ej. pdfMake, jsPDF)
+    console.log('Generando PDF para:', data);
+  }
+
+cargarCategorias() {
+  this._personaService.getCatalogosFormulario().subscribe({
+    next: (res: any) => {
+      this.categorias = res.categorias || res;
+      this.tiposSalario = res.tipos_salario || [];
+
+      // Re-evaluar visibilidad tras cargar la lista por si el select ya tenía un valor por defecto
+      const valActual = this.reporteTurnosForm.get('categoria_id')?.value;
+      if (valActual) {
+        this.evaluarVisibilidadComidas(valActual);
+      }
     },
     error: (err) => {
-    console.error('error al cargar categorias', err);
+      console.error('error al cargar categorias', err);
     }
-    });   
-  }
+  });   
+}
 
 
   cargarDatos(page: number = 1): void {
@@ -159,7 +217,7 @@ export class PersonalComponent implements OnInit {
     });
   }
 
-  // --- MÉTODOS PARA PDF MATRICIAL DE TURNOS ---
+  // --- MÉTODOS PARA PDF MATRIZ DE TURNOS ---
 
   actualizarRangoPorMes(): void {
     const mes = Number(this.reporteTurnosForm.get('mes_id')?.value) || (new Date().getMonth() + 1);
@@ -176,6 +234,179 @@ export class PersonalComponent implements OnInit {
       fecha_fin: fechaFinStr
     }, { emitEvent: false });
   }
+  
+generarPdfComidasPersonal(): void {
+  if (this.reporteTurnosForm.invalid) {
+    alert('Completa los datos del Mes y la Gestión.');
+    return;
+  }
+
+  const datosReporte = this.reporteTurnosForm.value;
+  const { mes_id, gestion, fecha_inicio, fecha_fin } = datosReporte;
+  const filtroSeleccionado = datosReporte.categoria_nombre || datosReporte.categoria_id || 'Todos';
+  const nombreMes = this.NOMBRES_MESES[Number(mes_id) - 1] || 'General';
+  const tipoSalarioActivo = this.tabActiva || 'Todos';
+  const categoriaSeleccionadaModal = datosReporte.categoria_nombre || datosReporte.categoria_id;
+
+  this._personaService.getMatrizTurnos(mes_id, gestion, tipoSalarioActivo, categoriaSeleccionadaModal, fecha_inicio, fecha_fin).subscribe({
+    next: (res: any) => {
+      const personalList = res.data || [];
+      const nombreFiltroAplicado = res.nombre_categoria || filtroSeleccionado;
+
+      // 🔍 FILTRO: Evalúa la propiedad 'comidas_mes' del backend
+      const personalConComidas = personalList.filter((user: any) => {
+        if (!user.comidas_mes) return false;
+
+        if (Array.isArray(user.comidas_mes)) {
+          return user.comidas_mes.length > 0;
+        }
+
+        if (typeof user.comidas_mes === 'object') {
+          return Object.keys(user.comidas_mes).length > 0;
+        }
+
+        return false;
+      });
+
+      if (personalConComidas.length === 0) {
+        alert('No se encontraron registros de personal con asignación de comidas en esta categoría para el rango seleccionado.');
+        return;
+      }
+
+      const doc = new jsPDF('l', 'mm', 'a4'); // Horizontal (Ancho total: 297mm)
+
+      // 🎨 ENCABEZADO INSTITUCIONAL DE COMIDAS (Naranja)
+      const COLOR_NARANJA: [number, number, number] = [230, 126, 34];
+      doc.setFillColor(...COLOR_NARANJA);
+      doc.rect(0, 0, 297, 22, 'F');
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(255, 255, 255);
+      doc.text('HOSPITAL REGIONAL SAN JUAN DE DIOS', 14, 14);
+
+      doc.setFontSize(9);
+      doc.setTextColor(40, 40, 40);
+      doc.text(`REPORTE DE ASIGNACIÓN DE COMIDAS - MATRIZ MENSUAL`, 14, 28);
+      doc.text(`FILTRO / CATEGORÍA: ${nombreFiltroAplicado.toUpperCase()}`, 14, 34);
+      doc.text(`MES: ${nombreMes.toUpperCase()} / ${gestion}`, 283, 34, { align: 'right' });
+      doc.text(`PERIODO: Del ${fecha_inicio} al ${fecha_fin}`, 14, 39);
+
+      // 🟢 RANGO Y GENERACIÓN DE FECHAS DE CABECERA
+      const [fIniYear, fIniMonth, fIniDay] = fecha_inicio.split('-').map(Number);
+      const [fFinYear, fFinMonth, fFinDay] = fecha_fin.split('-').map(Number);
+
+      let currDate = new Date(fIniYear, fIniMonth - 1, fIniDay);
+      const endDate = new Date(fFinYear, fFinMonth - 1, fFinDay);
+
+      const fechasCabecera: string[] = [];
+      while (currDate <= endDate) {
+        const yyyy = currDate.getFullYear();
+        const mm = String(currDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(currDate.getDate()).padStart(2, '0');
+        
+        fechasCabecera.push(`${yyyy}-${mm}-${dd}`);
+        currDate.setDate(currDate.getDate() + 1);
+      }
+
+      const headColumns = [
+        'NOMBRE COMPLETO', 
+        ...fechasCabecera.map(f => f.split('-')[2]), 
+        'TOTAL'
+      ];
+
+      // 🔍 CONSTRUCCIÓN DE FILAS Y MAPEO DESDE 'comidas_mes'
+      const bodyRows = personalConComidas.map((item: any) => {
+        const nombre = (item.persona?.nombre_completo || item.name || 'SIN NOMBRE').toUpperCase();
+        
+        const mapaComidasFecha: { [fecha: string]: { texto: string, cantidad: number } } = {};
+
+        if (Array.isArray(item.comidas_mes)) {
+          item.comidas_mes.forEach((c: any) => {
+            const texto = c.texto_resumen || '';
+            const cantidad = c.detalles ? c.detalles.length : texto.length;
+            mapaComidasFecha[c.fecha] = { texto, cantidad };
+          });
+        } else if (typeof item.comidas_mes === 'object') {
+          Object.keys(item.comidas_mes).forEach((fechaKey: string) => {
+            const obj = item.comidas_mes[fechaKey];
+            const texto = obj.texto_resumen || '';
+            const cantidad = obj.detalles ? obj.detalles.length : texto.length;
+            mapaComidasFecha[fechaKey] = { texto, cantidad };
+          });
+        }
+
+        let totalComidasUsuario = 0;
+        const fila: any[] = [nombre];
+
+        fechasCabecera.forEach(fechaStr => {
+          const infoComida = mapaComidasFecha[fechaStr];
+
+          if (infoComida && infoComida.texto) {
+            totalComidasUsuario += infoComida.cantidad;
+            fila.push(infoComida.texto); // Ej: "ATC", "D", "A"
+          } else {
+            fila.push('-');
+          }
+        });
+
+        fila.push(totalComidasUsuario);
+        return fila;
+      });
+
+      // 📐 CÁLCULO DINÁMICO DE ANCHOS DE COLUMNA
+      const marginLeftRight = 28; // Margen izq (14mm) + dcho (14mm)
+      const anchoPagina = 297;
+      const anchoNombre = 48;
+      const anchoTotal = 12;
+      const totalDias = fechasCabecera.length;
+      
+      const espacioParaDias = anchoPagina - marginLeftRight - anchoNombre - anchoTotal;
+      const anchoPorDia = Number((espacioParaDias / totalDias).toFixed(2));
+
+      const columnStylesConfig: any = {
+        0: { halign: 'left', fontStyle: 'bold', cellWidth: anchoNombre } 
+      };
+
+      let currentIdx = 1;
+      fechasCabecera.forEach(() => {
+        columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: anchoPorDia }; 
+        currentIdx++;
+      });
+      columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: anchoTotal, fontStyle: 'bold' }; 
+
+      // 🖨️ RENDERIZADO CON AUTOTABLE
+      autoTable(doc, {
+        startY: 43,
+        head: [headColumns],
+        body: bodyRows,
+        theme: 'grid',
+        headStyles: { 
+          fillColor: COLOR_NARANJA, 
+          halign: 'center', 
+          fontSize: 5.5, 
+          cellPadding: 0.8 
+        },
+        styles: { 
+          fontSize: 4.5, 
+          cellPadding: 0.6, 
+          halign: 'center', 
+          valign: 'middle',
+          font: 'helvetica'
+        },
+        columnStyles: columnStylesConfig,
+        alternateRowStyles: { fillColor: [253, 245, 238] }
+      });
+
+      doc.save(`Reporte_Comidas_${nombreMes}_${gestion}_${nombreFiltroAplicado}.pdf`);
+    },
+    error: (err) => {
+      console.error('Error al obtener la matriz de turnos para comidas:', err);
+      alert('Ocurrió un error al obtener la información del servidor.');
+    }
+  });
+}
+
 
   // --- GESTIÓN DE MODALES ---
 
@@ -255,24 +486,23 @@ export class PersonalComponent implements OnInit {
       }
     });
   }
-generarPdfTurnosPersonal(): void {
-  const datosReporte = this.reporteTurnosForm.value;
-    if (this.reporteTurnosForm.invalid) {
+  
+ generarPdfTurnosPersonal(): void {
+  if (this.reporteTurnosForm.invalid) {
     alert('Completa los datos del Mes y la Gestión.');
     return;
   }
-  const { mes_id, gestion, fecha_inicio, fecha_fin } = datosReporte;// 🟢 Extraemos las fechas del form
+  
+  const datosReporte = this.reporteTurnosForm.value;
+  const { mes_id, gestion, fecha_inicio, fecha_fin } = datosReporte;
   const filtroSeleccionado = datosReporte.categoria_nombre || datosReporte.categoria_id || 'Todos';
   const nombreMes = this.NOMBRES_MESES[Number(mes_id) - 1] || 'General';
   const tipoSalarioActivo = this.tabActiva || 'Todos'; 
   const categoriaSeleccionadaModal = datosReporte.categoria_nombre || datosReporte.categoria_id;
 
-  
   this._personaService.getMatrizTurnos(mes_id, gestion, tipoSalarioActivo, categoriaSeleccionadaModal, fecha_inicio, fecha_fin).subscribe({
     next: (res: any) => {
       const personalList = res.data || [];
-      const fechaInicioReal = res.fecha_inicio;
-      const fechaFinReal = res.fecha_fin;
       const nombreFiltroAplicado = res.nombre_categoria || filtroSeleccionado;
 
       if (personalList.length === 0) {
@@ -297,12 +527,20 @@ generarPdfTurnosPersonal(): void {
       doc.text(`MES: ${nombreMes.toUpperCase()} / ${gestion}`, 283, 34, { align: 'right' });
       doc.text(`PERIODO: Del ${fecha_inicio} al ${fecha_fin}`, 14, 39);
 
-      // Generar columnas de días (del 1 al 31 según el mes)
-    const fechasCabecera: string[] = [];
-      let currDate = new Date(fechaInicioReal + 'T00:00:00');
-      const endDate = new Date(fechaFinReal + 'T00:00:00');
+      // 🟢 RANGO Y GENERACIÓN DE FECHAS DE CABECERA
+      const [fIniYear, fIniMonth, fIniDay] = fecha_inicio.split('-').map(Number);
+      const [fFinYear, fFinMonth, fFinDay] = fecha_fin.split('-').map(Number);
+
+      let currDate = new Date(fIniYear, fIniMonth - 1, fIniDay);
+      const endDate = new Date(fFinYear, fFinMonth - 1, fFinDay);
+
+      const fechasCabecera: string[] = [];
       while (currDate <= endDate) {
-        fechasCabecera.push(currDate.toISOString().split('T')[0]);
+        const yyyy = currDate.getFullYear();
+        const mm = String(currDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(currDate.getDate()).padStart(2, '0');
+        
+        fechasCabecera.push(`${yyyy}-${mm}-${dd}`);
         currDate.setDate(currDate.getDate() + 1);
       }
 
@@ -313,7 +551,6 @@ generarPdfTurnosPersonal(): void {
         'HORAS'
       ];
 
-      // Función auxiliar para abreviar servicios largos y que quepan en la celda
       const abreviarServicio = (nombre: string): string => {
         if (!nombre) return '';
         const map: { [key: string]: string } = {
@@ -328,41 +565,47 @@ generarPdfTurnosPersonal(): void {
           'PEDIATRIA': 'PED',
           'NEONATOLOGIA': 'NEO',
           'EMERGENCIAS': 'EME',
-         
         };
         const upper = nombre.toUpperCase();
-        return map[upper] || upper.substring(0, 3); // Si no está en la lista, toma las primeras 5 letras
+        return map[upper] || upper.substring(0, 3);
       };
 
-      // Mapear filas con los turnos reales devueltos por Laravel
       const bodyRows = personalList.map((item: any) => {
         const nombre = (item.persona?.nombre_completo || item.name || 'SIN NOMBRE').toUpperCase();
+        
+        // 🌟 CLAVE: DICCIONARIO POR FECHA ÚNICA PARA CONSOLIDAR Y EVITAR TRIPLICACIÓN
+        const turnosPorFecha: { [fecha: string]: any } = {};
+        const turnosArray = item.turnos || [];
+
+        turnosArray.forEach((t: any) => {
+          const fechaKey = t.pivot ? t.pivot.fecha : t.fecha;
+          if (fechaKey && !turnosPorFecha[fechaKey]) {
+            turnosPorFecha[fechaKey] = t;
+          }
+        });
+
         let fila: any[] = [nombre];
         let diasTrabajados = 0;
         let horasTotales = 0;
 
         fechasCabecera.forEach(fechaStr => {
-          const turnoEnFecha = (item.turnos || []).find((t: any) => {
-            const fechaTurno = t.pivot ? t.pivot.fecha : t.fecha;
-            return fechaTurno === fechaStr;
-          });
+          const turnoEnFecha = turnosPorFecha[fechaStr];
 
           if (turnoEnFecha) {
             diasTrabajados++;
-            horasTotales += Number(turnoEnFecha.duracion_horas || 0);
+            const duracion = Number(turnoEnFecha.duracion_horas || turnoEnFecha.horas || 0);
+            horasTotales += duracion;
 
-            // Abreviar el nombre del turno si es muy largo (ej: Tarde/Noche -> T/N o mantener si entra)
             let nombreTurno = turnoEnFecha.nombre_turno || 'TURNO';
             if (nombreTurno.toLowerCase().includes('tarde/noche')) nombreTurno = 'T/N';
             if (nombreTurno.toLowerCase().includes('mañana/tarde')) nombreTurno = 'M/T';
             if (nombreTurno.toLowerCase().includes('noche')) nombreTurno = 'N';
 
-            const horaInicio = turnoEnFecha.hora_inicio ? turnoEnFecha.hora_inicio.substring(0, 3) : '';
-            const horaFin = turnoEnFecha.hora_fin ? turnoEnFecha.hora_fin.substring(0, 3) : '';
+            const horaInicio = turnoEnFecha.hora_inicio ? turnoEnFecha.hora_inicio.substring(0, 5) : '';
+            const horaFin = turnoEnFecha.hora_fin ? turnoEnFecha.hora_fin.substring(0, 5) : '';
             const rawServicio = turnoEnFecha.pivot ? turnoEnFecha.pivot.nombre_servicio : '';
             const servicioCorto = abreviarServicio(rawServicio);
 
-            // Estructura ultra compacta en líneas separadas para jsPDF
             let textoCelda = `${nombreTurno}`;
             if (horaInicio && horaFin) {
               textoCelda += `\n${horaInicio}-${horaFin}`;
@@ -382,20 +625,17 @@ generarPdfTurnosPersonal(): void {
         return fila;
       });
 
-      // Definir anchos de columna personalizados para que la hoja A4 horizontal (297mm) distribuya bien el espacio
       const columnStylesConfig: any = {
-        0: { halign: 'left', fontStyle: 'bold', cellWidth: 42 } // Columna de nombre más ancha
+        0: { halign: 'left', fontStyle: 'bold', cellWidth: 42 }
       };
 
-      // Asignar un ancho pequeño y uniforme a cada una de las columnas de los días (ej. 6.5mm por día)
       let currentIdx = 1;
       fechasCabecera.forEach(() => {
         columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: 6.5 };
         currentIdx++;
       });
-      // Columnas finales de DÍAS y HORAS
-      columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: 10, fontStyle: 'bold' };     // Días
-      columnStylesConfig[currentIdx + 1] = { halign: 'center', cellWidth: 12, fontStyle: 'bold' }; // Horas
+      columnStylesConfig[currentIdx] = { halign: 'center', cellWidth: 10, fontStyle: 'bold' }; 
+      columnStylesConfig[currentIdx + 1] = { halign: 'center', cellWidth: 12, fontStyle: 'bold' };
 
       autoTable(doc, {
         startY: 43,
@@ -409,8 +649,8 @@ generarPdfTurnosPersonal(): void {
           cellPadding: 1 
         },
         styles: { 
-          fontSize: 4,           // Letra minúscula para que los 3 datos entren perfecto en vertical
-          cellPadding: 0.8,      // Margen interno mínimo
+          fontSize: 4, 
+          cellPadding: 0.8, 
           halign: 'center', 
           valign: 'middle',
           font: 'helvetica'

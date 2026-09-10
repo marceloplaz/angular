@@ -149,7 +149,8 @@
   <label style="font-weight: bold;">Categoría a la que pertenece</label>
   <p-select 
     [options]="categoriasDisponibles()" 
-    [(ngModel)]="nuevoTurno().categoria_id"
+    [ngModel]="nuevoTurno().categoria_id"
+    (onChange)="onCategoriaChange($event.value)"
     optionLabel="nombre" 
     optionValue="id" 
     placeholder="Seleccione una Categoría"
@@ -176,6 +177,18 @@
       </div>
     </div>
 
+    <div class="field-checkbox flex align-items-center gap-2">
+      <p-checkbox 
+  [binary]="true" 
+  inputId="diaSiguiente"
+  [ngModel]="nuevoTurno().dia_siguiente"
+  (ngModelChange)="nuevoTurno.update(s => ({...s, dia_siguiente: $event})); onHoraChange()">
+</p-checkbox>
+      <label for="diaSiguiente" class="cursor-pointer text-sm font-bold text-700">
+        Turno Termina al día siguiente
+      </label>
+    </div>
+
     <div class="field">
       <label class="font-bold text-sm text-600">Duración Calculada</label>
       <div class="p-inputgroup">
@@ -188,12 +201,65 @@
         <span class="p-inputgroup-addon">Hrs</span>
       </div>
       
-      <small *ngIf="nuevoTurno().hora_inicio && nuevoTurno().hora_fin && nuevoTurno().hora_fin <= nuevoTurno().hora_inicio" 
+      <small *ngIf="nuevoTurno().dia_siguiente || (nuevoTurno().hora_inicio && nuevoTurno().hora_fin && nuevoTurno().hora_fin <= nuevoTurno().hora_inicio)" 
              class="text-orange-500 font-medium block mt-1">
-        <i class="pi pi-moon mr-1"></i> Turno nocturno detectado.
+        <i class="pi pi-moon mr-1"></i> Turno extendido día siguiente.
       </small>
+
     </div>
   </div>
+
+<div *ngIf="mostrarAlimentacion()" class="p-3 mb-2 border-round bg-blue-50 border-1 border-blue-200">
+        <label class="font-bold block mb-3 text-blue-700 text-sm flex align-items-center gap-2">
+          <i class="pi pi-check-square"></i> Alimentación Permitida
+        </label>
+
+        <div class="surface-card border-round p-3 shadow-1">
+          <!-- Encabezado de la Matriz -->
+          <div class="flex align-items-center justify-content-between pb-2 mb-2 border-bottom-1 surface-border font-bold text-xs text-600 uppercase">
+            <span style="flex: 1;">Tipo de Comida</span>
+            <span class="text-center" style="width: 110px;">Mismo Día<br><small class="font-normal text-400">(Día 0)</small></span>
+            <span class="text-center" style="width: 110px;">Día Siguiente<br><small class="font-normal text-400">(Día +1)</small></span>
+          </div>
+
+          <!-- Filas dinámicas por cada Comida disponible -->
+          <div *ngFor="let comida of comidasDisponibles()" class="flex align-items-center justify-content-between py-2 border-bottom-1 surface-border last:border-none">
+            
+            <span class="font-bold text-sm text-800" style="flex: 1;">
+              {{ comida.nombre }}
+            </span>
+
+            <!-- Checkbox Día 0 (Mismo Día / Entrada) -->
+            <div class="text-center" style="width: 110px;">
+              <p-checkbox 
+                [binary]="true"
+                [inputId]="'comida_d0_' + comida.id"
+                [ngModel]="estaComidaSeleccionada(comida.id, 0)"
+                (onChange)="onComidaToggleDia(comida.id, 0, $event.checked)">
+              </p-checkbox>
+            </div>
+
+            <!-- Checkbox Día 1 (Día Siguiente / Posguardia) -->
+            <div class="text-center" style="width: 110px;">
+              <p-checkbox 
+                [binary]="true"
+                [inputId]="'comida_d1_' + comida.id"
+                [ngModel]="estaComidaSeleccionada(comida.id, 1)"
+                (onChange)="onComidaToggleDia(comida.id, 1, $event.checked)">
+              </p-checkbox>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    
+
+
+
+
+
+
+
 
   <ng-template pTemplate="footer">
     <p-button 
@@ -224,13 +290,16 @@
     <div class="field mb-3">
       <input pInputText [(ngModel)]="nuevaArea().nombre" placeholder="Nombre de nueva área" class="mb-2" />
       
-   <p-select 
-  [options]="categoriasDisponibles()" 
-  [(ngModel)]="nuevaArea().categoria_id" 
-  optionLabel="nombre" 
-  optionValue="id" 
-  placeholder="Seleccione una categoría">
-</p-select>
+   
+<p-select 
+        [options]="categoriasDisponibles()" 
+        [(ngModel)]="nuevaArea().categoria_id" 
+        optionLabel="nombre" 
+        optionValue="id" 
+        placeholder="Seleccione una categoría"
+        scrollHeight="200px"
+        appendTo="body">
+      </p-select>
 
       <p-button label="Agregar" icon="pi pi-plus" (onClick)="guardarNuevaArea()"></p-button>
     </div>

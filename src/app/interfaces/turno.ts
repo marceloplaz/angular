@@ -1,4 +1,5 @@
-// 1. Representa un turno individual dentro del calendario
+import { Comida } from './comida';
+
 export interface TurnoDetalle {
   id_asignacion: number;
   nombre_turno: string;
@@ -6,6 +7,12 @@ export interface TurnoDetalle {
   fecha: string;      
   color: string;
   duracion_horas?: number;
+  termina_dia_siguiente?: boolean; // Vienen desde el backend si cruza de día
+  comidas?: Comida[];
+  
+  // Propiedades dinámicas para el control de la grilla en Frontend
+  esPosguardia?: boolean;          // Indica si el día fue bloqueado por un turno del día anterior
+  turnoOrigenFecha?: string;       // Guarda la fecha del turno que generó esta posguardia
 }
 
 // 2. Representa a una persona (Enfermera/Médico/manual) con sus turnos agrupados
@@ -15,6 +22,7 @@ export interface MiembroEquipo {
   categoria_nombre: string;
   tipo_salario: string;
   turnos: TurnoDetalle[];
+  
 }
 
 //  Estructura de la respuesta completa del servidor si 
@@ -31,5 +39,7 @@ export interface TurnoAsignado {
     };
     area: {
         nombre: string;
+        comidas?: Comida[];
     };
+    
 }

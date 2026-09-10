@@ -92,6 +92,7 @@ export class UpdatePersonalComponent implements OnInit {
       error: (err) => console.error('Error al cargar datos para editar:', err)
     });
   }
+
 actualizarPersonal(): void {
   if (this.updateForm.invalid) {
     alert('Por favor completa los campos requeridos.');
@@ -99,8 +100,6 @@ actualizarPersonal(): void {
   }    
 
   const formValues = this.updateForm.value;
-
-  // Estructura anidada que espera el UserController de Laravel
   const payload: any = {
     name: formValues.name,
     email: formValues.email,
@@ -120,20 +119,17 @@ actualizarPersonal(): void {
     }
   };
 
-  // Si el usuario escribió una nueva contraseña, la incluimos
   if (formValues.password) {
     payload.password = formValues.password;
-    payload.password_confirmation = formValues.password; // Opcional si usas 'confirmed' en Laravel
+    payload.password_confirmation = formValues.password;
   }
 
-  // IMPORTANTE: Asegúrate de pasar el ID del USUARIO (user_id), no el ID de la persona,
-  // ya que tu backend actualiza la tabla 'users'.
   const userId = formValues.user_id || this.personaId; 
 
   this.personaService.updatePersona(userId, payload).subscribe({
     next: (res) => {
       alert(res.message || 'Datos actualizados correctamente');
-      this.router.navigate(['/personal']);
+  this.router.navigateByUrl('/dashboard/personal');
     },
     error: (err) => {
       console.error('Error al actualizar:', err);

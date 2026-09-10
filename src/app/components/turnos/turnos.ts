@@ -16,6 +16,7 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { environment } from '../../../environments/environment';
 import { ReporteMensualService } from 'src/app/services/reporte-mensual';
+import { addDays, format, parseISO } from 'date-fns';
 
 
 export interface ResumenMensual {
@@ -136,13 +137,6 @@ filtrarTablaVisualmente() {
   this.cdRef.detectChanges();
 }
 
-
-
-  
-
-
-
-// En turnos.ts
 get personalParaReemplazo() {
   if (!this.personalAgrupado || !Array.isArray(this.personalAgrupado)) {
     return [];
@@ -180,15 +174,8 @@ ngOnInit() {
     this.cargarAreas();
   }
 
-  
-  // ========================================================
-  // NUEVO: ESCUCHA PARA GENERACIÓN DE PDF (ORQUESTACIÓN)
-  // ========================================================
   this._reporteMensualService.solicitarDatos$.subscribe(() => {
     this.actualizarNombresDeFiltros(); 
-
-    // 1. CAMBIO CLAVE: Llamar al servicio para obtener los datos REALES del backend
-    // Usamos los filtros actuales para pedir solo lo que corresponde al reporte
     this.turnoService.getReporteMensual(
       this.filters.mes_id, 
       this.filters.gestion, 
@@ -198,11 +185,8 @@ ngOnInit() {
       const turnosAgrupadosPorDia: any = {};
       
       console.log('--- PROCESANDO DATOS REALES DE LARAVEL PARA PDF ---');
-      
-      // 2. Procesamos los datos que vienen de la tabla 'turnos_asignados'
-      datosReales.forEach(t => {
-        // En Laravel, la tabla turnos_asignados tiene el campo 'fecha'
-        const fechaKey = t.fecha; 
+              datosReales.forEach(t => {
+            const fechaKey = t.fecha; 
 
         if (fechaKey) {
           if (!turnosAgrupadosPorDia[fechaKey]) {
@@ -284,6 +268,8 @@ cargarCategoriasGlobales() {
       this.categorias = todasLasCategorias.filter((cat: any) => 
         categoriasPermitidas.includes(cat.id) // Asegúrate de que 'cat.id' sea el campo correcto
       );
+      this.categoriasSeleccionadas = [];
+      this.personalAgrupado = [];
       
       this.cdRef.detectChanges();
     },
@@ -342,35 +328,75 @@ verificarEstadoBloqueo(): void {
     }
   });
 }
+
+obtenerRangoPeriodo() {
+  // Si no hay semanas disponibles para la selección actual
+  if (!this.semanasDisponibles || this.semanasDisponibles.length === 0) {
+    return { inicio: '', fin: '' };
+  }
+
+  // 1. La primera semana determina la fecha inicial
+  const primeraSemana = this.semanasDisponibles[0];
+  
+  // 2. La última semana determina la fecha final
+  const ultimaSemana = this.semanasDisponibles[this.semanasDisponibles.length - 1];
+
+  return {
+    fecha_inicio: primeraSemana.fecha_inicio || primeraSemana.inicio, // Adapta al nombre del campo en tu JSON
+    fecha_fin: ultimaSemana.fecha_fin || ultimaSemana.fin
+  };
+}
+
 // reporte mensual 
 exportarPdfMensualBlade(): void {
-  
+
   if (!this.puedeExportar()) {
     this.toastr.error('El reporte está bloqueado para este periodo.', 'Acción no permitida');
     return;
   }  
-  // 1. Validación de filtros
+  
+  // 1. Validación de filtros obligatorios
   if (!this.filters || !this.filters.servicio_id || !this.filters.mes_id) {
     this.toastr.warning('Por favor, seleccione un Servicio y un Mes.');
     return;
   }
 
-  // 2. Construimos el string con todos los IDs seleccionados
-  // Esto soluciona que el reporte salga vacío o con "N/A"
-  const categoriaIds = (this.categoriasSeleccionadas && this.categoriasSeleccionadas.length > 0)
-    ? this.categoriasSeleccionadas.map(nombre => {
-        // Buscamos el ID real basado en el nombre seleccionado
-        const cat = this.categorias.find(c => c.nombre === nombre);
-        return cat ? cat.id : null;
-      }).filter(id => id !== null).join(',')
-    : this.categorias.map(c => c.id).join(',');
+  // 🎯 REGLA: Obligar a seleccionar al menos una categoría
+  if (!this.categoriasSeleccionadas || this.categoriasSeleccionadas.length === 0) {
+    this.toastr.warning('Debe seleccionar al menos una categoría para generar el reporte.', 'Filtro requerido');
+    return;
+  }
 
-  // 3. Ejecución segura enviando el string de IDs
+  // 2. Mapeo de IDs de categorías seleccionadas
+  const categoriaIds = this.categoriasSeleccionadas
+    .map(nombre => {
+      const cat = this.categorias.find(c => c.nombre === nombre);
+      return cat ? cat.id : null;
+    })
+    .filter(id => id !== null)
+    .join(',');
+
+  // 🎯 3. Cálculo dinámico del Periodo (Fecha Inicio y Fecha Fin según semanasDisponibles)
+  let fechaInicio = '';
+  let fechaFin = '';
+
+  if (this.semanasDisponibles && this.semanasDisponibles.length > 0) {
+    const primeraSemana = this.semanasDisponibles[0];
+    const ultimaSemana = this.semanasDisponibles[this.semanasDisponibles.length - 1];
+
+    // Adapta las claves 'fecha_inicio' / 'fecha_fin' según la estructura exacta de tu objeto semana
+    fechaInicio = primeraSemana.fecha_inicio || primeraSemana.inicio || '';
+    fechaFin = ultimaSemana.fecha_fin || ultimaSemana.fin || '';
+  }
+
+  // 4. Ejecución enviando filtros, categoría e intervalo exacto de fechas
   this.turnoService.obtenerPdfReporteMensual(
     this.filters.servicio_id, 
     this.filters.mes_id, 
     this.rolUsuario,
-    categoriaIds // Ya no da error porque cambiamos el tipo en el servicio
+    categoriaIds,
+    fechaInicio, // Nuevo parámetro dinámico
+    fechaFin     // Nuevo parámetro dinámico
   ).subscribe({
     next: (blob: Blob) => {
       const fileURL = URL.createObjectURL(blob);
@@ -382,7 +408,6 @@ exportarPdfMensualBlade(): void {
     }
   });
 }
-
 actualizarNombresDeFiltros() {
   // 1. Nombre del Mes
   const mes = this.mesesDisponibles.find(m => m.id == this.filters.mes_id);
@@ -414,31 +439,46 @@ onMesChange(mesId: any) {
 }
 //actualizamos las semanas segun la categoria
 actualizarSemanasDisponibles(mesSeleccionado: any) {
-  const todasLasSemanas = mesSeleccionado.semanas || [];
+  const todasLasSemanas = mesSeleccionado?.semanas || [];
 
+  //Si no hay categorías seleccionadas, vaciamos todo y no mostramos nada
   if (this.categoriasSeleccionadas.length === 0) {
-    this.semanasDisponibles = todasLasSemanas;
-  } else {
-    // Filtramos las semanas que pertenezcan a los IDs de las categorías seleccionadas
-    // (Asumiendo que cada semana en tu JSON trae un campo 'categoria_id')
-    const idsCategoriasSeleccionadas = this.categoriasSeleccionadas.map(nombreCat => {
-      const cat = this.categorias.find(c => c.nombre === nombreCat);
-      return cat ? cat.id : null;
-    });
-
-    this.semanasDisponibles = todasLasSemanas.filter((s: any) => 
-      !s.categoria_id || idsCategoriasSeleccionadas.includes(s.categoria_id)
-    );
+    this.semanasDisponibles = [];
+    this.filters.semana_id = null;
+    this.personalAgrupado = [];
+    return; // Cortamos la ejecución aquí
   }
+
+  // Filtramos las semanas que pertenezcan a los IDs de las categorías seleccionadas
+  const idsCategoriasSeleccionadas = this.categoriasSeleccionadas.map(nombreCat => {
+    const cat = this.categorias.find(c => c.nombre === nombreCat);
+    return cat ? cat.id : null;
+  }).filter(id => id !== null); // Eliminamos nulos por seguridad
+
+  // 1. Filtrar las semanas correspondientes
+  const semanasFiltradas = todasLasSemanas.filter((s: any) => 
+    !s.categoria_id || idsCategoriasSeleccionadas.includes(s.categoria_id)
+  );
+
+  // 2. 🎯 DEDUPLICACIÓN: Evitamos que las semanas se repitan en el select desplegable
+  const mapaSemanasUnicas = new Map();
+  semanasFiltradas.forEach((sem: any) => mapaSemanasUnicas.set(sem.id, sem));
+  this.semanasDisponibles = Array.from(mapaSemanasUnicas.values());
 
   // Auto-seleccionar la primera semana disponible del filtro resultante
   if (this.semanasDisponibles.length > 0) {
     this.filters.semana_id = this.semanasDisponibles[0].id;
+    
+    // Si tienes el método que carga el backend, lo llamamos solo si hay semanas válidas
+    if (typeof this.cargarTurnos === 'function') {
+      this.cargarTurnos();
+    }
   } else {
     this.filters.semana_id = null;
     this.personalAgrupado = [];
   }
 }
+
 // 3. Actualizar el método cuando cambian las categorías 
 
 toggleCategoria(nombreCategoria: string) {
@@ -716,11 +756,16 @@ cargarTurnos() {
  
       ).subscribe({
         next: (res: any) => {
-            this.personalOriginal = res.equipo_visible || res.data || res;
+            const datosEquipo = res.equipo_visible || res.data || res;
             
-            // Asignamos el estado real que viene del servidor
+            // 1. Inyectamos los bloqueos de posguardia antes de guardar el arreglo original
+            this.procesarPosguardiasEquipo(datosEquipo);
+
+            // 2. Guardamos la referencia y actualizamos bloqueos
+            this.personalOriginal = datosEquipo;
             this.isPeriodoBloqueado = !!res.isBloqueado; 
             
+            // 3. Filtramos según las categorías seleccionadas y refrescamos la UI
             this.filtrarPersonal(); 
             this.cargando = false;
             this.cdRef.detectChanges();
@@ -732,19 +777,50 @@ cargarTurnos() {
     });
 }
 
-//toggleCategoria(nombreCategoria: string) {
-  //const index = this.categoriasSeleccionadas.indexOf(nombreCategoria);
-  
-  //if (index > -1) {
-    // Si ya está seleccionado, lo quitamos
-    //this.categoriasSeleccionadas.splice(index, 1);
-  //} else {
-    // Si no está, lo añadimos
-    //this.categoriasSeleccionadas.push(nombreCategoria);
-  //}
-    // Ya no actualizamos un único 'categoria_id', porque ahora manejamos múltiples
-  //this.filtrarPersonal();
-//}
+procesarPosguardiasEquipo(equipo: any[]) {
+  if (!equipo || !Array.isArray(equipo)) return;
+
+  equipo.forEach(miembro => {
+    if (!miembro.turnos) miembro.turnos = [];
+
+    const turnosPorFecha = new Map<string, any>();
+    miembro.turnos.forEach((t: any) => turnosPorFecha.set(t.fecha, t));
+
+    const turnosOriginales = [...miembro.turnos];
+
+    // 2. Evaluar cada turno asignado
+    turnosOriginales.forEach((turno: any) => {
+      // Verificamos la bandera 'termina_dia_siguiente' enviada desde la BD o el modelo
+      if (turno.termina_dia_siguiente) {
+        // Calculamos la fecha del día siguiente (YYYY-MM-DD)
+        const fechaActual = parseISO(turno.fecha);
+        const fechaSiguiente = format(addDays(fechaActual, 1), 'yyyy-MM-dd');
+
+        // Si ya existe un turno asignado el día siguiente, se remueve para respetar el descanso obligatorio
+        if (turnosPorFecha.has(fechaSiguiente)) {
+          const turnoEliminar = turnosPorFecha.get(fechaSiguiente);
+          miembro.turnos = miembro.turnos.filter((t: any) => t.id_asignacion !== turnoEliminar?.id_asignacion);
+        }
+
+        // Insertamos el registro ficticio de POSGUARDIA para bloquear el día siguiente en la grilla/PDF
+        miembro.turnos.push({
+          id_asignacion: 0,
+          nombre_turno: 'POSGUARDIA',
+          horario: 'Descanso',
+          fecha: fechaSiguiente,
+          color: '#e2e8f0', // Gris tenue
+          esPosguardia: true,
+          turnoOrigenFecha: turno.fecha
+        });
+      }
+    });
+  });
+}
+
+esDiaBloqueado(persona: any, dia: any): boolean {
+  const turnos = this.obtenerTurnosAsignados(persona, dia);
+  return turnos.some((t: any) => t.estado === 'bloqueado' || t.esPosguardia);
+}
 
 
 
@@ -868,9 +944,9 @@ async capturarPantalla() {
   const doc = new jsPDF('l', 'mm', 'a4'); // Orientación horizontal (Landscape)
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // 1. CONFIGURACIÓN DE ENCABEZADO (Estilo profesional)
+  // 1. CONFIGURACIÓN DE ENCABEZADO
   doc.setFontSize(16);
-  doc.setTextColor(40, 167, 69); // Verde médico / institucional
+  doc.setTextColor(40, 167, 69); // Verde institucional
   doc.setFont("helvetica", "bold");
   
   const nombreServicio = this.servicios.find(s => s.id == this.filters.servicio_id)?.nombre || 'SERVICIO';
@@ -885,108 +961,140 @@ async capturarPantalla() {
   const periodo = `Periodo: ${semanaActual?.fecha_inicio || ''} al ${semanaActual?.fecha_fin || ''}`;
   doc.text(periodo, pageWidth / 2, 22, { align: 'center' });
 
-  // Línea decorativa verde
+  // Línea decorativa
   doc.setDrawColor(40, 167, 69);
   doc.setLineWidth(1);
   doc.line(15, 25, pageWidth - 15, 25);
 
-  // 2. PREPARACIÓN DE DATOS PARA LA TABLA DEL PDF
+  // 2. CONSTRUCCIÓN DE CABECERAS PARA LA TABLA
+  const headHeaders = [
+    'PERSONAL / SALARIO',
+    ...this.diasSemana.map((dia, index) => {
+      const fechaStr = this.fechasRealesDeLaSemana[index] || '';
+      return `${dia.toUpperCase()}\n${fechaStr}`;
+    })
+  ];
+
+  // 3. PREPARACIÓN DE DATOS PARA LAS FILAS DEL PDF
   const bodyData = this.personalAgrupado.map((p: any) => {
-      // MODIFICACIÓN CLAVE: Agregamos el Tipo de Salario debajo del Nombre con un salto de línea
-      const nombreYSalario = `${p.usuario_nombre.toUpperCase()}\n[${p.tipo_salario || 'No definido'}]`;
-      const fila = [nombreYSalario];
-      
-      this.diasSemana.forEach(dia => {
-          const fechaBuscada = this.obtenerFechaReal(dia);
-          const turnosDelDia = p.turnos?.filter((t: any) => t.fecha === fechaBuscada) || [];
+    const nombreYSalario = `${p.usuario_nombre.toUpperCase()}\n[${p.tipo_salario || 'No definido'}]`;
+    const fila: string[] = [nombreYSalario];
+    
+    this.diasSemana.forEach(dia => {
+      const fechaBuscada = this.obtenerFechaReal(dia);
+      const turnosDelDia = p.turnos?.filter((t: any) => t.fecha === fechaBuscada) || [];
 
-          if (turnosDelDia.length > 0) {
-              const textoCeldas = turnosDelDia.map((t: any) => {
-                  let horarioStr = '';
-                  if (t.horario && !t.horario.includes('2026')) {
-                      horarioStr = t.horario;
-                  } else {
-                      const inicio = t.hora_inicio?.length > 10 ? t.hora_inicio.slice(11, 16) : t.hora_inicio?.slice(0, 5);
-                      const fin = t.hora_fin?.length > 10 ? t.hora_fin.slice(11, 16) : t.hora_fin?.slice(0, 5);
-                      horarioStr = `${inicio || '--:--'} - ${fin || '--:--'}`;
-                  }
-
-                  const nombreServicioStr = t.area_nombre || t.servicio_nombre || 'GENERAL';
-                  return `${t.nombre_turno.toUpperCase()}\n(${nombreServicioStr.toUpperCase()})\n${horarioStr}`;
-              }).join('\n\n');
-
-              fila.push(textoCeldas);
-          } else {
-              fila.push('-');
+      if (turnosDelDia.length > 0) {
+        const textoCeldas = turnosDelDia.map((t: any) => {
+          // Si el turno está marcado visualmente como posguardia
+          if (t.esPosguardia || t.nombre_turno === 'POSGUARDIA') {
+            return `🌙 POSGUARDIA\n(DESCANSO)`;
           }
-      });
 
-      // Se calculan los totales semanales
-      const diasTrabajados = this.calcularDiasTrabajados(p);
-      const horasTotales = this.calcularTotalHoras(p);
+          let horarioStr = '';
+          if (t.horario && !t.horario.includes('2026')) {
+            horarioStr = t.horario;
+          } else {
+            const inicio = t.hora_inicio?.length > 10 ? t.hora_inicio.slice(11, 16) : t.hora_inicio?.slice(0, 5);
+            const fin = t.hora_fin?.length > 10 ? t.hora_fin.slice(11, 16) : t.hora_fin?.slice(0, 5);
+            horarioStr = `${inicio || '--:--'} - ${fin || '--:--'}`;
+          }
 
-      // Insertamos los totales en sus respectivas celdas
-      fila.push(`${diasTrabajados}`);
-      fila.push(`${horasTotales}h`);
-      
-      return fila;
+          const nombreServicioStr = t.area_nombre || t.servicio_nombre || 'GENERAL';
+          return `${t.nombre_turno.toUpperCase()}\n(${nombreServicioStr.toUpperCase()})\n${horarioStr}`;
+        }).join('\n---\n');
+
+        fila.push(textoCeldas);
+      } else {
+        fila.push(' LIBRE ');
+      }
+    });
+
+    return fila;
   });
 
-  // 3. GENERACIÓN DE TABLA AUTOMÁTICA
+  // 4. GENERACIÓN DE TABLA CON AUTO-TABLE
   autoTable(doc, {
-    startY: 30,
-    // MODIFICACIÓN CLAVE: Añadidas las cabeceras de DÍAS y HORAS para que coincidan con los datos de las columnas
-    head: [['PERSONAL / SALARIO', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM', 'DÍAS', 'HORAS']],
+    startY: 28,
+    head: [headHeaders],
     body: bodyData,
     theme: 'grid',
-    headStyles: { 
-      fillColor: [40, 167, 69], 
-      halign: 'center', 
-      fontSize: 9,
-      cellPadding: 3
+    styles: {
+      fontSize: 7,
+      cellPadding: 2,
+      halign: 'center', // Fix: Reemplazado 'alignment' por 'halign'
+      valign: 'middle',
+      overflow: 'linebreak'
+    },
+    headStyles: {
+      fillColor: [40, 167, 69],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center'
     },
     columnStyles: {
-      0: { cellWidth: 42, fontStyle: 'bold', halign: 'left' }, // Ajuste para el nombre y tipo de salario
-      8: { cellWidth: 14, halign: 'center', fontStyle: 'bold' }, // Columna DÍAS
-      9: { cellWidth: 16, halign: 'center', fontStyle: 'bold', textColor: [0, 123, 255] } // Columna HORAS en azul
+      0: { cellWidth: 38, halign: 'left', fontStyle: 'bold' } // Columna de Personal
     },
-    styles: { 
-      fontSize: 8, 
-      halign: 'center', 
-      valign: 'middle', 
-      overflow: 'linebreak',
-      cellPadding: 2
-    },
-    margin: { left: 15, right: 15 }
+    didParseCell: (data) => {
+      
+      if (data.section === 'body' && data.column.index > 0) {
+        const texto = data.cell.raw as string;
+        if (texto.includes('LIBRE')) {
+          data.cell.styles.textColor = [150, 150, 150];
+        } else if (texto.includes('POSGUARDIA')) {
+          data.cell.styles.fillColor = [238, 242, 246];
+          data.cell.styles.textColor = [100, 116, 139];
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    }
   });
-
-  // 4. PIE DE PÁGINA Y FIRMAS
-  const finalY = (doc as any).lastAutoTable.finalY + 25;
-
-  doc.setDrawColor(180);
-  doc.line(15, finalY, 75, finalY);
-  doc.setFontSize(9);
-  doc.setTextColor(50);
-  doc.text(`Generado por: ${this.alias}`, 15, finalY + 5);
-  doc.text(this.rolUsuario.toUpperCase(), 15, finalY + 10);
-
-  doc.setFontSize(8);
-  doc.setTextColor(150);
-  const fechaGeneracion = `Impreso el: ${new Date().toLocaleString()}`;
-  doc.text(fechaGeneracion, pageWidth - 15, finalY + 15, { align: 'right' });
-
-  // 5. DESCARGA DEL ARCHIVO
-  doc.save(`Reporte_Turnos_${nombreServicio.replace(/\s+/g, '_')}.pdf`);
+  
+  doc.save(`Rol_Turnos_${nombreServicio}_${semanaActual?.fecha_inicio || 'semana'}.pdf`);
 }
 
-
 calcularTotalHoras(p: any): number {
-  if (!p.turnos || p.turnos.length === 0) return 0;
+  if (!p?.turnos || p.turnos.length === 0) return 0;
 
-  // Sumamos la propiedad duracion_horas de cada turno asignado
+  // Set para guardar las fechas de turnos especiales/post ya procesados
+  const fechasPostProcesadas = new Set<string>();
+
   return p.turnos.reduce((acc: number, turno: any) => {
-    // Validamos que el campo sea un número para evitar errores de suma
-    const horas = Number(turno.duracion_horas) || 0;
+    // 🚫 1. IGNORAR TURNOS BLOQUEADOS O POSGUARDIAS DESCANSO
+    const estado = (turno.estado || '').toLowerCase();
+    if (estado === 'bloqueado' || turno.isBloqueado) {
+      return acc;
+    }
+
+    const nombre = (turno.nombre_turno || turno.nombre || '').toUpperCase();
+    const obs = (turno.observacion || '').toUpperCase();
+    const fecha = turno.fecha; // ej: "2026-08-04"
+
+    // 🔍 2. Detectamos si es un turno especial con POST (ej: "MAÑANA/POST")
+    const esTurnoPost = nombre.includes('POST') || obs.includes('POST');
+
+    if (esTurnoPost) {
+      // Calculamos la fecha del día anterior
+      const fechaActual = new Date(fecha + 'T00:00:00'); // T00:00:00 evita desfases de zona horaria
+      fechaActual.setDate(fechaActual.getDate() - 1);
+      
+      const yyyy = fechaActual.getFullYear();
+      const mm = String(fechaActual.getMonth() + 1).padStart(2, '0');
+      const dd = String(fechaActual.getDate()).padStart(2, '0');
+      const fechaAyerStr = `${yyyy}-${mm}-${dd}`;
+
+      // Si el día de ayer ya registró el turno base, no sumar
+      if (fechasPostProcesadas.has(fechaAyerStr)) {
+        return acc;
+      }
+
+      // Marcamos esta fecha como el día origen del turno
+      if (fecha) {
+        fechasPostProcesadas.add(fecha);
+      }
+    }
+
+    const horas = Number(turno.duracion_horas || turno.horas) || 0;
     return acc + horas;
   }, 0);
 }
@@ -1302,8 +1410,6 @@ abrirOpcionesTurno(turno: any, personal: any) {
   this.mostrarModal = false;
   this.mostrarModalCRUD = false;
   this.mostrarModalCalendario = false;
-  
-  // Limpieza de datos para evitar errores de 'null' en el HTML
   this.turnoSeleccionado = null;
   this.fechasSeleccionadas = [];
   this.esMensual = false;
@@ -1312,13 +1418,37 @@ abrirOpcionesTurno(turno: any, personal: any) {
   this.cdRef.detectChanges();
 }
 
-//cuantos dias trabajo por mes
-calcularDiasTrabajados(usuario: any): number {
-  if (!usuario.turnos || !Array.isArray(usuario.turnos)) return 0;
-  
-    // Usamos Set para evitar contar doble si hubiera algún error de duplicados por fecha
-  const fechasUnicas = new Set(usuario.turnos.map((t: any) => t.fecha));
-  return fechasUnicas.size;
+
+calcularDiasTrabajados(p: any): number {
+  if (!p?.turnos || p.turnos.length === 0) return 0;
+
+  const fechasPostProcesadas = new Set<string>();
+
+  const turnosFiltrados = p.turnos.filter((turno: any) => {
+    const nombre = (turno.nombre_turno || turno.nombre || '').toUpperCase();
+    const obs = (turno.observacion || '').toUpperCase();
+    const fecha = turno.fecha;
+
+    const esTurnoPost = nombre.includes('POST') || obs.includes('POST');
+
+    if (esTurnoPost) {
+      const fechaActual = new Date(fecha);
+      fechaActual.setDate(fechaActual.getDate() - 1);
+      const fechaAyerStr = fechaActual.toISOString().split('T')[0];
+
+      if (fechasPostProcesadas.has(fechaAyerStr)) {
+        return false; 
+      }
+
+      if (fecha) {
+        fechasPostProcesadas.add(fecha);
+      }
+    }
+
+    return true;
+  });
+
+  return turnosFiltrados.length;
 }
 
 
@@ -1607,5 +1737,26 @@ rotarPersonalEstructuraFija(): void {
       this.toastr.error(err.error?.message || "No se pudo procesar la rotación.");
     }
   });
+}
+
+esPostTurno(turno: any): boolean {
+  if (!turno) return false;
+  
+  const textoEvaluar = (
+    (turno.nombre_turno || '') + ' ' + 
+    (turno.nombre || '') + ' ' + 
+    (turno.observacion || '') + ' ' +
+    (turno.tipo || '')
+  ).toLowerCase();
+
+  return textoEvaluar.includes('post') || turno.es_post_turno === true || turno.es_autogenerado === true;
+}
+
+// Devuelve 'POST-TURNO' para el día siguiente o el nombre original para el día principal
+obtenerEtiquetaTurno(asignacion: any): string {
+  if (this.esPostTurno(asignacion)) {
+    return 'POST-TURNO';
+  }
+  return asignacion?.turno?.nombre || 'TURNO';
 }
  }

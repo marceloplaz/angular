@@ -10,12 +10,6 @@
     </button>
   </div>
 
-  <input type="file" #fileInput (change) = "onFileSelected($event)" accept=".xlsx, .xls" style="display: none;">
-  
-  <!-- Botón estético para Carga Masiva -->
-  <button class="btn btn-success" (click)="fileInput.click()">
-    <i class="fas fa-file-excel"></i> Carga Masiva (Excel)
-  </button>
   
   <div class="d-flex justify-content-end mb-3">
   <button 
@@ -37,16 +31,25 @@
 
   <div class="row mb-3 align-items-center">
     <div class="col-md-7">
-      <div class="btn-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #a3cfbb;">
-        <button (click)="aplicarFiltro('Todos')" [style.background-color]="filtroActual === 'Todos' ? '#28a745' : '#e0f2f1'"
-                [style.color]="filtroActual === 'Todos' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">Todos</button>
-        <button (click)="aplicarFiltro('TGN')" [style.background-color]="filtroActual === 'TGN' ? '#28a745' : '#e0f2f1'"
-                [style.color]="filtroActual === 'TGN' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">TGN</button>
-        <button (click)="aplicarFiltro('SUS')" [style.background-color]="filtroActual === 'SUS' ? '#28a745' : '#e0f2f1'"
-                [style.color]="filtroActual === 'SUS' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">SUS</button>
-        <button (click)="aplicarFiltro('CONTRATO')" [style.background-color]="filtroActual === 'CONTRATO' ? '#28a745' : '#e0f2f1'"
-                [style.color]="filtroActual === 'CONTRATO' ? 'white' : '#00796b'" class="btn fw-bold btn-sm px-3">Contrato</button>
-      </div>
+      <!-- CÓDIGO NUEVO (DINÁMICO) -->
+<div class="btn-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #a3cfbb;">
+  <!-- Botón por defecto para mostrar todos -->
+  <button (click)="aplicarFiltro('Todos')" 
+          [style.background-color]="filtroActual === 'Todos' ? '#28a745' : '#e0f2f1'"
+          [style.color]="filtroActual === 'Todos' ? 'white' : '#00796b'" 
+          class="btn fw-bold btn-sm px-3">
+    Todos
+  </button>
+
+  <!-- Botones generados dinámicamente desde la BD -->
+  <button *ngFor="let item of tiposSalario" 
+          (click)="aplicarFiltro(item.id)" 
+          [style.background-color]="filtroActual === item.id ? '#28a745' : '#e0f2f1'"
+          [style.color]="filtroActual === item.id ? 'white' : '#00796b'" 
+          class="btn fw-bold btn-sm px-3">
+    {{ item.nombre }}
+  </button>
+</div>
     </div>
 
     <div class="col-md-5">
@@ -100,24 +103,32 @@
             </td>
             <td style="border: 1px solid #a3cfbb !important;" class="text-center">
               <div class="d-flex justify-content-center gap-2">
-                
-                 <button [routerLink]="['ver', p.id]" 
-                class="btn btn-sm btn-outline-success" 
-                title="Ver Detalles">
+                <!-- Acciones para derivar a otras rutas-->
+                <button [routerLink]="['ver', p.id]" 
+                class="btn btn-sm btn-outline-success" title="Ver Detalles">
                 <i class="bi bi-eye-fill"></i>
-                  </button>
+                </button>
 
-                <button class="btn btn-warning btn-sm" [routerLink]="['editar', p.id]"></button>
+                <button class="btn btn-warning btn-sm" [routerLink]="['editar', p.id]" title="Editar">
+                <i class="bi bi-pencil-square"></i>
+                </button>
          
                 <button (click)="eliminarPersona(p.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                  <i class="bi bi-trash3-fill"></i>
+                <i class="bi bi-trash3-fill"></i>
                 </button>
+
+              <button class="btn btn-sm btn-outline-danger me-1"  title="Descargar Reporte de Alimentación" (click)="descargarReporteAlimentacion(p.id)">
+              <i class="bi bi-file-earmark-pdf"></i>
+              </button>
+        
+             
+
+
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-
     
     </div>
   </div>
@@ -170,24 +181,37 @@
             </div>
           </div>
 
-<div class="mb-3">
-    <label class="form-label fw-bold text-secondary small">CATEGORÍA A REPORTAR:</label>
-    <select class="form-select" formControlName="categoria_id">
-        <option value="TODOS">-- TODAS LAS CATEGORÍAS --</option>
-        <option *ngFor="let cat of categorias" [value]="cat.id">
-            {{ cat.nombre }}
-        </option>
-    </select>
-    <div class="form-text text-muted">Seleccione la categoría correspondiente para el reporte.</div>
-</div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-secondary small">CATEGORÍA A REPORTAR:</label>
+            <select 
+              class="form-select" 
+              formControlName="categoria_id" 
+              (change)="evaluarVisibilidadComidas($any($event.target).value)">
+                <option value="TODOS">-- TODAS LAS CATEGORÍAS --</option>
+                <option *ngFor="let cat of categorias" [value]="cat.id">
+                    {{ cat.nombre }}
+                </option>
+            </select>
+            <div class="form-text text-muted">Seleccione la categoría correspondiente para el reporte.</div>
+          </div>
+      
+          
 
         </form>
       </div>
+
+      
+
+
       <div class="modal-footer">
   <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
   <button class="btn btn-success" (click)="generarPdfTurnosPersonal()" data-bs-dismiss="modal">
     Generar Matriz de Turnos PDF
   </button>
+
+        <button   *ngIf="mostrarBotonComidas"  class="btn btn-warning text-dark fw-bold" (click)="generarPdfComidasPersonal()" data-bs-dismiss="modal">
+          <i class="bi bi-egg-fried me-1"></i> Generar Reporte Alimentación
+        </button>
 </div>
     </div>
   </div>

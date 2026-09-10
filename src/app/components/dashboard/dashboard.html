@@ -40,6 +40,9 @@
             </a>
 
             <div class="nav-label mt-3">ADMINISTRACIÓN</div>
+            <a routerLink="/dashboard/asistencia" class="nav-item" routerLinkActive="active">
+                <i class="bi bi-calendar-check"></i> Asistencia
+            </a>
             <a routerLink="/dashboard/vacaciones" class="nav-item" routerLinkActive="active">
                 <i class="bi bi-sun"></i> Vacaciones
             </a>
@@ -70,7 +73,7 @@
         <header class="top-bar d-flex justify-content-between align-items-center px-4">
             <div class="search-box d-flex align-items-center">
                 <i (click)="toggleSidebar()" class="bi bi-list fs-4 me-3 cursor-pointer"></i>
-                <input type="text" class="form-control form-control-sm border-0 bg-transparent" placeholder="Buscar en el sistema...">
+           
             </div>
             
             <div class="user-info d-flex align-items-center">
@@ -151,6 +154,7 @@
                                         <button type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitudVacacion" class="btn btn-sm text-white fw-bold py-1 px-2 flex-grow-1" style="background-color: #27ae60; font-size: 0.65rem; border-radius: 6px; border: none;">
                                             FORM. VACACION
                                         </button>
+                                        
                                         <button type="button" data-bs-toggle="modal" data-bs-target="#modalPermisoCuenta" class="btn btn-sm btn-outline-success fw-bold py-1 px-2 flex-grow-1" style="font-size: 0.65rem; border-radius: 6px; border-color: #27ae60; color: #27ae60;">
                                             A CUENTA
                                         </button>
@@ -370,14 +374,17 @@
                 <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
                     Cancelar
                 </button>
+                <button type="button" class="btn btn-outline-danger px-3 shadow-sm fw-bold" (click)="verVistaPreviaFormato6()" [disabled]="permisoCuentaForm.invalid">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Vista Previa PDF
+                </button>
                 <button type="button" class="btn btn-success px-4 shadow-sm fw-bold" [disabled]="permisoCuentaForm.invalid" data-bs-dismiss="modal">
                     <i class="bi bi-cloud-arrow-up-fill me-1"></i> Registrar Permiso
                 </button>
+                
             </div>
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="modalSolicitudVacacion" data-bs-backdrop="static" tabindex="-1" aria-labelledby="modalSolicitudVacacionLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -391,13 +398,14 @@
             <div class="modal-body p-4 bg-light">
                 <form [formGroup]="vacacionForm" *ngIf="vacacionForm">
                     <div class="card p-3 border-0 shadow-sm mb-4 bg-white text-center">
-                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.7 Director-rem; letter-spacing: 0.5px;">
+                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                             <span class="d-block text-dark fw-bold">Ministerio de Salud y Deportes</span>
                             <span class="d-block text-success fw-bold">Hospital Regional San Juan de Dios</span>
                             <span class="text-muted">Unidad de Recursos Humanos - Tarija Bolivia</span>
                         </div>
                     </div>
 
+                    <!-- Interruptor de Solo Reemplazo -->
                     <div class="card p-3 mb-4 border-0 shadow-sm bg-white" style="border-left: 4px solid #ffc107 !important;">
                         <div class="form-check form-switch m-0 d-flex align-items-center">
                             <input class="form-check-input me-3" type="checkbox" id="switchSoloReemplazo" formControlName="es_solo_reemplazo" style="width: 2.5em; height: 1.25em; cursor: pointer;">
@@ -407,6 +415,7 @@
                         </div>
                     </div>
 
+                    <!-- Datos del Solicitante y Servicio -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-7">
                             <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
@@ -417,8 +426,59 @@
                                 <input type="text" class="form-control bg-white fw-bold text-dark" formControlName="nombre_solicitante" readonly placeholder="Busque un profesional...">
                             </div>
                         </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+                                Unidad o Servicio
+                            </label>
+                            <input type="text" class="form-control bg-white fw-bold text-dark shadow-sm" formControlName="servicio_nombre" placeholder="Ej. NUTRICION">
+                        </div>
+                    </div>
+
+                    <!-- Gestión de Vacación (Condicional si no es solo reemplazo) -->
+                    <div class="mb-4" *ngIf="!vacacionForm.get('es_solo_reemplazo')?.value">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+                            Gestión Correspondiente de Vacación
+                        </label>
+                        <input type="text" class="form-control shadow-sm border-primary-subtle" formControlName="gestion_vacacion" placeholder="Ej. 2025 o 2025-2026">
+                    </div>
+
+                  
+                    <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
+                        <span class="text-primary fw-bold small mb-3 d-block text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                            Período y Reemplazo Asignado
+                        </span>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-semibold">Empieza el:</label>
+                                <input type="date" class="form-control border-primary-subtle shadow-sm" formControlName="fecha_inicio">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-semibold">Hasta el:</label>
+                                <input type="date" class="form-control border-primary-subtle shadow-sm" formControlName="fecha_fin">
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label small text-muted fw-semibold">Funcionario(a) en su Reemplazo:</label>
+                            <input type="text" class="form-control border-primary-subtle shadow-sm text-uppercase" formControlName="funcionario_reemplazo" placeholder="Nombre completo del funcionario de relevo...">
+                        </div>
                     </div>
                 </form>
+            </div>
+
+            <!-- Pie del Modal con botones de acción y Vista Previa PDF -->
+            <div class="modal-footer bg-white border-top-0 px-4 pb-3">
+                <button type="button" class="btn btn-light border px-4 shadow-sm fw-semibold text-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-outline-danger px-3 shadow-sm fw-bold" (click)="guardarSolicitudVacacion()" [disabled]="vacacionForm.invalid">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Vista Previa PDF
+                </button>
+                <button type="button" class="btn btn-primary px-4 shadow-sm fw-bold" [disabled]="vacacionForm.invalid" data-bs-dismiss="modal">
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> Registrar Solicitud
+                </button>
             </div>
         </div>
     </div>

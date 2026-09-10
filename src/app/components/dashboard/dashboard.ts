@@ -31,10 +31,7 @@ export class DashboardComponent implements OnInit {
   private _reporteMensualService = inject(ReporteMensualService);
   private turnoService = inject(TurnoService);  
   private nombreOriginal = signal<string>('');
-
-  // 🛡️ Almacén seguro del ID de la sesión real para evitar alteración de turnos ajenos
   private usuarioRealId: number | null = null;
-
   public permisoCuentaForm!: FormGroup;
   public alertaPermisoActivo = signal<{ activo: boolean, detalle: string | null }>({ activo: false, detalle: null });
   
@@ -411,7 +408,8 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private generarFormato6PDF(datos: any) {
+// 1. generador de permiso cuenta vacacion
+  private generarFormato6PDF(datos: any): any {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     const formatearFechaLocal = (fechaString: string): string => {
@@ -522,8 +520,40 @@ export class DashboardComponent implements OnInit {
     const lineasNota = doc.splitTextToSize(notaLegal, 180);
     doc.text(lineasNota, 15, 280);
 
-    doc.save(`Formato_6_Permiso_${nombreTrabajador.replace(/\s+/g, '_')}.pdf`);
+    return doc;
   }
+
+  // 2. Función vinculada al botón para abrir la vista previa en pestaña nueva
+  public verVistaPreviaFormato6(): void {
+    if (this.permisoCuentaForm.invalid) {
+      alert('Por favor complete los campos requeridos.');
+      return;
+    }
+
+    const datos = this.permisoCuentaForm.getRawValue();
+
+    // Adjuntamos la información de la persona seleccionada actual si está disponible
+    if (this.usuarioSeleccionado) {
+      datos.persona = this.usuarioSeleccionado.persona || this.usuarioSeleccionado;
+    }
+
+    try {
+      const doc = this.generarFormato6PDF(datos);
+      const blobPdf = doc.output('blob', { type: 'application/pdf' });
+      const urlVistaPrevia = window.URL.createObjectURL(blobPdf);
+
+      const ventanaImpresion = window.open(urlVistaPrevia, '_blank');
+      if (ventanaImpresion) {
+        ventanaImpresion.focus();
+      } else {
+        alert('Por favor, permita las ventanas emergentes (pop-ups) en su navegador para ver la vista previa.');
+      }
+    } catch (error) {
+      console.error('Error al generar la vista previa del Formato 6:', error);
+      alert('Ocurrió un error al procesar el documento PDF.');
+    }
+  }
+
 
   private obtenerIdDesdeToken(): number | null {
     const token = this.authService.getToken();
@@ -582,8 +612,7 @@ export class DashboardComponent implements OnInit {
   }
 
   cargarTurnos(servicioId: number) {
-    // 🛡️ AQUÍ ESTÁ LA PROTECCIÓN: Usamos el ID buscado para la grilla de consulta, 
-    // pero la sesión de permisos sigue protegida por el usuario real.
+        // pero la sesión de permisos sigue protegida por el usuario real.
     const idParaConsulta = this.usuarioBuscadoId() ?? this.usuarioRealId ?? this.obtenerIdDesdeToken();
     if (!idParaConsulta) return;
 
@@ -644,10 +673,9 @@ export class DashboardComponent implements OnInit {
     return horarioCompleto;
   }
 
-  //para el pdf reporte-mensual.ts
+  
 generarPDFMensualGeneral(): void {
-  // Obtenemos el nombre correcto del funcionario activo en pantalla
-  const nombreFuncionario = this.usuarioSeleccionado 
+    const nombreFuncionario = this.usuarioSeleccionado 
     ? (this.usuarioSeleccionado.persona?.nombre_completo || this.usuarioSeleccionado.name || this.usuario()) 
     : this.usuario();
 
@@ -676,12 +704,10 @@ generarPDFMensualGeneral(): void {
   toggleSidebar() { this.sidebarVisible.update(v => !v); }
   logout() { localStorage.removeItem('token'); this.router.navigate(['/login']); }
 
-  //  para el reporte del pdf por funcionario
+  
   generarPDF() {
   const doc = new jsPDF('p', 'mm', 'a4');
-  
-  // 🌟 Obtenemos el nombre del funcionario seleccionado o de la sesión actual
-  const nombreProfesional = (this.usuarioSeleccionado?.persona?.nombre_completo || 
+     const nombreProfesional = (this.usuarioSeleccionado?.persona?.nombre_completo || 
                              this.usuarioSeleccionado?.name || 
                              this.usuario()).trim().toUpperCase(); 
                              
@@ -755,6 +781,7 @@ generarPDFMensualGeneral(): void {
       console.error('Error al generar la vista previa del PDF:', error);
     }
   }
+ 
 
   private generarPDFSolicitudVacacionAnual(datos: any): Blob {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });

@@ -37,11 +37,6 @@ actualizarEstadoVinculacion(datos: { usuario_id: number, servicio_id: number, es
 }
 
 
-  /**
-   * Obtiene los servicios asignados a un usuario específico (para ver el calendario de otros)
-   */
- 
-
 getServiciosPorUsuario(usuarioId: number): Observable<any> {
   return this.http.get(`${this.url}/usuarios/${usuarioId}/servicios`);
 }

@@ -3,15 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
 import { ToastrService } from 'ngx-toastr';
-
-// PrimeNG Modules
 import { TableModule } from 'primeng/table';
-
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
-
 import { SelectModule } from 'primeng/select'; 
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -20,7 +16,14 @@ import { DialogModule } from 'primeng/dialog';
 import { forkJoin } from 'rxjs';
 import { AreaService } from '../../services/area';
 import { AreaForm } from '../../interfaces/area';
-
+import { ComidaService } from '../../services/comida';
+export interface Comida {
+  id: number;
+  nombre: string;
+  codigo?: string;
+  estado?: boolean;
+  dia_relativo?: number;
+}
 
 @Component({
   selector: 'app-configuracion-sistema',
@@ -39,7 +42,8 @@ export class ConfiguracionSistemaComponent implements OnInit {
   private turnoService = inject(TurnoService);
   private toastr = inject(ToastrService);
   private areaService = inject(AreaService);
-
+  private comidaService = inject(ComidaService);
+  
   servicios = signal<any[]>([]);
   categoriasDisponibles = signal<any[]>([]);
   turnosDisponibles = signal<any[]>([]);
@@ -49,41 +53,42 @@ export class ConfiguracionSistemaComponent implements OnInit {
   objetosSeleccionados: any[] = [];
   mostrarModalCrear = signal<boolean>(false);
   mostrarModalArea = signal<boolean>(false);
-  // para configurar areas
   areasDelServicio = signal<any[]>([]);
-  
-  // En tu clase:
-  
-
+  comidasDisponibles = signal<any[]>([]);
+  comidasSeleccionadasIds = signal<number[]>([]);
+  comidasSeleccionadas = signal<Comida[]>([]);
+  mostrarAlimentacion = signal<boolean>(false);
   nuevaArea = signal<AreaForm>({
   nombre: '',
   servicio_id: null,
   categoria_id: null
 });
-
+opcionesDiaRelativo = [
+    { label: 'Mismo día (Día 0)', value: 0 },
+    { label: 'Día siguiente (Día +1)', value: 1 }
+  ];
 // para configurar turnos
   nuevoTurno = signal({
     nombre_turno: '',
     hora_inicio: '',
     hora_fin: '',
-  categoria_id: null as number | null,  
-    duracion_horas: 0
+    categoria_id: null as number | null,  
+    duracion_horas: 0,
+    dia_siguiente: false,
+   comidas: [] as Comida[]
+
   });
 
   
 
  constructor() {
   effect(() => {
-      const turnoActual = this.nuevoTurno();
-    const inicio = turnoActual.hora_inicio;
-    const fin = turnoActual.hora_fin;
-
+    const turnoActual = this.nuevoTurno();
+    const { hora_inicio: inicio, hora_fin: fin, dia_siguiente: diasiguiente } = turnoActual;
+    
     if (inicio && fin) {
-      const duracion = this.calcularDiferenciaHoras(inicio, fin);
-      
-      // Solo actualizamos si la duración es distinta a la que ya tiene
-      // para evitar ciclos de renderizado innecesarios
-      if (duracion !== turnoActual.duracion_horas) {
+      const duracion = this.calcularDiferenciaHoras(inicio, fin, diasiguiente );
+                  if (duracion !== turnoActual.duracion_horas) {
         this.nuevoTurno.update(state => ({
           ...state,
           duracion_horas: duracion
@@ -93,18 +98,19 @@ export class ConfiguracionSistemaComponent implements OnInit {
   }, { allowSignalWrites: true });
 }
 
-onHoraChange() {
-    const inicio = this.nuevoTurno().hora_inicio;
-    const fin = this.nuevoTurno().hora_fin;
 
-    if (inicio && fin) {
-      const duracion = this.calcularDiferenciaHoras(inicio, fin);
-      this.nuevoTurno.update(state => ({
-        ...state,
-        duracion_horas: duracion
-      }));
-    }
-  } 
+
+  onHoraChange() {
+  const { hora_inicio: inicio, hora_fin: fin, dia_siguiente: diasiguiente } = this.nuevoTurno();
+
+  if (inicio && fin) {
+    const duracion = this.calcularDiferenciaHoras(inicio, fin, diasiguiente);
+    this.nuevoTurno.update(state => ({
+      ...state,
+      duracion_horas: duracion
+    }));
+  }
+}
 
   ngOnInit() {
     this.obtenerDatosIniciales();
@@ -121,7 +127,10 @@ onHoraChange() {
 
   
   obtenerDatosIniciales() {
-    // 1. Cargamos el catálogo general (No marca nada por defecto)
+   
+   this.comidaService.getComidas().subscribe((res: any) => {
+    this.comidasDisponibles.set(res.data || res);
+  });
     this.turnoService.getTurnos({}).subscribe((res: any) => {
       this.turnosDisponibles.set(res.data || res);
     });
@@ -218,35 +227,78 @@ abrirModalNuevoTurno() {
       hora_inicio: '',
       hora_fin: '',
       categoria_id: null,
-      duracion_horas: 0
+      duracion_horas: 0,
+      dia_siguiente: false,
+      comidas: []
     });
+    this.comidasSeleccionadas.set([]); 
     this.mostrarModalCrear.set(true);
+
   }
 
- private calcularDiferenciaHoras(inicio: string, fin: string): number {
+ private calcularDiferenciaHoras(inicio: string, fin: string, diasiguiente:boolean): number {
   const [h1, m1] = inicio.split(':').map(Number);
   const [h2, m2] = fin.split(':').map(Number);
-
-  let totalInicio = h1 * 60 + m1;
+  const totalInicio = h1 * 60 + m1;
   let totalFin = h2 * 60 + m2;
 
-  // Si el fin es menor al inicio, sumamos 24 horas
-  if (totalFin <= totalInicio) {
+  if ( diasiguiente ){totalFin += 24*60; } 
+  else if    (totalFin <= totalInicio) {
     totalFin += 24 * 60;
   }
-
   const diferenciaMinutos = totalFin - totalInicio;
-  
-  // Usamos Math.ceil o Math.round según prefieras
   return Math.round(diferenciaMinutos / 60);
 }
 
 onCategoriaChange(id: number) {
-    this.nuevoTurno.update(state => ({
-      ...state,
-      categoria_id: id
-    }));
+  // 1. Sincronizamos la categoría seleccionada
+  this.nuevoTurno.update(state => ({
+    ...state,
+    categoria_id: id,
+    comidas: []
+  }));
+
+  this.comidasSeleccionadasIds.set([]);
+
+  // 2. IDs específicos que llevan alimentación (Medicos, Internos, Internos-Medicina, Internos-Imagenologia)
+  const idsConAlimentacion = [1, 7, 11, 14];
+
+  if (idsConAlimentacion.includes(id)) {
+    this.mostrarAlimentacion.set(true);
+  } else {
+    this.mostrarAlimentacion.set(false);
   }
+}
+
+estaComidaSeleccionada(comidaId: number, diaRelativo: number): boolean {
+  return this.comidasSeleccionadas().some(
+    c => c.id === comidaId && c.dia_relativo === diaRelativo
+  );
+}
+
+
+ onComidaToggleDia(comidaId: number, diaRelativo: number, checked: boolean) {
+  let seleccionadas = [...this.comidasSeleccionadas()];
+
+  if (checked) {
+    // Agregamos el objeto con la estructura que espera tu backend ({ id, dia_relativo })
+    seleccionadas.push({ id: comidaId, dia_relativo: diaRelativo } as Comida);
+  } else {
+    seleccionadas = seleccionadas.filter(
+      c => !(c.id === comidaId && c.dia_relativo === diaRelativo)
+    );
+  }
+
+  this.comidasSeleccionadas.set(seleccionadas);
+
+  // Sincronizamos con la señal del nuevo turno
+  this.nuevoTurno.update(state => ({
+    ...state,
+    comidas: seleccionadas
+  }));
+}
+
+ 
 
   guardarNuevoTurno() {
     const data = this.nuevoTurno();

@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient,HttpParams } from '@angular/common/http'; 
 import { Observable } from 'rxjs';
-
 import { environment } from '../../environments/environment.development';
 @Injectable({
   providedIn: 'root'
@@ -99,6 +98,8 @@ getReporteMensual(mes_id: number, gestion: number, servicio_id: number): Observa
 
   return this.http.get<any[]>(`${this.apiUrl}/reporte-mensual`, { params });
 }
+
+
 getServiciosPorUsuario(usuarioId: number): Observable<any> {
   return this.http.get(`${this.apiUrl}/usuarios/${usuarioId}/servicios`);
 }
@@ -132,16 +133,20 @@ cambiarBloqueoRol(servicio_id: any, mes_id: any, estado: boolean) {
     bloquear: estado 
   });
 }
-obtenerPdfReporteMensual(servicio_id: number, mes_id: number, usuario_rol: string, categoria_id: any): Observable<Blob> {
-  const params = new HttpParams()
-    .set('servicio_id', servicio_id.toString())
-    .set('mes_id', mes_id.toString())
-    .set('rol_usuario', usuario_rol)
-    .set('categoria_id', categoria_id.toString()); 
-  return this.http.get(`${environment.apiUrl}/acciones-reporte/mensual-pdf`, {
-    params: params,
-    responseType: 'blob'
-  });
+
+
+obtenerPdfReporteMensual(servicioId: any, mesId: any, rol: string, categoriaIds: string, fechaInicio?: string, fechaFin?: string) {
+  let params = new HttpParams()
+    .set('servicio_id', servicioId)
+    .set('mes_id', mesId)
+    .set('rol', rol)
+    .set('categoria_id', categoriaIds) 
+    .set('categorias', categoriaIds);   
+
+  if (fechaInicio) params = params.set('fecha_inicio', fechaInicio);
+  if (fechaFin) params = params.set('fecha_fin', fechaFin);
+
+    return this.http.get(`${environment.apiUrl}/acciones-reporte/mensual-pdf`, { params, responseType: 'blob' });
 }
 
 getSemanasPorMes(mesId: number): Observable<any> {

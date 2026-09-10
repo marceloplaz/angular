@@ -395,4 +395,67 @@ $border-color: #dee2e6;          // Bordes generales del sistema
     align-items: center;
     gap: 3px;
   }
+  &.tarjeta-post-turno {
+    background-color: #d1e7dd !important;             // Fondo diferenciado (verde pastel suave)
+    border: 1.5px dashed $hospital-primary !important;  // Borde punteado para indicar secuencia
+    
+    .turno-title, .extra-small, i, span, small {
+      color: $hospital-primary !important;             // Texto en verde institucional oscuro
+    }
+
+    &:hover {
+      background-color: color.adjust(#d1e7dd, $lightness: -5%) !important;
+    }
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .turno-title {
+    font-size: 0.72rem !important; 
+    font-weight: 800 !important;      
+    line-height: 1.1;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+    width: 100%;
+    white-space: normal;          
+    word-wrap: break-word;
+    word-break: break-all;       
+  }
+
+  .extra-small {
+    font-weight: 700 !important;      
+    font-size: 0.68rem;
+    line-height: 1;
+    white-space: nowrap;          
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+}
+
+/* Bloqueo completo de la celda del día posterior */
+.celda-bloqueada {
+  background-color: #f8f9fa !important;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.03) 10px,
+    rgba(0, 0, 0, 0.03) 20px
+  );
+  cursor: not-allowed !important;
+}
+
+/* Evita eventos drag & drop o clicks en elementos dentro de la celda bloqueada */
+.celda-bloqueada .badge-turno {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+/* Borde distintivo para el turno principal de 24h */
+.tarjeta-replica {
+  border-left: 3px solid #0d6efd !important;
 }

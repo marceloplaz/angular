@@ -22,25 +22,35 @@ export class PersonaService {
     });
   }
 
-  // En services/persona.ts
+  getReporteAlimentacionPersona(personaId: number): Observable<any> {
+  // Limpiamos '/usuarios' para apuntar a /persona/{id}/reporte-alimentacion
+  const urlLimpia = this.API_URL.replace('/usuarios', '') + `/persona/${personaId}/reporte-alimentacion`;
+  
+  return this.http.get<any>(urlLimpia, { headers: this.getHeaders() });
+}
+ 
+
 getEspecialista(id: string | number) {
   return this.http.get(`${this.API_URL}/${id}`);
 }
 
-getMatrizTurnos(mes_id: any, gestion: any, filtro: string, categoriaModal?: string, fecha_inicio?: string, fecha_fin?: string): Observable<any> {
+getMatrizTurnos(
+  mes_id: any, 
+  gestion: any, 
+  filtro: string, 
+  categoriaModal?: string, 
+  fecha_inicio?: string, 
+  fecha_fin?: string
+): Observable<any> {
+
   let params = new HttpParams()
     .set('mes_id', mes_id)
     .set('gestion', gestion);
 
-  // 🟢 Adjuntamos las fechas si se proporcionan opcionalmente
-  if (fecha_inicio) {
-    params = params.set('fecha_inicio', fecha_inicio);
-  }
-  if (fecha_fin) {
-    params = params.set('fecha_fin', fecha_fin);
-  }
+  if (fecha_inicio) params = params.set('fecha_inicio', fecha_inicio);
+  if (fecha_fin) params = params.set('fecha_fin', fecha_fin);
 
-  const tiposSalarioValidos = ['tgn', 'sus', 'contrato'];
+  const tiposSalarioValidos = ['tgn', 'sus', 'contrato', 'gob', 'internos', 'residentes'];
 
   if (filtro && filtro.toLowerCase() !== 'todos') {
     if (tiposSalarioValidos.includes(filtro.toLowerCase())) {
@@ -73,6 +83,7 @@ exportarPdf(): Observable<Blob> {
   const urlLimpia = this.API_URL.replace('/usuarios', '') + '/personal/exportar-pdf';
    return this.http.get(urlLimpia, { headers: this.getHeaders(), responseType: 'blob'  });
 }
+
 
 getPersonas(): Observable<any> {
     return this.http.get<any>(this.API_URL, { headers: this.getHeaders() });

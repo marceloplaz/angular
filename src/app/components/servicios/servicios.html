@@ -118,10 +118,11 @@
                 <label class="extra-small fw-bold text-muted text-uppercase">Buscar Profesional</label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                  <input type="text" class="form-control border-start-0" 
-                         [(ngModel)]="terminoBusqueda" 
-                         (keyup)="ejecutarBusqueda()" 
-                         placeholder="Escriba un nombre para buscar...">
+                 <input type="text" 
+       class="form-control border-start-0" 
+       #searchBox 
+       (input)="onInputBusqueda(searchBox.value)" 
+       placeholder="Escriba un nombre para buscar...">
                 </div>
 
                 <ul class="list-group position-absolute w-100 shadow-lg mt-1" 

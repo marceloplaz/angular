@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterLink, RouterModule } from '@angular/router';
 import { ServicioService } from '../../services/servicios'; 
 import { Servicio } from '../../interfaces/servicio';
-import { finalize } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, Subject, Subscription } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -40,11 +40,14 @@ export class ServiciosComponent implements OnInit {
   cargoSeleccionado: string = 'personal_planta';
   usuarioParaVincular: any = null;
   estadoSeleccionado: number = 1;
+  private busquedaSubject = new Subject<string>();
+  private busquedaSubscription?: Subscription;
 
   constructor(
     private _servicioService: ServicioService,
     private toastr: ToastrService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdRef: ChangeDetectorRef
 
   ) {
     this.form = this.fb.group({
@@ -53,9 +56,23 @@ export class ServiciosComponent implements OnInit {
       cantidad_pacientes: [0, [Validators.required, Validators.min(0)]]
     });
   }
-
-  ngOnInit(): void {
+ngOnInit(): void {
     this.obtenerServicios();
+
+    // Debounce que evita saturar peticiones al escribir o borrar rápido
+    this.busquedaSubscription = this.busquedaSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(termino => {
+      this.realizarBusquedaServidor(termino);
+    });
+  }
+  
+
+  ngOnDestroy(): void {
+    if (this.busquedaSubscription) {
+      this.busquedaSubscription.unsubscribe();
+    }
   }
 
   obtenerServicios() {
@@ -68,6 +85,38 @@ export class ServiciosComponent implements OnInit {
       error: (e) => {
         this.loading = false;
         console.error('Error al cargar servicios: ', e);
+      }
+    });
+  }
+
+  onInputBusqueda(valor: string) {
+  // Aseguramos que solo busque si tiene 3 caracteres o más
+  if (valor.trim().length < 3) {
+    this.resultadosBusqueda = [];
+    this.cdRef.detectChanges();
+    return;
+  }
+  
+  // Enviamos el valor al subject
+  this.busquedaSubject.next(valor);
+}
+
+  realizarBusquedaServidor(termino: string) {
+    if (termino.trim().length < 3) {
+      this.resultadosBusqueda = [];
+      this.cdRef.detectChanges();
+      return;
+    }
+    this.buscandoProfesional = true;
+    this._servicioService.buscarProfesionales(termino).subscribe({
+      next: (res: any) => {
+        this.resultadosBusqueda = res;
+        this.buscandoProfesional = false;
+        this.cdRef.detectChanges();
+      },
+      error: (e) => {
+        this.buscandoProfesional = false;
+        console.error('Error en búsqueda:', e);
       }
     });
   }
@@ -209,34 +258,34 @@ limpiarBuscador() {
     this.form.reset({ cantidad_pacientes: 0 });
     this.obtenerServicios();
   }
-verDetalles(servicio: any) {
-  this.loading = true;
-  this._servicioService.getServicio(servicio.id).subscribe({
-    next: (res) => {
-      this.servicioSeleccionado = res.data;
-      this.loading = false;
+  verDetalles(servicio: any) {
+    // 1. Asigna inmediatamente los datos locales
+    this.servicioSeleccionado = servicio;
+    this.limpiarBuscador();
 
-      const modalElement = document.getElementById('detalleServicioModal');
-      if (modalElement) {
-        // 1. Intentamos obtener una instancia existente
-        let modalInstance = bootstrap.Modal.getInstance(modalElement);
-        
-        // 2. Si no existe, la creamos UNA sola vez
-        if (!modalInstance) {
-          modalInstance = new bootstrap.Modal(modalElement);
-        }
-        
-        // 3. Mostramos el modal
-        modalInstance.show();
+    // 2. Abre el modal al instante (Primer clic)
+    const modalElement = document.getElementById('detalleServicioModal');
+    if (modalElement) {
+      let modalInstance = bootstrap.Modal.getInstance(modalElement);
+      if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalElement);
       }
-    },
-    error: (e) => {
-      this.loading = false;
-      console.error(e);
+      modalInstance.show();
     }
-  });
-}
 
+    // 3. Sincroniza datos frescos con el servidor
+    this.loading = true;
+    this._servicioService.getServicio(servicio.id).subscribe({
+      next: (res) => {
+        this.servicioSeleccionado = res.data;
+        this.loading = false;
+      },
+      error: (e) => {
+        this.loading = false;
+        console.error(e);
+      }
+    });
+  }
 
 abrirAsignacion() {
   const modalElement = document.getElementById('detalleServicioModal');

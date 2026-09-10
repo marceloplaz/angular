@@ -25,7 +25,7 @@
       <div class="row mb-4">
         <div class="col-md-6">
           <label class="form-label fw-semibold">
-            Contraseña <small class="text-muted fw-normal">(Déjalo en blanco si no deseas cambiarla)</small>:
+            Contraseña <small class="text-muted fw-normal">(Si no se desea camiar la contraseña mantener en blanco)</small>:
           </label>
           <input type="password" class="form-control" formControlName="password" placeholder="Nueva contraseña opcional">
         </div>
@@ -120,6 +120,7 @@
         <button type="button" class="btn btn-secondary px-4" (click)="cancelar()">
           <i class="fas fa-times me-1"></i> Cancelar
         </button>
+        
         <button type="submit" class="btn btn-success px-4" [disabled]="updateForm.invalid">
           <i class="fas fa-save me-1"></i> Guardar Cambios
         </button>

@@ -19,6 +19,7 @@ import { ConfiguracionSistemaComponent } from './components/configuracion-sistem
 import { PermisosRolesComponent } from './components/permisos-roles/permisos-roles';
 import { SemanaMesComponent } from './components/semana-mes/semana-mes';
 import { UpdatePersonalComponent } from './components/personal/update-personal/update-personal';
+import { AsistenciaComponent } from './components/asistencia/asistencia';
 
 
 
@@ -48,6 +49,12 @@ export const routes: Routes = [
   ]
 },
 
+{ 
+      path: 'asistencia', 
+      component: AsistenciaComponent,
+      canActivate: [roleGuard],
+      data: { roles: [...ROLES_JEFATURAS] }
+    },
       // SECCIÓN SERVICIOS
       {
   path: 'servicios',
