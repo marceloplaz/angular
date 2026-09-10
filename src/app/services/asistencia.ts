@@ -2,24 +2,31 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
-// Importa las interfaces que definimos para tipar la respuesta
-import { AsistenciaResponse } from '../interfaces/asistencia'; 
 
 @Injectable({
   providedIn: 'root'
 })
 export class AsistenciaService {
   private http = inject(HttpClient);
-  // Usamos el environment de forma centralizada al igual que en tus áreas
-  private apiUrl = `${environment.apiUrl}/asistencia/reporte-rango`;
+  private apiUrl = `${environment.apiUrl}/asistencia`;
 
-  // GET: Obtiene el reporte de asistencia y permisos por rango de fechas
-  obtenerReporteRango(usuarioId: number, fechaInicio: string, fechaFin: string): Observable<AsistenciaResponse> {
-    const params = new HttpParams()
-      .set('usuario_id', usuarioId.toString())
+  // Permitimos que usuarioId sea opcional o acepte null
+  obtenerReporteRango(
+    usuarioId: number | null | undefined, 
+    fechaInicio: string, 
+    fechaFin: string
+  ): Observable<any> {
+    
+    // Construimos los Query Params dinámicamente
+    let params = new HttpParams()
       .set('fecha_inicio', fechaInicio)
       .set('fecha_fin', fechaFin);
 
-    return this.http.get<AsistenciaResponse>(this.apiUrl, { params });
+    // Solo adjuntamos usuario_id a la petición HTTP si tiene un valor válido
+    if (usuarioId !== null && usuarioId !== undefined) {
+      params = params.set('usuario_id', usuarioId.toString());
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/reporte-rango`, { params });
   }
 }
