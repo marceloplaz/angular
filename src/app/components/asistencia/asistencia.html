@@ -88,6 +88,7 @@
             <th>Fecha</th>
             <th>Funcionario</th>
             <th>CI / Celular</th>
+            <th>Turno Programado</th>
             <th>Ingreso</th>
             <th>Salida</th>
             <th>Retraso</th>
@@ -109,6 +110,26 @@
             <td>
               <div>CI: {{ reg.ci || 'S/N' }}</div>
               <small class="text-muted"><i class="bi bi-phone"></i> {{ reg.celular || 'Sin celular' }}</small>
+            </td>
+
+            <!-- Turno Programado (Servicio, Nombre y Rango Horario) -->
+            <td>
+              <ng-container *ngIf="reg.turno_programado?.hora_inicio; else sinTurno">
+    <div class="d-flex flex-column align-items-start">
+      <span class="badge bg-light text-dark border fw-bold mb-1">
+        {{ reg.turno_programado?.nombre }}
+      </span>
+      <small class="text-primary fw-bold">
+        <i class="bi bi-hospital me-1"></i>{{ reg.turno_programado?.servicio }}
+      </small>
+      <small class="text-muted">
+        <i class="bi bi-clock me-1"></i>{{ reg.turno_programado?.hora_inicio }} - {{ reg.turno_programado?.hora_fin }}
+      </small>
+    </div>
+  </ng-container>
+              <ng-template #sinTurno>
+                <span class="badge bg-secondary">Sin Turno Asignado</span>
+              </ng-template>
             </td>
 
             <!-- Marcación Ingreso -->

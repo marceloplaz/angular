@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AsistenciaService } from '../../services/asistencia'; 
 import { AsistenciaRegistro } from '../../interfaces/asistencia'; 
+import { TableModule } from 'primeng/table';
 
 @Component({
   selector: 'app-asistencia',
   standalone: true, 
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TableModule],
   templateUrl: './asistencia.html',
   styleUrl: './asistencia.scss'
 })

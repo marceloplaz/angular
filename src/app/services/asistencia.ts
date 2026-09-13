@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 
@@ -27,6 +28,13 @@ export class AsistenciaService {
       params = params.set('usuario_id', usuarioId.toString());
     }
 
-    return this.http.get<any>(`${this.apiUrl}/reporte-rango`, { params });
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    });
+
+    return this.http.get<any>(`${this.apiUrl}/reporte-rango`, { params, headers });
   }
 }
