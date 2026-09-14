@@ -19,44 +19,50 @@ export class AsistenciaComponent implements OnInit {
   registros: AsistenciaRegistro[] = [];
   cargando: boolean = false;
 
-  // Dejamos el ID vacío por defecto para consultar a todos los funcionarios
-  usuarioId: string | number = ''; 
+  // Valor del input de búsqueda (CI o ID)
+  ciBusqueda: string = ''; 
   fechaInicio: string = '2026-02-01';
   fechaFin: string = '2026-02-28';
 
   ngOnInit() {
-    // Al entrar al componente se lista automáticamente a todo el personal con retrasos/permisos
     this.buscarAsistencia();
   }
 
-// En tu método buscarAsistencia() de asistencia.ts
-buscarAsistencia() {
-  if (!this.fechaInicio || !this.fechaFin) {
-    console.warn('Las fechas son obligatorias');
-    return;
-  }
+  buscarAsistencia() {
+    if (!this.fechaInicio || !this.fechaFin) {
+      console.warn('Las fechas son obligatorias');
+      return;
+    }
 
-  this.cargando = true;
+    this.cargando = true;
+    const valorLimpio = this.ciBusqueda.trim();
 
-  const idLimpio = String(this.usuarioId).trim();
-  // Usamos undefined en lugar de null si no hay ID
-  const idParametro = idLimpio !== '' ? Number(idLimpio) : undefined;
+    // Construcción dinámica de los parámetros de búsqueda
+    const busquedaParams: { ci?: string; usuarioId?: number } = {};
 
-  // Si el servicio no acepta undefined, fuerza el casteo con (idParametro as any)
-  this.asistenciaService.obtenerReporteRango(idParametro as any, this.fechaInicio, this.fechaFin)
-    .pipe(
-      finalize(() => {
-        this.cargando = false; 
-      })
-    )
-    .subscribe({
-      next: (response: any) => {
-        this.registros = response?.data || [];
-      },
-      error: (err) => {
-        console.error('Error al obtener asistencia:', err);
-        this.registros = [];
+    if (valorLimpio !== '') {
+      // Si tiene 5 o más dígitos se envía como C.I., de lo contrario como ID interno
+      if (valorLimpio.length >= 5) {
+        busquedaParams.ci = valorLimpio;
+      } else {
+        busquedaParams.usuarioId = Number(valorLimpio);
       }
-    });
-}
+    }
+
+    this.asistenciaService.obtenerReporteRango(busquedaParams, this.fechaInicio, this.fechaFin)
+      .pipe(
+        finalize(() => {
+          this.cargando = false; 
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          this.registros = response?.data || [];
+        },
+        error: (err) => {
+          console.error('Error al obtener asistencia:', err);
+          this.registros = [];
+        }
+      });
+  }
 }

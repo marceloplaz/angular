@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 
@@ -11,21 +10,24 @@ export class AsistenciaService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/asistencia`;
 
-  // Permitimos que usuarioId sea opcional o acepte null
   obtenerReporteRango(
-    usuarioId: number | null | undefined, 
+    busqueda: { ci?: string; usuarioId?: number }, 
     fechaInicio: string, 
     fechaFin: string
   ): Observable<any> {
     
-    // Construimos los Query Params dinámicamente
     let params = new HttpParams()
       .set('fecha_inicio', fechaInicio)
       .set('fecha_fin', fechaFin);
 
-    // Solo adjuntamos usuario_id a la petición HTTP si tiene un valor válido
-    if (usuarioId !== null && usuarioId !== undefined) {
-      params = params.set('usuario_id', usuarioId.toString());
+    // Adjuntar 'ci' si fue ingresado
+    if (busqueda?.ci) {
+      params = params.set('ci', busqueda.ci);
+    }
+
+    // Adjuntar 'usuario_id' si fue ingresado como ID
+    if (busqueda?.usuarioId) {
+      params = params.set('usuario_id', busqueda.usuarioId.toString());
     }
 
     const token = localStorage.getItem('token');

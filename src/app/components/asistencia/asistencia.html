@@ -9,18 +9,18 @@
     <div class="card-body">
       <div class="row g-3 align-items-end">
         
-        <!-- ID Personal (Opcional) -->
+        <!-- CI / ID Funcionario (Opcional) -->
         <div class="col-md-3">
-          <label for="usuarioId" class="form-label fw-bold">ID Personal (Opcional):</label>
+          <label for="ciBusqueda" class="form-label fw-bold">CI / ID Funcionario (Opcional):</label>
           <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <span class="input-group-text"><i class="bi bi-card-heading"></i></span>
             <input 
               type="text" 
-              id="usuarioId" 
-              name="usuarioId"
-              [(ngModel)]="usuarioId" 
+              id="ciBusqueda" 
+              name="ciBusqueda"
+              [(ngModel)]="ciBusqueda" 
               class="form-control" 
-              placeholder="Todos los funcionarios" />
+              placeholder="Ej: 7190335 o dejar vacío" />
           </div>
         </div>
 
@@ -115,18 +115,18 @@
             <!-- Turno Programado (Servicio, Nombre y Rango Horario) -->
             <td>
               <ng-container *ngIf="reg.turno_programado?.hora_inicio; else sinTurno">
-    <div class="d-flex flex-column align-items-start">
-      <span class="badge bg-light text-dark border fw-bold mb-1">
-        {{ reg.turno_programado?.nombre }}
-      </span>
-      <small class="text-primary fw-bold">
-        <i class="bi bi-hospital me-1"></i>{{ reg.turno_programado?.servicio }}
-      </small>
-      <small class="text-muted">
-        <i class="bi bi-clock me-1"></i>{{ reg.turno_programado?.hora_inicio }} - {{ reg.turno_programado?.hora_fin }}
-      </small>
-    </div>
-  </ng-container>
+                <div class="d-flex flex-column align-items-start">
+                  <span class="badge bg-light text-dark border fw-bold mb-1">
+                    {{ reg.turno_programado?.nombre }}
+                  </span>
+                  <small class="text-primary fw-bold">
+                    <i class="bi bi-hospital me-1"></i>{{ reg.turno_programado?.servicio }}
+                  </small>
+                  <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>{{ reg.turno_programado?.hora_inicio }} - {{ reg.turno_programado?.hora_fin }}
+                  </small>
+                </div>
+              </ng-container>
               <ng-template #sinTurno>
                 <span class="badge bg-secondary">Sin Turno Asignado</span>
               </ng-template>
@@ -177,7 +177,7 @@
     <div class="card-body">
       <i class="bi bi-check-all display-4 text-success mb-3"></i>
       <h5 class="text-muted">No se encontraron retrasos ni permisos registrados en este rango de fechas.</h5>
-      <p class="text-muted small">Si aplicaste un filtro por ID Personal, intenta dejándolo vacío para consultar todo el personal.</p>
+      <p class="text-muted small">Si aplicaste un filtro por CI / ID Personal, intenta dejándolo vacío para consultar todo el personal.</p>
     </div>
   </div>
 
