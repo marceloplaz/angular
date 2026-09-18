@@ -1,7 +1,11 @@
 <div class="container-fluid px-4 py-3">
-  <!-- Título de la sección -->
+  
+  <!-- Título de la sección y botón alineados correctamente -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-calendar-check text-primary me-2"></i> Reporte General de Asistencia y Permisos</h2>
+    <button type="button" class="btn btn-outline-success shadow-sm" (click)="abrirModalReporteTurnos()">
+      <i class="bi bi-file-earmark-pdf-fill me-1"></i> REPORTE-TURNO-PERSONAL
+    </button>
   </div>
 
   <!-- Filtros de búsqueda -->
@@ -97,22 +101,15 @@
         </thead>
         <tbody>
           <tr *ngFor="let reg of registros">
-            <!-- Fecha -->
             <td class="fw-semibold text-nowrap">{{ reg.fecha_asistencia }}</td>
-            
-            <!-- Datos del Funcionario -->
             <td>
               <div class="fw-bold text-dark">{{ reg.nombre_completo }}</div>
               <small class="text-muted">Cód: {{ reg.codigo_personal }} | ID: {{ reg.id_interno }}</small>
             </td>
-
-            <!-- CI / Celular -->
             <td>
               <div>CI: {{ reg.ci || 'S/N' }}</div>
               <small class="text-muted"><i class="bi bi-phone"></i> {{ reg.celular || 'Sin celular' }}</small>
             </td>
-
-            <!-- Turno Programado (Servicio, Nombre y Rango Horario) -->
             <td>
               <ng-container *ngIf="reg.turno_programado?.hora_inicio; else sinTurno">
                 <div class="d-flex flex-column align-items-start">
@@ -131,20 +128,14 @@
                 <span class="badge bg-secondary">Sin Turno Asignado</span>
               </ng-template>
             </td>
-
-            <!-- Marcación Ingreso -->
             <td>
               <span *ngIf="reg.hora_ingreso" class="text-dark fw-medium">{{ reg.hora_ingreso }}</span>
               <span *ngIf="!reg.hora_ingreso" class="text-muted fst-italic">Sin marcación</span>
             </td>
-
-            <!-- Marcación Salida -->
             <td>
               <span *ngIf="reg.hora_salida" class="text-dark fw-medium">{{ reg.hora_salida }}</span>
               <span *ngIf="!reg.hora_salida" class="badge bg-warning text-dark">Sin marcar salida</span>
             </td>
-
-            <!-- Retrasos observados -->
             <td>
               <span *ngIf="reg.tiene_retraso" class="badge bg-danger fs-6">
                 <i class="bi bi-clock-history me-1"></i> {{ reg.minutos_retraso }} min
@@ -153,8 +144,6 @@
                 <i class="bi bi-check-circle me-1"></i> A tiempo
               </span>
             </td>
-
-            <!-- Permisos y Licencias -->
             <td>
               <div *ngIf="reg.nombre_permiso || reg.tipo_codigo">
                 <span class="badge bg-info text-dark mb-1">
@@ -172,7 +161,7 @@
     </div>
   </div>
 
-  <!-- Estado vacío (Sin incidencias ni registros) -->
+  <!-- Estado vacío -->
   <div *ngIf="!cargando && registros.length === 0" class="card shadow-sm text-center py-5">
     <div class="card-body">
       <i class="bi bi-check-all display-4 text-success mb-3"></i>
@@ -181,4 +170,83 @@
     </div>
   </div>
 
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL FUERA DEL CONTENEDOR PRINCIPAL     -->
+<!-- ========================================== -->
+<div class="modal fade" id="modalReporteTurnos" tabindex="-1" aria-hidden="true" [ngStyle]="{'display': mostrarModal ? 'block' : 'none'}" [class.show]="mostrarModal" [style.background-color]="mostrarModal ? 'rgba(0,0,0,0.5)' : 'transparent'">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+      
+      <!-- Header del Modal -->
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-gear-fill me-2"></i> CONFIGURAR REPORTE DE TURNOS
+        </h5>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="cerrarModalReporteTurnos()"></button>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="modal-body bg-light">
+        <div class="row g-3">
+          
+          <!-- Mes y Gestión -->
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary">MES:</label>
+            <select class="form-select" [(ngModel)]="modalMes" (change)="calcularFechasPorMes()">
+              <option value="1">Enero</option>
+              <option value="2">Febrero</option>
+              <option value="3">Marzo</option>
+              <option value="4">Abril</option>
+              <option value="5">Mayo</option>
+              <option value="6">Junio</option>
+              <option value="7">Julio</option>
+              <option value="8">Agosto</option>
+              <option value="9">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary">GESTIÓN:</label>
+            <input type="number" class="form-control" [(ngModel)]="modalGestion" (input)="calcularFechasPorMes()" />
+          </div>
+
+          <!-- Fecha Inicio y Fin -->
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary">FECHA INICIO:</label>
+            <input type="date" class="form-control" [(ngModel)]="modalFechaInicio" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary">FECHA FIN:</label>
+            <input type="date" class="form-control" [(ngModel)]="modalFechaFin" />
+          </div>
+
+          <!-- Categoría a Reportar -->
+          <div class="col-12">
+            <label class="form-label fw-bold text-secondary">CATEGORÍA A REPORTAR:</label>
+            <select class="form-select" [(ngModel)]="modalCategoriaId">
+              <option [value]="''">-- Todas las Categorías --</option>
+              <option *ngFor="let cat of listaCategorias" [value]="cat.id">{{ cat.nombre }}</option>
+            </select>
+            <small class="text-muted mt-1 d-block">Seleccione la categoría correspondiente para el reporte.</small>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="modal-footer bg-white">
+        <button type="button" class="btn btn-secondary px-4" (click)="cerrarModalReporteTurnos()">Cancelar</button>
+        <button type="button" class="btn btn-success px-4 fw-bold" (click)="generarMatrizTurnosPdf()">
+          <i class="bi bi-file-pdf me-1"></i> Generar Matriz de Turnos PDF
+        </button>
+      </div>
+
+    </div>
+  </div>
 </div>
