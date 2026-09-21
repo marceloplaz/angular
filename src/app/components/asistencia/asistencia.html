@@ -137,13 +137,21 @@
               <span *ngIf="!reg.hora_salida" class="badge bg-warning text-dark">Sin marcar salida</span>
             </td>
             <td>
-              <span *ngIf="reg.tiene_retraso" class="badge bg-danger fs-6">
-                <i class="bi bi-clock-history me-1"></i> {{ reg.minutos_retraso }} min
-              </span>
-              <span *ngIf="!reg.tiene_retraso" class="badge bg-success">
-                <i class="bi bi-check-circle me-1"></i> A tiempo
-              </span>
-            </td>
+  <!-- Case 1: Retraso en el ingreso -->
+  <span *ngIf="reg.tiene_retraso" class="badge bg-danger fs-6">
+    <i class="bi bi-clock-history me-1"></i> {{ reg.minutos_retraso }} min
+  </span>
+
+  <!-- Case 2: Salida antes de hora (sin retraso de ingreso) -->
+  <span *ngIf="!reg.tiene_retraso && reg.salida_temprana" class="badge bg-warning text-dark">
+    <i class="bi bi-exclamation-triangle me-1"></i> Salida antes ({{ reg.minutos_temprano }} min)
+  </span>
+
+  <!-- Case 3: Cumplimiento normal (A tiempo) -->
+  <span *ngIf="!reg.tiene_retraso && !reg.salida_temprana" class="badge bg-success">
+    <i class="bi bi-check-circle me-1"></i> A tiempo
+  </span>
+</td>
             <td>
               <div *ngIf="reg.nombre_permiso || reg.tipo_codigo">
                 <span class="badge bg-info text-dark mb-1">
