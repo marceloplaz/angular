@@ -5,6 +5,8 @@ import { finalize } from 'rxjs';
 import { AsistenciaService } from '../../services/asistencia'; 
 import { AsistenciaRegistro } from '../../interfaces/asistencia'; 
 import { TableModule } from 'primeng/table';
+import * as XLSX from 'xlsx';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-asistencia',
@@ -128,5 +130,76 @@ export class AsistenciaComponent implements OnInit {
           alert('No se pudo generar el reporte en PDF. Verifique los permisos o datos.');
         }
       });
+      }
+
+ exportarExcel(): void {
+  if (!this.modalFechaInicio || !this.modalFechaFin) {
+    Swal.fire('Atención', 'Seleccione un rango de fechas válido', 'warning');
+    return;
   }
+
+  this.cargando = true;
+
+  // Consultar la matriz de datos procesados desde el backend
+  this.asistenciaService.obtenerMatrizAsistencia(
+    this.modalFechaInicio, 
+    this.modalFechaFin, 
+    this.modalCategoriaId
+  ).subscribe({
+    next: (res: any) => {
+      this.cargando = false;
+      const empleados: any[] = res?.data?.empleados || [];
+
+      if (empleados.length === 0) {
+        Swal.fire('Atención', 'No hay datos registrados para exportar en este periodo', 'info');
+        return;
+      }
+
+      // Mapear los datos con tipos explícitos en (emp: any, index: number)
+     const dataExcel = empleados.map((emp: any, index: number) => ({
+  'Nº': index + 1,
+  'ITEM': emp.item,
+  'CARGA HORARIA': emp.carga_horaria,
+  'FECHA DE INGRESO': emp.fecha_ingreso,
+  'C.I.': emp.ci,
+  'CARGO': emp.cargo,
+  'TIPO SALARIO / FUENTE': emp.tipo_salario,
+  'LUGAR DE TRABAJO': emp.lugar_trabajo,
+  'APELLIDO PATERNO': emp.apellido_paterno,
+  'APELLIDO MATERNO': emp.apellido_materno,
+  'NOMBRES': emp.nombres,
+
+  // Sanciones R.I.P.
+  'FALTAS': emp.faltas,
+  'MINUTOS RETRASO': emp.minutos_retraso,
+  'ABAND.': emp.abandono,
+  'OMISIÓN MARCADO INGRESO/SALIDA': emp.omision_marcado,
+  'TOTAL DÍAS A DESCONTAR': emp.total_dias_descontar,
+
+  // Novedades Laborales
+  'DÍAS EFECT. TRABAJADOS': emp.dias_efect_trabajados,
+  'DÍAS DE FALTA': emp.dias_falta,
+  'DÍAS DE BAJA MÉDICA': emp.dias_baja_medica,
+  'DÍAS DE LICENCIA': emp.dias_licencia,
+  'DÍAS DE VACACIÓN': emp.dias_vacacion,
+  'DÍAS DE COMISIÓN': emp.dias_comision,
+  'DÍAS FERIADO': emp.dias_feriado,
+  'DÍAS DE FIN DE SEMANA': emp.dias_fin_semana,
+  'TOTAL DÍAS DEL MES': emp.total_dias_mes,
+  'OBSERVACIÓN': emp.observacion
+}));
+
+      // Generación del archivo binario .xlsx
+      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataExcel);
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'PLANILLA DE ASISTENCIA');
+
+      XLSX.writeFile(wb, `Planilla_Asistencia_${this.modalFechaInicio}_al_${this.modalFechaFin}.xlsx`);
+    },
+    error: (err: any) => {
+      this.cargando = false;
+      Swal.fire('Error', err?.error?.message || 'Error al obtener datos para el reporte Excel', 'error');
+    }
+  });
+}
 }

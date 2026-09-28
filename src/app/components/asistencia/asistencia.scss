@@ -18,3 +18,84 @@
   font-weight: 500;
   padding: 0.5em 0.75em;
 }
+/* Configuración de página en horizontal (Landscape) con márgenes mínimos */
+@page {
+    size: letter landscape; /* O 'a4 landscape' */
+    margin: 8mm 5mm 8mm 5mm;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Tabla con distribución de ancho rígida */
+.tabla-reporte {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* CLAVE: Fuerza a respetar los % exactos asignados */
+}
+
+.tabla-reporte th, 
+.tabla-reporte td {
+    border: 0.8px solid #555;
+    text-align: center;
+    vertical-align: middle;
+    padding: 2px 1px;
+    font-size: 6.5pt; /* Tamaño optimizado para 31 días */
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+/* Encabezados principales */
+.tabla-reporte th {
+    background-color: #e9ecef;
+    font-weight: bold;
+    color: #000;
+}
+
+/* --- Definición de anchos de columna (Suma total = 100%) --- */
+.col-no { width: 2.5%; }
+.col-cedula { width: 6.5%; }
+
+/* Ancho fijo garantizado para Nombres y Apellidos (18% espacio amplio) */
+.col-nombre { 
+    width: 18%; 
+    text-align: left !important; 
+    padding-left: 3px !important;
+    font-size: 7pt;
+    line-height: 1.1;
+}
+
+/* Columnas de días (31 días x ~1.7% = 52.7% del total) */
+.col-dia { 
+    width: 1.7%; 
+    font-size: 6pt;
+}
+
+/* Totales y Observaciones */
+.col-total-min { width: 6.5%; font-size: 6pt; line-height: 1; }
+.col-total-hrs { width: 6.5%; font-size: 6pt; line-height: 1; }
+.col-obs { width: 7.3%; font-size: 6pt; }
+
+/* Botón personalizado de Excel */
+.btn-excel-icon {
+  background-color: #107c41;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-excel-icon:hover {
+  background-color: #0b532c;
+  transform: scale(1.08);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}

@@ -36,6 +36,23 @@ export class AsistenciaService {
     return this.http.get<any>(`${this.apiUrl}/reporte-rango`, { params, headers });
   }
 
+  obtenerMatrizAsistencia(fechaInicio: string, fechaFin: string, categoriaId?: any): Observable<any> {
+    let params = new HttpParams()
+      .set('fecha_inicio', fechaInicio)
+      .set('fecha_fin', fechaFin);
+
+    if (categoriaId !== '' && categoriaId !== null && categoriaId !== undefined) {
+      params = params.set('categoria_id', categoriaId.toString());
+    }
+
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    });
+
+    return this.http.get<any>(`${this.apiUrl}/matriz`, { params, headers });
+  }
   descargarMatrizPdf(fechaInicio: string, fechaFin: string, categoriaId: any): Observable<Blob> {
     let params = new HttpParams()
       .set('fecha_inicio', fechaInicio)
