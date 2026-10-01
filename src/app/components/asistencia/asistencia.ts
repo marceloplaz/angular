@@ -250,4 +250,50 @@ export class AsistenciaComponent implements OnInit {
       }
     });
   }
+
+  // ==========================================
+  // NUEVOS MÉTODOS PARA ESTILOS Y TOOLTIPS
+  // ==========================================
+
+  /**
+   * Define clases CSS personalizadas según el tipo de jornada o estado.
+   */
+  obtenerClaseCelda(dia: AsistenciaRegistro | undefined): string {
+    if (!dia) return '';
+
+    if (dia.tipo_jornada === 'Feriado') {
+      return 'celda-feriado';
+    } 
+    if (dia.tipo_jornada === 'Tolerancia') {
+      return 'celda-tolerancia';
+    }
+    if (dia.estado_texto === 'F' || dia.estado_texto === 'Falta') {
+      return 'celda-falta';
+    }
+    if (dia.nombre_permiso || dia.estado_texto === 'PER') {
+      return 'celda-permiso';
+    }
+    
+    return '';
+  }
+
+  /**
+   * Genera el texto del tooltip (hover) con la descripción exacta del feriado o tolerancia.
+   */
+  obtenerTooltipCelda(dia: AsistenciaRegistro | undefined): string {
+    if (!dia) return '';
+
+    if (dia.tipo_jornada === 'Feriado' || dia.tipo_jornada === 'Tolerancia') {
+      return `${dia.tipo_jornada}: ${dia.feriado_descripcion ?? 'Sin descripción'} \nAlcance: ${dia.alcance_descripcion ?? 'N/A'}`;
+    }
+    if (dia.nombre_permiso) {
+      return `Permiso: ${dia.nombre_permiso}`;
+    }
+    if (dia.minutos_retraso > 0) {
+      return `Retraso: ${dia.minutos_retraso} minutos`;
+    }
+
+    return `Estado: ${dia.estado_texto || 'Normal'}`;
+  }
+
 }

@@ -99,3 +99,31 @@ body {
   transform: scale(1.08);
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+/* asistencia.scss */
+
+.celda-feriado {
+  background-color: #ffc107 !important; // Amarillo destacado
+  color: #212529 !important;
+  font-weight: bold;
+  text-align: center;
+}
+
+.celda-tolerancia {
+  background-color: #0dcaf0 !important; // Celeste / Azul claro
+  color: #212529 !important;
+  font-weight: bold;
+  text-align: center;
+}
+
+.celda-falta {
+  background-color: #dc3545 !important; // Rojo para faltas
+  color: #ffffff !important;
+  text-align: center;
+}
+
+.celda-permiso {
+  background-color: #6c757d !important; // Gris para permisos
+  color: #ffffff !important;
+  text-align: center;
+}

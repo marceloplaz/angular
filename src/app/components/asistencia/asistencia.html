@@ -101,18 +101,28 @@
           <th>Permiso / Justificación</th>
         </tr>
       </ng-template>
-
-      <ng-template pTemplate="body" let-reg>
+<ng-template pTemplate="body" let-reg>
         <tr>
-          <td class="fw-semibold text-nowrap">{{ reg.fecha_asistencia }}</td>
+          <!-- 1. Fecha (con los estilos y tooltips aplicados) -->
+          <td class="fw-semibold text-nowrap" 
+              [ngClass]="obtenerClaseCelda(reg)" 
+              [title]="obtenerTooltipCelda(reg)">
+            {{ reg.fecha_asistencia }}
+          </td>
+
+          <!-- 2. Funcionario -->
           <td>
             <div class="fw-bold text-dark">{{ reg.nombre_completo }}</div>
             <small class="text-muted">Cód: {{ reg.codigo_personal }} | ID: {{ reg.id_interno }}</small>
           </td>
+
+          <!-- 3. CI / Celular -->
           <td>
             <div>CI: {{ reg.ci || 'S/N' }}</div>
             <small class="text-muted"><i class="bi bi-phone"></i> {{ reg.celular || 'Sin celular' }}</small>
           </td>
+
+          <!-- 4. Turno Programado -->
           <td>
             <ng-container *ngIf="reg.turno_programado?.hora_inicio; else sinTurno">
               <div class="d-flex flex-column align-items-start">
@@ -131,30 +141,33 @@
               <span class="badge bg-secondary">Sin Turno Asignado</span>
             </ng-template>
           </td>
+
+          <!-- 5. Ingreso -->
           <td>
             <span *ngIf="reg.hora_ingreso" class="text-dark fw-medium">{{ reg.hora_ingreso }}</span>
             <span *ngIf="!reg.hora_ingreso" class="text-muted fst-italic">Sin marcación</span>
           </td>
+
+          <!-- 6. Salida -->
           <td>
             <span *ngIf="reg.hora_salida" class="text-dark fw-medium">{{ reg.hora_salida }}</span>
             <span *ngIf="!reg.hora_salida" class="badge bg-warning text-dark">Sin marcar salida</span>
           </td>
+
+          <!-- 7. Retraso -->
           <td>
-            <!-- Case 1: Retraso en el ingreso -->
             <span *ngIf="reg.tiene_retraso" class="badge bg-danger fs-6">
               <i class="bi bi-clock-history me-1"></i> {{ reg.minutos_retraso }} min
             </span>
-
-            <!-- Case 2: Salida antes de hora -->
             <span *ngIf="!reg.tiene_retraso && reg.salida_temprana" class="badge bg-warning text-dark">
               <i class="bi bi-exclamation-triangle me-1"></i> Salida antes ({{ reg.minutos_temprano }} min)
             </span>
-
-            <!-- Case 3: Cumplimiento normal -->
             <span *ngIf="!reg.tiene_retraso && !reg.salida_temprana" class="badge bg-success">
               <i class="bi bi-check-circle me-1"></i> A tiempo
             </span>
           </td>
+
+          <!-- 8. Permiso / Justificación -->
           <td>
             <div *ngIf="reg.nombre_permiso || reg.tipo_codigo">
               <span class="badge bg-info text-dark mb-1">
@@ -165,14 +178,6 @@
               </div>
             </div>
             <span *ngIf="!reg.nombre_permiso && !reg.tipo_codigo" class="text-muted small">Sin permisos</span>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="8" class="text-center py-4 text-muted">
-            No se encontraron retrasos ni permisos registrados en este rango de fechas.
           </td>
         </tr>
       </ng-template>

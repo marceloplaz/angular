@@ -27,6 +27,11 @@ export interface AsistenciaRegistro {
   minutos_temprano: number;    
   estado_texto?: string;
   turno_programado?: TurnoProgramadoInfo;
+  
+  feriado_descripcion?: string;
+  tipo_jornada?: string;       // Ej: 'Feriado', 'Tolerancia', 'Laboral'
+  alcance_descripcion?: string;
+
 }
 
 // ESTRUCTURA PARA LA PLANILLA EXCEL (Reutilizando tus nombres + campos del R.I.P.)
@@ -61,7 +66,7 @@ export interface EmpleadoPlanilla {
   dias_feriado: number;
   dias_fin_semana: number;
   total_dias_mes: number;
-
+  
   observacion: string;
   dias_detalle?: { [fecha: string]: AsistenciaRegistro };
 }
