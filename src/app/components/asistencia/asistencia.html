@@ -1,8 +1,8 @@
 <div class="container-fluid px-4 py-3">
-  
-  <!-- Título de la sección y botón alineados correctamente -->
+
+  <!-- Título de la sección y botón alineados -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-calendar-check text-primary me-2"></i> Reporte General de Asistencia y Permisos</h2>
+    <h2><i class="bi bi-calendar-check text-primary me-2"></i> REPORTE DE ASISTENCIA Y REGISTROS DE PERMISOS</h2>
     <button type="button" class="btn btn-outline-success shadow-sm" (click)="abrirModalReporteTurnos()">
       <i class="bi bi-file-earmark-pdf-fill me-1"></i> REPORTE-TURNO-PERSONAL
     </button>
@@ -12,10 +12,10 @@
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
-        
-        <!-- CI / ID Funcionario (Opcional) -->
+
+        <!-- CI / ID Funcionario -->
         <div class="col-md-3">
-          <label for="ciBusqueda" class="form-label fw-bold">CI / ID Funcionario (Opcional):</label>
+          <label for="ciBusqueda" class="form-label fw-bold">CI</label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-card-heading"></i></span>
             <input 
@@ -24,7 +24,7 @@
               name="ciBusqueda"
               [(ngModel)]="ciBusqueda" 
               class="form-control" 
-              placeholder="Ej: 7190335 o dejar vacío" />
+              placeholder="" />
           </div>
         </div>
 
@@ -55,7 +55,7 @@
           <button 
             type="button"
             class="btn btn-primary w-100 shadow-sm" 
-            (click)="buscarAsistencia()" 
+            (click)="buscarAsistencia(1)" 
             [disabled]="cargando">
             <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             <i class="bi bi-funnel me-1" *ngIf="!cargando"></i> Filtrar Reporte
@@ -66,111 +66,121 @@
     </div>
   </div>
 
-  <!-- Spinner de carga -->
-  <div *ngIf="cargando" class="text-center my-5">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">Cargando...</span>
-    </div>
-    <p class="text-muted mt-2">Procesando registros de asistencia del personal...</p>
-  </div>
-
-  <!-- Tabla de resultados -->
-  <div class="card shadow-sm" *ngIf="!cargando && registros.length > 0">
+  <!-- 1. Tabla de resultados (se muestra si está cargando o si existen registros) -->
+  <div class="card shadow-sm" *ngIf="cargando || registros.length > 0 || totalRecords > 0">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
       <h5 class="mb-0 text-secondary">
         Lista de Incidencias (Retrasos y Permisos)
       </h5>
       <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">
-        Total: {{ registros.length }} registros
+        Total: {{ totalRecords }} registros
       </span>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Fecha</th>
-            <th>Funcionario</th>
-            <th>CI / Celular</th>
-            <th>Turno Programado</th>
-            <th>Ingreso</th>
-            <th>Salida</th>
-            <th>Retraso</th>
-            <th>Permiso / Justificación</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let reg of registros">
-            <td class="fw-semibold text-nowrap">{{ reg.fecha_asistencia }}</td>
-            <td>
-              <div class="fw-bold text-dark">{{ reg.nombre_completo }}</div>
-              <small class="text-muted">Cód: {{ reg.codigo_personal }} | ID: {{ reg.id_interno }}</small>
-            </td>
-            <td>
-              <div>CI: {{ reg.ci || 'S/N' }}</div>
-              <small class="text-muted"><i class="bi bi-phone"></i> {{ reg.celular || 'Sin celular' }}</small>
-            </td>
-            <td>
-              <ng-container *ngIf="reg.turno_programado?.hora_inicio; else sinTurno">
-                <div class="d-flex flex-column align-items-start">
-                  <span class="badge bg-light text-dark border fw-bold mb-1">
-                    {{ reg.turno_programado?.nombre }}
-                  </span>
-                  <small class="text-primary fw-bold">
-                    <i class="bi bi-hospital me-1"></i>{{ reg.turno_programado?.servicio }}
-                  </small>
-                  <small class="text-muted">
-                    <i class="bi bi-clock me-1"></i>{{ reg.turno_programado?.hora_inicio }} - {{ reg.turno_programado?.hora_fin }}
-                  </small>
-                </div>
-              </ng-container>
-              <ng-template #sinTurno>
-                <span class="badge bg-secondary">Sin Turno Asignado</span>
-              </ng-template>
-            </td>
-            <td>
-              <span *ngIf="reg.hora_ingreso" class="text-dark fw-medium">{{ reg.hora_ingreso }}</span>
-              <span *ngIf="!reg.hora_ingreso" class="text-muted fst-italic">Sin marcación</span>
-            </td>
-            <td>
-              <span *ngIf="reg.hora_salida" class="text-dark fw-medium">{{ reg.hora_salida }}</span>
-              <span *ngIf="!reg.hora_salida" class="badge bg-warning text-dark">Sin marcar salida</span>
-            </td>
-            <td>
-  <!-- Case 1: Retraso en el ingreso -->
-  <span *ngIf="reg.tiene_retraso" class="badge bg-danger fs-6">
-    <i class="bi bi-clock-history me-1"></i> {{ reg.minutos_retraso }} min
-  </span>
+    <p-table
+      [value]="registros"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [paginator]="true"
+      [rows]="rows"
+      [totalRecords]="totalRecords"
+      [first]="first"
+      [loading]="cargando"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      styleClass="p-datatable-striped p-datatable-hoverable">
 
-  <!-- Case 2: Salida antes de hora (sin retraso de ingreso) -->
-  <span *ngIf="!reg.tiene_retraso && reg.salida_temprana" class="badge bg-warning text-dark">
-    <i class="bi bi-exclamation-triangle me-1"></i> Salida antes ({{ reg.minutos_temprano }} min)
-  </span>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Funcionario</th>
+          <th>CI / Celular</th>
+          <th>Turno Programado</th>
+          <th>Ingreso</th>
+          <th>Salida</th>
+          <th>Retraso</th>
+          <th>Permiso / Justificación</th>
+        </tr>
+      </ng-template>
 
-  <!-- Case 3: Cumplimiento normal (A tiempo) -->
-  <span *ngIf="!reg.tiene_retraso && !reg.salida_temprana" class="badge bg-success">
-    <i class="bi bi-check-circle me-1"></i> A tiempo
-  </span>
-</td>
-            <td>
-              <div *ngIf="reg.nombre_permiso || reg.tipo_codigo">
-                <span class="badge bg-info text-dark mb-1">
-                  <i class="bi bi-file-text me-1"></i> {{ reg.nombre_permiso || 'Permiso Activo' }} (Tipo: {{ reg.tipo_codigo }})
+      <ng-template pTemplate="body" let-reg>
+        <tr>
+          <td class="fw-semibold text-nowrap">{{ reg.fecha_asistencia }}</td>
+          <td>
+            <div class="fw-bold text-dark">{{ reg.nombre_completo }}</div>
+            <small class="text-muted">Cód: {{ reg.codigo_personal }} | ID: {{ reg.id_interno }}</small>
+          </td>
+          <td>
+            <div>CI: {{ reg.ci || 'S/N' }}</div>
+            <small class="text-muted"><i class="bi bi-phone"></i> {{ reg.celular || 'Sin celular' }}</small>
+          </td>
+          <td>
+            <ng-container *ngIf="reg.turno_programado?.hora_inicio; else sinTurno">
+              <div class="d-flex flex-column align-items-start">
+                <span class="badge bg-light text-dark border fw-bold mb-1">
+                  {{ reg.turno_programado?.nombre }}
                 </span>
-                <div class="small text-muted" *ngIf="reg.permiso_inicio">
-                  Del {{ reg.permiso_inicio }} al {{ reg.permiso_fin }} ({{ reg.duracion }} días)
-                </div>
+                <small class="text-primary fw-bold">
+                  <i class="bi bi-hospital me-1"></i>{{ reg.turno_programado?.servicio }}
+                </small>
+                <small class="text-muted">
+                  <i class="bi bi-clock me-1"></i>{{ reg.turno_programado?.hora_inicio }} - {{ reg.turno_programado?.hora_fin }}
+                </small>
               </div>
-              <span *ngIf="!reg.nombre_permiso && !reg.tipo_codigo" class="text-muted small">Sin permisos</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            </ng-container>
+            <ng-template #sinTurno>
+              <span class="badge bg-secondary">Sin Turno Asignado</span>
+            </ng-template>
+          </td>
+          <td>
+            <span *ngIf="reg.hora_ingreso" class="text-dark fw-medium">{{ reg.hora_ingreso }}</span>
+            <span *ngIf="!reg.hora_ingreso" class="text-muted fst-italic">Sin marcación</span>
+          </td>
+          <td>
+            <span *ngIf="reg.hora_salida" class="text-dark fw-medium">{{ reg.hora_salida }}</span>
+            <span *ngIf="!reg.hora_salida" class="badge bg-warning text-dark">Sin marcar salida</span>
+          </td>
+          <td>
+            <!-- Case 1: Retraso en el ingreso -->
+            <span *ngIf="reg.tiene_retraso" class="badge bg-danger fs-6">
+              <i class="bi bi-clock-history me-1"></i> {{ reg.minutos_retraso }} min
+            </span>
+
+            <!-- Case 2: Salida antes de hora -->
+            <span *ngIf="!reg.tiene_retraso && reg.salida_temprana" class="badge bg-warning text-dark">
+              <i class="bi bi-exclamation-triangle me-1"></i> Salida antes ({{ reg.minutos_temprano }} min)
+            </span>
+
+            <!-- Case 3: Cumplimiento normal -->
+            <span *ngIf="!reg.tiene_retraso && !reg.salida_temprana" class="badge bg-success">
+              <i class="bi bi-check-circle me-1"></i> A tiempo
+            </span>
+          </td>
+          <td>
+            <div *ngIf="reg.nombre_permiso || reg.tipo_codigo">
+              <span class="badge bg-info text-dark mb-1">
+                <i class="bi bi-file-text me-1"></i> {{ reg.nombre_permiso || 'Permiso Activo' }} (Tipo: {{ reg.tipo_codigo }})
+              </span>
+              <div class="small text-muted" *ngIf="reg.permiso_inicio">
+                Del {{ reg.permiso_inicio }} al {{ reg.permiso_fin }} ({{ reg.duracion }} días)
+              </div>
+            </div>
+            <span *ngIf="!reg.nombre_permiso && !reg.tipo_codigo" class="text-muted small">Sin permisos</span>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center py-4 text-muted">
+            No se encontraron retrasos ni permisos registrados en este rango de fechas.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 
-  <!-- Estado vacío -->
-  <div *ngIf="!cargando && registros.length === 0" class="card shadow-sm text-center py-5">
+  <!-- 2. Estado vacío (solo cuando NO está cargando y NO hay registros) -->
+  <div *ngIf="!cargando && registros.length === 0 && totalRecords === 0" class="card shadow-sm text-center py-5 mt-4">
     <div class="card-body">
       <i class="bi bi-check-all display-4 text-success mb-3"></i>
       <h5 class="text-muted">No se encontraron retrasos ni permisos registrados en este rango de fechas.</h5>
@@ -180,10 +190,11 @@
 
 </div>
 
-<!-- ========================================== -->
-<!-- MODAL FUERA DEL CONTENEDOR PRINCIPAL     -->
-<!-- ========================================== -->
-<div class="modal fade" id="modalReporteTurnos" tabindex="-1" aria-hidden="true" [ngStyle]="{'display': mostrarModal ? 'block' : 'none'}" [class.show]="mostrarModal" [style.background-color]="mostrarModal ? 'rgba(0,0,0,0.5)' : 'transparent'">
+<!-- Modal para Configurar Reporte de Turnos -->
+<div class="modal fade" id="modalReporteTurnos" tabindex="-1" aria-hidden="true" 
+     [ngStyle]="{'display': mostrarModal ? 'block' : 'none'}" 
+     [class.show]="mostrarModal" 
+     [style.background-color]="mostrarModal ? 'rgba(0,0,0,0.5)' : 'transparent'">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow-lg border-0">
       
@@ -199,7 +210,6 @@
       <div class="modal-body bg-light">
         <div class="row g-3">
           
-          <!-- Mes y Gestión -->
           <div class="col-md-6">
             <label class="form-label fw-bold text-secondary">MES:</label>
             <select class="form-select" [(ngModel)]="modalMes" (change)="calcularFechasPorMes()">
@@ -223,7 +233,6 @@
             <input type="number" class="form-control" [(ngModel)]="modalGestion" (input)="calcularFechasPorMes()" />
           </div>
 
-          <!-- Fecha Inicio y Fin -->
           <div class="col-md-6">
             <label class="form-label fw-bold text-secondary">FECHA INICIO:</label>
             <input type="date" class="form-control" [(ngModel)]="modalFechaInicio" />
@@ -234,7 +243,6 @@
             <input type="date" class="form-control" [(ngModel)]="modalFechaFin" />
           </div>
 
-          <!-- Categoría a Reportar -->
           <div class="col-12">
             <label class="form-label fw-bold text-secondary">CATEGORÍA A REPORTAR:</label>
             <select class="form-select" [(ngModel)]="modalCategoriaId">
@@ -254,11 +262,11 @@
           <i class="bi bi-file-pdf me-1"></i> Generar Matriz de Turnos PDF
         </button>
         <button type="button" 
-        class="btn-excel-icon" 
-        (click)="exportarExcel()" 
-        title="Exportar a Excel Planilla de Asistencia">
-  <i class="bi bi-file-earmark-excel-fill fs-5"></i>
-</button>
+          class="btn-excel-icon" 
+          (click)="exportarExcel()" 
+          title="Exportar a Excel Planilla de Asistencia">
+          <i class="bi bi-file-earmark-excel-fill fs-5"></i>
+        </button>
       </div>
 
     </div>

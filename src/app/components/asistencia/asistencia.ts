@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -16,7 +16,6 @@ import Swal from 'sweetalert2';
   styleUrl: './asistencia.scss'
 })
 export class AsistenciaComponent implements OnInit {
-  private asistenciaService = inject(AsistenciaService);
 
   registros: AsistenciaRegistro[] = [];
   cargando: boolean = false;
@@ -33,13 +32,51 @@ export class AsistenciaComponent implements OnInit {
   fechaInicio: string = '2026-08-01';
   fechaFin: string = '2026-08-31';
 
-  ngOnInit() {
-    this.buscarAsistencia();
-    this.cargarCategorias(); // <-- Cargar las categorías al iniciar
+  totalRecords: number = 0;
+  rows: number = 15;
+  first: number = 0;
+  paginaActual: number = 1;
+
+  constructor(
+    private asistenciaService: AsistenciaService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    const hoy = new Date();
+    this.fechaFin = hoy.toISOString().substring(0, 10);
+    
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    this.fechaInicio = inicioMes.toISOString().substring(0, 10);
+
+    this.cargarCategorias();
+  }
+
+  inicializarFechas() {
+    const hoy = new Date();
+
+    const yearHoy = hoy.getFullYear();
+    const monthHoy = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dayHoy = String(hoy.getDate()).padStart(2, '0');
+    const fechaHoyFormateada = `${yearHoy}-${monthHoy}-${dayHoy}`;
+
+    const ayer = new Date(hoy);
+    ayer.setDate(hoy.getDate() - 1);
+
+    const yearAyer = ayer.getFullYear();
+    const monthAyer = String(ayer.getMonth() + 1).padStart(2, '0');
+    const dayAyer = String(ayer.getDate()).padStart(2, '0');
+    const fechaAyerFormateada = `${yearAyer}-${monthAyer}-${dayAyer}`;
+
+    this.fechaInicio = fechaAyerFormateada;
+    this.fechaFin = fechaHoyFormateada;
+
+    this.modalGestion = hoy.getFullYear();
+    this.modalMes = hoy.getMonth() + 1;
+    this.calcularFechasPorMes();
   }
 
   cargarCategorias() {
-    // Llamada para obtener las categorías desde tu servicio o endpoint
     this.asistenciaService.obtenerCategorias?.().subscribe({
       next: (res: any) => {
         this.listaCategorias = res?.data || res || [];
@@ -50,39 +87,55 @@ export class AsistenciaComponent implements OnInit {
     });
   }
 
-  buscarAsistencia() {
-    if (!this.fechaInicio || !this.fechaFin) {
-      console.warn('Las fechas son obligatorias');
-      return;
+  onPageChange(event: any): void {
+    this.first = event.first ?? 0;
+    this.rows = event.rows ?? 15;
+
+    const pagina = Math.floor(this.first / this.rows) + 1;
+    this.buscarAsistencia(pagina);
+  }
+  
+  buscarAsistencia(page: number = 1): void {
+    if (page === 1) {
+      this.first = 0;
     }
 
-    this.cargando = true;
-    const valorLimpio = this.ciBusqueda.trim();
-    const busquedaParams: { ci?: string; usuarioId?: number } = {};
+    setTimeout(() => {
+      this.cargando = true;
+      this.cdr.detectChanges();
+    });
 
-    if (valorLimpio !== '') {
-      if (valorLimpio.length >= 5) {
-        busquedaParams.ci = valorLimpio;
-      } else {
-        busquedaParams.usuarioId = Number(valorLimpio);
-      }
-    }
+    const params = {
+      ci: this.ciBusqueda,
+      fecha_inicio: this.fechaInicio,
+      fecha_fin: this.fechaFin,
+      page: page,
+      per_page: this.rows
+    };
 
-    this.asistenciaService.obtenerReporteRango(busquedaParams, this.fechaInicio, this.fechaFin)
-      .pipe(
-        finalize(() => {
-          this.cargando = false; 
-        })
-      )
-      .subscribe({
-        next: (response: any) => {
-          this.registros = response?.data || [];
-        },
-        error: (err) => {
-          console.error('Error al obtener asistencia:', err);
+    this.asistenciaService.obtenerReporteRango(params).subscribe({
+      next: (res: any) => {
+        if (res.status === 'success' && res.data) {
+          this.registros = res.data.data || [];
+          this.totalRecords = res.data.total || 0;
+        } else {
           this.registros = [];
+          this.totalRecords = 0;
         }
-      });
+        this.finalizarCarga();
+      },
+      error: (err) => {
+        console.error('Error al obtener la asistencia:', err);
+        this.registros = [];
+        this.totalRecords = 0;
+        this.finalizarCarga();
+      }
+    });
+  }
+
+  private finalizarCarga(): void {
+    this.cargando = false;
+    this.cdr.detectChanges();
   }
 
   abrirModalReporteTurnos() {
@@ -130,76 +183,71 @@ export class AsistenciaComponent implements OnInit {
           alert('No se pudo generar el reporte en PDF. Verifique los permisos o datos.');
         }
       });
-      }
-
- exportarExcel(): void {
-  if (!this.modalFechaInicio || !this.modalFechaFin) {
-    Swal.fire('Atención', 'Seleccione un rango de fechas válido', 'warning');
-    return;
   }
 
-  this.cargando = true;
-
-  // Consultar la matriz de datos procesados desde el backend
-  this.asistenciaService.obtenerMatrizAsistencia(
-    this.modalFechaInicio, 
-    this.modalFechaFin, 
-    this.modalCategoriaId
-  ).subscribe({
-    next: (res: any) => {
-      this.cargando = false;
-      const empleados: any[] = res?.data?.empleados || [];
-
-      if (empleados.length === 0) {
-        Swal.fire('Atención', 'No hay datos registrados para exportar en este periodo', 'info');
-        return;
-      }
-
-      // Mapear los datos con tipos explícitos en (emp: any, index: number)
-     const dataExcel = empleados.map((emp: any, index: number) => ({
-  'Nº': index + 1,
-  'ITEM': emp.item,
-  'CARGA HORARIA': emp.carga_horaria,
-  'FECHA DE INGRESO': emp.fecha_ingreso,
-  'C.I.': emp.ci,
-  'CARGO': emp.cargo,
-  'TIPO SALARIO / FUENTE': emp.tipo_salario,
-  'LUGAR DE TRABAJO': emp.lugar_trabajo,
-  'APELLIDO PATERNO': emp.apellido_paterno,
-  'APELLIDO MATERNO': emp.apellido_materno,
-  'NOMBRES': emp.nombres,
-
-  // Sanciones R.I.P.
-  'FALTAS': emp.faltas,
-  'MINUTOS RETRASO': emp.minutos_retraso,
-  'ABAND.': emp.abandono,
-  'OMISIÓN MARCADO INGRESO/SALIDA': emp.omision_marcado,
-  'TOTAL DÍAS A DESCONTAR': emp.total_dias_descontar,
-
-  // Novedades Laborales
-  'DÍAS EFECT. TRABAJADOS': emp.dias_efect_trabajados,
-  'DÍAS DE FALTA': emp.dias_falta,
-  'DÍAS DE BAJA MÉDICA': emp.dias_baja_medica,
-  'DÍAS DE LICENCIA': emp.dias_licencia,
-  'DÍAS DE VACACIÓN': emp.dias_vacacion,
-  'DÍAS DE COMISIÓN': emp.dias_comision,
-  'DÍAS FERIADO': emp.dias_feriado,
-  'DÍAS DE FIN DE SEMANA': emp.dias_fin_semana,
-  'TOTAL DÍAS DEL MES': emp.total_dias_mes,
-  'OBSERVACIÓN': emp.observacion
-}));
-
-      // Generación del archivo binario .xlsx
-      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataExcel);
-      const wb: XLSX.WorkBook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'PLANILLA DE ASISTENCIA');
-
-      XLSX.writeFile(wb, `Planilla_Asistencia_${this.modalFechaInicio}_al_${this.modalFechaFin}.xlsx`);
-    },
-    error: (err: any) => {
-      this.cargando = false;
-      Swal.fire('Error', err?.error?.message || 'Error al obtener datos para el reporte Excel', 'error');
+  exportarExcel(): void {
+    if (!this.modalFechaInicio || !this.modalFechaFin) {
+      Swal.fire('Atención', 'Seleccione un rango de fechas válido', 'warning');
+      return;
     }
-  });
-}
+
+    this.cargando = true;
+
+    this.asistenciaService.obtenerMatrizAsistencia(
+      this.modalFechaInicio, 
+      this.modalFechaFin, 
+      this.modalCategoriaId
+    ).subscribe({
+      next: (res: any) => {
+        this.cargando = false;
+        const empleados: any[] = res?.data?.empleados || [];
+
+        if (empleados.length === 0) {
+          Swal.fire('Atención', 'No hay datos registrados para exportar en este periodo', 'info');
+          return;
+        }
+
+        const dataExcel = empleados.map((emp: any, index: number) => ({
+          'Nº': index + 1,
+          'ITEM': emp.item,
+          'CARGA HORARIA': emp.carga_horaria,
+          'FECHA DE INGRESO': emp.fecha_ingreso,
+          'C.I.': emp.ci,
+          'CARGO': emp.cargo,
+          'TIPO SALARIO / FUENTE': emp.tipo_salario,
+          'LUGAR DE TRABAJO': emp.lugar_trabajo,
+          'APELLIDO PATERNO': emp.apellido_paterno,
+          'APELLIDO MATERNO': emp.apellido_materno,
+          'NOMBRES': emp.nombres,
+
+          'FALTAS': emp.faltas,
+          'MINUTOS RETRASO': emp.minutos_retraso,
+          'ABAND.': emp.abandono,
+          'OMISIÓN MARCADO INGRESO/SALIDA': emp.omision_marcado,
+          'TOTAL DÍAS A DESCONTAR': emp.total_dias_descontar,
+
+          'DÍAS EFECT. TRABAJADOS': emp.dias_efect_trabajados,
+          'DÍAS DE FALTA': emp.dias_falta,
+          'DÍAS DE BAJA MÉDICA': emp.dias_baja_medica,
+          'DÍAS DE LICENCIA': emp.dias_licencia,
+          'DÍAS DE VACACIÓN': emp.dias_vacacion,
+          'DÍAS DE COMISIÓN': emp.dias_comision,
+          'DÍAS FERIADO': emp.dias_feriado,
+          'DÍAS DE FIN DE SEMANA': emp.dias_fin_semana,
+          'TOTAL DÍAS DEL MES': emp.total_dias_mes,
+          'OBSERVACIÓN': emp.observacion
+        }));
+
+        const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataExcel);
+        const wb: XLSX.WorkBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'PLANILLA DE ASISTENCIA');
+
+        XLSX.writeFile(wb, `Planilla_Asistencia_${this.modalFechaInicio}_al_${this.modalFechaFin}.xlsx`);
+      },
+      error: (err: any) => {
+        this.cargando = false;
+        Swal.fire('Error', err?.error?.message || 'Error al obtener datos para el reporte Excel', 'error');
+      }
+    });
+  }
 }
