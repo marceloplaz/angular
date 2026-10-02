@@ -17,6 +17,7 @@ import Swal from 'sweetalert2';
 })
 export class AsistenciaComponent implements OnInit {
 
+  fechasRango: string[] = [];
   registros: AsistenciaRegistro[] = [];
   cargando: boolean = false;
   mostrarModal: boolean = false;
@@ -255,45 +256,49 @@ export class AsistenciaComponent implements OnInit {
   // NUEVOS MÉTODOS PARA ESTILOS Y TOOLTIPS
   // ==========================================
 
-  /**
-   * Define clases CSS personalizadas según el tipo de jornada o estado.
-   */
-  obtenerClaseCelda(dia: AsistenciaRegistro | undefined): string {
+  obtenerTextoCelda(dia: AsistenciaRegistro | undefined): string {
     if (!dia) return '';
 
     if (dia.tipo_jornada === 'Feriado') {
-      return 'celda-feriado';
-    } 
+      return 'FER';
+    }
     if (dia.tipo_jornada === 'Tolerancia') {
-      return 'celda-tolerancia';
+      return 'TOL';
     }
-    if (dia.estado_texto === 'F' || dia.estado_texto === 'Falta') {
-      return 'celda-falta';
-    }
-    if (dia.nombre_permiso || dia.estado_texto === 'PER') {
-      return 'celda-permiso';
-    }
-    
-    return '';
+
+    return dia.estado_texto || '';
   }
-
-  /**
-   * Genera el texto del tooltip (hover) con la descripción exacta del feriado o tolerancia.
-   */
-  obtenerTooltipCelda(dia: AsistenciaRegistro | undefined): string {
-    if (!dia) return '';
-
-    if (dia.tipo_jornada === 'Feriado' || dia.tipo_jornada === 'Tolerancia') {
-      return `${dia.tipo_jornada}: ${dia.feriado_descripcion ?? 'Sin descripción'} \nAlcance: ${dia.alcance_descripcion ?? 'N/A'}`;
-    }
-    if (dia.nombre_permiso) {
-      return `Permiso: ${dia.nombre_permiso}`;
-    }
-    if (dia.minutos_retraso > 0) {
-      return `Retraso: ${dia.minutos_retraso} minutos`;
-    }
-
-    return `Estado: ${dia.estado_texto || 'Normal'}`;
+  obtenerClaseCelda(dia: any): string {
+  if (!dia) return '';
+  
+  switch (dia.estado) {
+    case 'FER':
+      return 'bg-danger text-white fw-bold'; // Fondo rojo para feriados
+    case 'TOL':
+      return 'bg-warning text-dark fw-bold'; // Fondo amarillo para tolerancia
+    case 'PER':
+      return 'bg-info text-dark fw-bold';    // Fondo azul para permisos
+    case 'F':
+      return 'bg-danger-subtle text-danger fw-bold'; // Falta
+    default:
+      return '';
   }
+}
+
+obtenerTooltipCelda(dia: any): string {
+  if (!dia) return 'Sin registro';
+  
+  let tooltip = `Estado: ${dia.estado || 'Laboral'}`;
+  if (dia.feriado_descripcion && dia.feriado_descripcion !== 'Laboral') {
+    tooltip += `\nDetalle: ${dia.feriado_descripcion}`;
+  }
+  if (dia.alcance_descripcion && dia.alcance_descripcion !== 'N/A') {
+    tooltip += `\nAlcance: ${dia.alcance_descripcion}`;
+  }
+  if (dia.permiso) {
+    tooltip += `\nPermiso: ${dia.permiso}`;
+  }
+  return tooltip;
+}
 
 }

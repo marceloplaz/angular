@@ -101,13 +101,24 @@
           <th>Permiso / Justificación</th>
         </tr>
       </ng-template>
+
 <ng-template pTemplate="body" let-reg>
         <tr>
-          <!-- 1. Fecha (con los estilos y tooltips aplicados) -->
-          <td class="fw-semibold text-nowrap" 
-              [ngClass]="obtenerClaseCelda(reg)" 
+          <!-- 1. Fecha (Con soporte para Feriados, Tolerancias y Tooltips) -->
+          <td class="text-center align-middle"
+              [ngClass]="obtenerClaseCelda(reg)"
               [title]="obtenerTooltipCelda(reg)">
-            {{ reg.fecha_asistencia }}
+            
+            <div class="fw-medium text-dark">{{ reg.fecha_asistencia }}</div>
+
+            <!-- Indicador visual rápido si es Feriado o Tolerancia -->
+            <span *ngIf="reg.tipo_jornada === 'Feriado'" class="badge bg-danger mt-1">FER</span>
+            <span *ngIf="reg.tipo_jornada === 'Tolerancia'" class="badge bg-warning text-dark mt-1">TOL</span>
+            
+            <!-- Descripción corta de SQL Server si existe -->
+            <div *ngIf="reg.feriado_descripcion && reg.feriado_descripcion !== 'Laboral'" class="small text-muted text-truncate" style="max-width: 120px;" [title]="reg.feriado_descripcion">
+              {{ reg.feriado_descripcion }}
+            </div>
           </td>
 
           <!-- 2. Funcionario -->
